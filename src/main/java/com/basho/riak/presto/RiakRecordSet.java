@@ -20,8 +20,8 @@ import com.facebook.presto.spi.RecordCursor;
 import com.facebook.presto.spi.RecordSet;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.InputSupplier;
-import com.google.common.io.Resources;
+//import com.google.common.io.InputSupplier;
+//import com.google.common.io.Resources;
 import io.airlift.log.Logger;
 
 import java.io.IOException;

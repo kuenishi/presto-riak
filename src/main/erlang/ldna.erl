@@ -20,10 +20,15 @@ get_splits(ReqID) when is_integer(ReqID) ->
     [{Node, Indexes, FilterVNodes}
      || {Node, Indexes} <- dict:to_list(Dict)].
 
+%% @doc process a Split including multiple vnodes at one node
+%% TODO: deprecate this and use process_split/3
+-spec process_splits(binary(), {atom(), [integer()], {integer(),[integer()]}}) -> [list()].
 process_splits(Bucket, {Node, Indexes, FilterVNodes}) ->
     [process_split(Bucket, {Index, Node}, FilterVNodes)
      || Index <- Indexes ].
 
+%% @doc returns list of riak_object (internal format).
+-spec process_split(binary, {atom(), integer()}, {integer(),[integer()]}) -> list().
 process_split(Bucket, VNode, FilterVNodes) ->
     {Index, _} = VNode,
     FilterVNode = proplists:get_value(Index, FilterVNodes),

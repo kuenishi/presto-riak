@@ -34,21 +34,33 @@ public class CLI {
     private static final int CONNECTION_TIMEOUT_MIL = 2000;
     private static final int REQUEST_TIMEOUT_MIL = 2000;
 
-    public static void main(String[] args)
+    public static void main(String[] args) throws Exception
     {
-        System.out.println("presto-riak CLI: create table, create schema, drop... >" + args[0]);
         System.out.println(args[0]);
         System.out.println(args[1]);
         //System.out.println(args[2]);
 
+        if(args.length == 0) {
+            System.out.println("presto-riak CLI. create table, create schema, drop... >");
+            System.out.println("usage: ./presto-riak-cli plan <node> [<cookie>]");
+            // or mvn exec:java -q -Dexec.main=com.basho.riak.presto.CLI -Dexec.args="plan riak@127.0.0.1"
+            return;
+        }
+
         if(args[0].equals("plan")) {
             String node = args[1];
             String cookie = "riak";
-            if(args.length > 2){  cookie = args[2];           }
+            if(args.length > 2){  cookie = args[2]; }
+            System.out.println("connecting to Riak node "+node+" with cookie="+cookie);
+
+            String self = "client@127.0.0.1";
             try {
-                DirectConnection conn = new DirectConnection(node, cookie);
+                DirectConnection conn = new DirectConnection(self, cookie);
+                conn.connect(node);
+                //conn.ping();
                 ClusterPlan clusterPlan = new ClusterPlan(conn);
                 System.out.println(clusterPlan.build().toString());
+                clusterPlan.run();
             }
             catch (java.io.IOException e){
                 System.err.println(e);

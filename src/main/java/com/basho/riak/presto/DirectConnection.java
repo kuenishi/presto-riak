@@ -2,7 +2,7 @@ package com.basho.riak.presto;
 
 // /usr/local/erlang/R16B03-1/lib/erlang/lib/jinterface-1.5.8/priv/OtpErlang.jar
 // or 1.5.6 on maven repo.
-import com.ericsson.otp.erlang.*;  
+import com.ericsson.otp.erlang.*;
 import java.util.Vector;
 
 // @doc directly connect to Riak via distributed Erlang.
@@ -13,16 +13,20 @@ public class DirectConnection {
     private OtpPeer other;
     private OtpConnection conn;
     private OtpErlangObject local_client;
-    public DirectConnection(String peer, String cookie) throws java.io.IOException {
-        this.peer = peer;
+    public DirectConnection(String self, String cookie) throws java.io.IOException {
+        this.self = new OtpSelf(self, cookie);
         this.cookie = cookie;
-        this.self = new OtpSelf(peer, cookie);
+        //this.self = new OtpSelf(peer, cookie);
     }
 
+    // there are no disconnect.
     public void connect(String other) throws java.io.IOException, OtpAuthException, OtpErlangExit {
+        this.peer = other;
         this.other = new OtpPeer(other);
-        this.conn = self.connect(this.other); 
+        this.conn = self.connect(this.other);
+    }
 
+    public void ping() throws java.io.IOException, OtpAuthException, OtpErlangExit {
         // connection test
         conn.sendRPC("erlang","date",new OtpErlangList());
         OtpErlangObject received = conn.receiveRPC();
@@ -32,14 +36,16 @@ public class DirectConnection {
         OtpErlangTuple ok_or_error = (OtpErlangTuple)conn.receiveRPC();
         this.local_client = ok_or_error.elementAt(1);
         System.out.println(this.local_client);
+
     }
 
     public OtpConnection getConn(){
         return conn;
     }
 
-    public void get(byte[] b, byte[] k) throws Exception {
-        OtpErlangObject[] argv0 = {
+    public void get(byte[] b, byte[] k)
+        throws java.io.IOException , OtpErlangExit , OtpAuthException {
+              OtpErlangObject[] argv0 = {
             new OtpErlangBinary(b),
             new OtpErlangBinary(k),
             local_client};
@@ -57,7 +63,8 @@ public class DirectConnection {
         return ring;
     }
 
-    public OtpErlangObject my_indices(OtpErlangObject ring) throws java.io.IOException , OtpErlangExit , OtpAuthException {
+    public OtpErlangObject my_indices(OtpErlangObject ring)
+        throws java.io.IOException , OtpErlangExit , OtpAuthException {
         OtpErlangObject[] argv = {ring};
         conn.sendRPC("riak_core_ring", "my_indices", new OtpErlangList(argv));
         OtpErlangObject indices = conn.receiveRPC();
@@ -72,6 +79,26 @@ public class DirectConnection {
         OtpErlangObject cov = conn.receiveRPC();
         return (OtpErlangList)cov;
     }
+
+    public OtpErlangList getSplits(int reqid) throws java.io.IOException , OtpErlangExit , OtpAuthException {
+        OtpErlangLong i = new OtpErlangLong(reqid);
+        OtpErlangObject[] argv = {i};
+        System.out.println(argv);
+        conn.sendRPC("ldna", "get_splits", new OtpErlangList(argv));
+        OtpErlangObject cov = conn.receiveRPC();
+        return (OtpErlangList)cov;
+    }
+
+    public OtpErlangList processSplits(byte[] bucket, OtpErlangTuple nodeSplits)
+        throws java.io.IOException , OtpErlangExit , OtpAuthException
+    {
+        OtpErlangObject[] argv = {new OtpErlangBinary(bucket), nodeSplits};
+        System.out.println(argv);
+        conn.sendRPC("ldna", "process_splits", new OtpErlangList(argv));
+        OtpErlangObject objects = conn.receiveRPC();
+        return (OtpErlangList)objects;
+    }
+
 
     // vnode, bucket -> [riak_object()]
     public OtpErlangObject fetchVNodeData(OtpErlangObject vnode,
