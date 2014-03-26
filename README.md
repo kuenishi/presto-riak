@@ -1,5 +1,7 @@
 # presto-riak
 
+Riak connector for [prestodb](http://prestodb.io). [RP](https://github.com/kuenishi/rp) is for development environment.
+
 ## build and installation
 
 You need `riak` directory in Presto plugin directory, with
