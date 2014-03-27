@@ -68,6 +68,8 @@ public class CLI {
 
                 for(SplitTask split : splits)
                 {
+                    System.out.println("============printing split data at "+split.getHost()+"===============");
+
                     split.fetchAllData(conn, "default", "foobartable");
                 }
             }

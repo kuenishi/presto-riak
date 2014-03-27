@@ -35,12 +35,17 @@
             <artifactId>presto-spi</artifactId>
             <version>0.61</version>
         </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.9</version>
+        </dependency>
 
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>bootstrap</artifactId>
             <scope>provided</scope>
-            <version>0.84</version>
+            <version>0.87</version>
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>

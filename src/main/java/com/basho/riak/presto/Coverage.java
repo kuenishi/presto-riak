@@ -48,6 +48,7 @@ public class Coverage {
 
         for(OtpErlangObject obj : vnodes)
         {
+
             // {Index, Node}
             OtpErlangTuple vnode = (OtpErlangTuple)obj;
             OtpErlangObject index = vnode.elementAt(0);
@@ -60,13 +61,6 @@ public class Coverage {
         }
 
         return l;
-    }
-
-    public byte[] term2binary(OtpErlangObject o)
-    {
-        OtpOutputStream oos = new OtpOutputStream();
-        oos.write_any(o);
-        return oos.toByteArray();
     }
 
     public String toString() {
