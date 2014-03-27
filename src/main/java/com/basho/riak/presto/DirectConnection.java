@@ -3,6 +3,8 @@ package com.basho.riak.presto;
 // /usr/local/erlang/R16B03-1/lib/erlang/lib/jinterface-1.5.8/priv/OtpErlang.jar
 // or 1.5.6 on maven repo.
 import com.ericsson.otp.erlang.*;
+
+import java.io.IOException;
 import java.util.Vector;
 
 // @doc directly connect to Riak via distributed Erlang.
@@ -43,16 +45,21 @@ public class DirectConnection {
         return conn;
     }
 
+    private <T> T call(String module, String function, OtpErlangList argv)
+            throws IOException, OtpErlangExit, OtpAuthException
+    {
+        conn.sendRPC(module, function, argv);
+        OtpErlangObject result = conn.receiveRPC();
+        return (T)result;
+    }
+
     public void get(byte[] b, byte[] k)
         throws java.io.IOException , OtpErlangExit , OtpAuthException {
-              OtpErlangObject[] argv0 = {
+        OtpErlangObject[] argv0 = {
             new OtpErlangBinary(b),
             new OtpErlangBinary(k),
             local_client};
-        OtpErlangList argv1 = new OtpErlangList(argv0);
-        System.out.println(argv1);
-        conn.sendRPC("riak_client", "get", argv1);
-        OtpErlangObject val = conn.receiveRPC();
+        OtpErlangObject val = call("riak_client", "get", new OtpErlangList(argv0));
         System.out.println(val);
     }
 
@@ -81,24 +88,31 @@ public class DirectConnection {
     }
 
     public OtpErlangList getSplits(int reqid) throws java.io.IOException , OtpErlangExit , OtpAuthException {
-        OtpErlangLong i = new OtpErlangLong(reqid);
-        OtpErlangObject[] argv = {i};
-        System.out.println(argv);
-        conn.sendRPC("ldna", "get_splits", new OtpErlangList(argv));
-        OtpErlangObject cov = conn.receiveRPC();
-        return (OtpErlangList)cov;
+        OtpErlangObject[] argv = { new OtpErlangLong(reqid) };
+        return this.call("ldna", "get_splits", new OtpErlangList(argv));
+    }
+
+    public OtpErlangTuple getCoveragePlan(int reqid)
+        throws IOException, OtpErlangExit, OtpAuthException
+    {
+        OtpErlangObject[] argv = { new OtpErlangLong(reqid) };
+        return this.call("ldna", "get_coverage_plan", new OtpErlangList(argv));
     }
 
     public OtpErlangList processSplits(byte[] bucket, OtpErlangTuple nodeSplits)
         throws java.io.IOException , OtpErlangExit , OtpAuthException
     {
         OtpErlangObject[] argv = {new OtpErlangBinary(bucket), nodeSplits};
-        System.out.println(argv);
-        conn.sendRPC("ldna", "process_splits", new OtpErlangList(argv));
-        OtpErlangObject objects = conn.receiveRPC();
-        return (OtpErlangList)objects;
+        return this.call("ldna", "process_splits", new OtpErlangList(argv));
     }
 
+    public OtpErlangList processSplit(byte[] bucket, OtpErlangTuple vnode,
+                                      OtpErlangList filterVnodes)
+            throws java.io.IOException , OtpErlangExit , OtpAuthException
+    {
+        OtpErlangObject[] argv = {new OtpErlangBinary(bucket), vnode, filterVnodes};
+        return this.call("ldna", "process_split", new OtpErlangList(argv));
+    }
 
     // vnode, bucket -> [riak_object()]
     public OtpErlangObject fetchVNodeData(OtpErlangObject vnode,

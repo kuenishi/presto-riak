@@ -1,5 +1,6 @@
 package com.basho.riak.presto;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -12,7 +13,7 @@ import com.basho.riak.client.bucket.Bucket;
 import com.basho.riak.client.cap.DefaultRetrier;
 import com.basho.riak.client.raw.pbc.PBClientConfig;
 import com.basho.riak.client.raw.pbc.PBClusterConfig;
-import com.facebook.presto.spi.ConnectorFactory;
+import com.facebook.presto.spi.Split;
 
 /**
  * Created by kuenishi on 14/03/21.
@@ -58,9 +59,17 @@ public class CLI {
                 DirectConnection conn = new DirectConnection(self, cookie);
                 conn.connect(node);
                 //conn.ping();
-                ClusterPlan clusterPlan = new ClusterPlan(conn);
-                System.out.println(clusterPlan.build().toString());
-                clusterPlan.run();
+                Coverage coverage = new Coverage(conn);
+                coverage.plan();
+                List<SplitTask> splits = coverage.getSplits();
+
+                System.out.println("print coverage plan==============");
+                System.out.println(coverage.toString());
+
+                for(SplitTask split : splits)
+                {
+                    split.fetchAllData(conn, "default", "foobartable");
+                }
             }
             catch (java.io.IOException e){
                 System.err.println(e);

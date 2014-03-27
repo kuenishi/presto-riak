@@ -13,6 +13,7 @@
  */
 package com.basho.riak.presto;
 
+import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.HostAddress;
 import com.facebook.presto.spi.Split;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -33,10 +34,12 @@ public class RiakSplit
     private final String schemaName;
     private final String tableName;
     private final String host;
+
     private final boolean remotelyAccessible;
     private final ImmutableList<HostAddress> addresses;
 
-    private static final Logger log = Logger.get(RiakSplit.class);
+    //private static final Logger log = Logger.get(RiakSplit.class);
+
 
     @JsonCreator
     public RiakSplit(
@@ -49,7 +52,7 @@ public class RiakSplit
         this.connectorId = checkNotNull(connectorId, "connector id is null");
         this.tableName = checkNotNull(tableName, "table name is null");
         this.host = checkNotNull(host);
-        log.debug("%s.%s@%s", schemaName, tableName, host);
+        //log.debug("%s.%s@%s", schemaName, tableName, host);
 
 //        if ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme())) {
         this.remotelyAccessible = true;
@@ -76,6 +79,7 @@ public class RiakSplit
 
     @JsonProperty
     public String getHost() { return host; }
+
 
     @Override
     public boolean isRemotelyAccessible()
