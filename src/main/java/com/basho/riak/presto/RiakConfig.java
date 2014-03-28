@@ -29,26 +29,26 @@ public class RiakConfig
     public static String ERLANG_NODE_NAME = "presto@127.0.0.1";
     public static String ERLANG_COOKIE = "riak";
 
-    @Config("riak.hosts")
+    @Config("riak.pb.host")
     public RiakConfig setHosts(String hosts)
     {
         this.hosts = hosts;
         return this;
     }
 
-    @Config("erlang.riak.node") // like 'riak@127.0.0.1'
+    @Config("riak.erlang.host") // like 'riak@127.0.0.1'
     public RiakConfig setLocalNode(String node)
     {
         this.localNode = node;
         return this;
     }
-    @Config("erlang.presto.node") // like 'presto@127.0.0.1'
-    public RiakConfig setPrestoName(String erlangNodeName)
+    @Config("presto.erlang.host") // like 'presto@127.0.0.1'
+    public RiakConfig setErlangNodeName(String erlangNodeName)
     {
         this.erlangNodeName = erlangNodeName;
         return this;
     }
-    @Config("erlang.cookie")
+    @Config("presto.erlang.cookie")
     public RiakConfig setErlangCookie(String cookie)
     {
         this.erlangCookie = cookie;
