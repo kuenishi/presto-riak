@@ -20,6 +20,7 @@ import com.facebook.presto.spi.RecordSet;
 import com.facebook.presto.spi.Split;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
+import org.apache.commons.codec.DecoderException;
 
 import javax.inject.Inject;
 
@@ -33,14 +34,17 @@ public class RiakRecordSetProvider
 {
     private final String connectorId;
     private final RiakConfig riakConfig;
+    private final DirectConnection directConnection;
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
     @Inject
     public RiakRecordSetProvider(RiakConnectorId connectorId,
-                                 RiakConfig riakConfig)
+                                 RiakConfig riakConfig,
+                                 DirectConnection directConnection)
     {
         this.connectorId = checkNotNull(connectorId, "connectorId is null").toString();
         this.riakConfig = checkNotNull(riakConfig);
+        this.directConnection = checkNotNull(directConnection);
 
         log.debug(riakConfig.getHost());
         log.debug(riakConfig.getErlangCookie());
@@ -80,10 +84,15 @@ public class RiakRecordSetProvider
         try{
             return new CoverageRecordSet(coverageSplit,
                    handles.build(),
-                   riakConfig);
+                   riakConfig, directConnection);
         }
         catch(OtpErlangDecodeException e)
         {
+            log.error(e);
+        }
+        catch(DecoderException e)
+        {
+            log.error(e);
         }
         return null;
     }

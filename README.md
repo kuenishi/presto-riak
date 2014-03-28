@@ -22,7 +22,12 @@ Use pb port.
 ```
 $ cat riak.properies
 connector.name=riak
-riak.hosts=localhost:8087
+
+riak.pb.host=localhost:8087
+riak.erlang.node=riak@127.0.0.1
+
+presto.erlang.node=presto@127.0.0.1
+presto.erlang.cookie=riak
 $ cp riak.properties path/to/presto/etc/catalog
 $ ./presto-cli --server localhost:8008 --catalog riak
 ```
@@ -121,12 +126,11 @@ At startup time, presto-riak creates it all if not existing.
 
 ## TODOs
 
-- modes: PB API mode and direct mode. Former is just a
-  adaptor and no distributed processing over Presto.
-  The latter uses direct access to Erlang node, then
-  chooses a plan to run.
-- locality: change Split, to use jinterface and design
-  a coverage operation _in Java_.
+- modes: PB API mode and direct mode. Direct mode seems now
+  working while PB API mode is cut off. Needs rewrite.
+- currently OtpConnection is protected with `synchronized`
+  method in DirectConnection#call(). Needs change with
+  request id control.
 - optimization: pushing-down predicates would make it
   much faster; or changing index to find keys
   or custom mapreduce each time? Anyway, for now

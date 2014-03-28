@@ -45,16 +45,19 @@ public class RiakSplitManager
     private final String connectorId;
     private final RiakClient riakClient;
     private final RiakConfig riakConfig;
+    private final DirectConnection directConnection;
 
     private static final Logger log = Logger.get(RiakSplitManager.class);
 
 
     @Inject
-    public RiakSplitManager(RiakConnectorId connectorId, RiakClient riakClient, RiakConfig config)
+    public RiakSplitManager(RiakConnectorId connectorId, RiakClient riakClient,
+                            RiakConfig config, DirectConnection directConnection)
     {
         this.connectorId = checkNotNull(connectorId, "connectorId is null").toString();
         this.riakClient = checkNotNull(riakClient, "client is null");
         this.riakConfig = checkNotNull(config);
+        this.directConnection = checkNotNull(directConnection);
     }
 
     @Override
@@ -107,12 +110,10 @@ public class RiakSplitManager
         if(riakConfig.getLocalNode() != null)
         {
             // TODO: make coverageSplits here
-            String self = riakConfig.getErlangNodeName();
-            String riak = riakConfig.getLocalNode();
-            log.debug("connecting to %s from %s", riak, self);
-            try {
-                DirectConnection conn = new DirectConnection(self, riakConfig.getErlangCookie());
-                conn.connect(riak);
+            //log.debug("connecting to %s from %s", riak, self);
+            //try {
+                DirectConnection conn = directConnection;
+                //conn.connect(riak);
                 //conn.ping();
                 Coverage coverage = new Coverage(conn);
                 coverage.plan();
@@ -136,17 +137,17 @@ public class RiakSplitManager
                             split.getHost(),
                             split.toString()));
                 }
-            }
-            catch (java.io.IOException e){
-                log.error(e);
-            }
-            catch (OtpAuthException e){
-                log.error(e);
-            }
-            catch (OtpErlangExit e)
-            {
-                log.error(e);
-            }
+            //}
+//            catch (java.io.IOException e){
+//                log.error(e);
+//            }
+//            catch (OtpAuthException e){
+//                log.error(e);
+//            }
+//            catch (OtpErlangExit e)
+//            {
+//                log.error(e);
+//            }
         }
         else
         {

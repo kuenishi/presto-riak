@@ -20,6 +20,7 @@ import com.facebook.presto.spi.RecordCursor;
 import com.facebook.presto.spi.RecordSet;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
+import org.apache.commons.codec.DecoderException;
 
 import java.util.List;
 
@@ -39,14 +40,16 @@ public class CoverageRecordSet
     //private final InputSupplier<InputStream> inputStreamSupplier;
     private final SplitTask splitTask;
     private final RiakConfig riakConfig;
+    private final DirectConnection directConnection;
 
     private static final Logger log = Logger.get(CoverageRecordSet.class);
 
 
     public CoverageRecordSet(CoverageSplit split,
                              List<RiakColumnHandle> columnHandles,
-                             RiakConfig riakConfig)
-            throws OtpErlangDecodeException
+                             RiakConfig riakConfig,
+                             DirectConnection directConnection)
+            throws OtpErlangDecodeException, DecoderException
     {
         checkNotNull(split, "split is null");
         this.columnHandles = checkNotNull(columnHandles, "column handles is null");
@@ -55,7 +58,7 @@ public class CoverageRecordSet
             types.add(column.getColumnType());
         }
 
-        log.debug("new CoverageRecordSet: %s", split.getSplitData());
+        //log.debug("new CoverageRecordSet: %s", split.getSplitData());
 
         this.schemaName = checkNotNull(split.getSchemaName());
         this.tableName = checkNotNull(split.getTableName());
@@ -63,6 +66,7 @@ public class CoverageRecordSet
         this.addresses = ImmutableList.copyOf(split.getAddresses());
         this.splitTask = checkNotNull(split.getSplitTask());
         this.riakConfig = checkNotNull(riakConfig);
+        this.directConnection = checkNotNull(directConnection);
     }
 
     @Override
@@ -75,6 +79,7 @@ public class CoverageRecordSet
     public RecordCursor cursor()
     {
         return new CoverageRecordCursor(schemaName, tableName,
-                columnHandles, addresses, splitTask, riakConfig);
+                columnHandles, addresses, splitTask,
+                riakConfig, directConnection);
     }
 }

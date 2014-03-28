@@ -58,6 +58,7 @@ public class CLI {
             try {
                 DirectConnection conn = new DirectConnection(self, cookie);
                 conn.connect(node);
+                //conn.pid();
                 //conn.ping();
                 Coverage coverage = new Coverage(conn);
                 coverage.plan();

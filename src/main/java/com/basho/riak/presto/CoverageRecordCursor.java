@@ -48,6 +48,7 @@ public class CoverageRecordCursor
     private final List<RiakColumnHandle> columnHandles;
     //private final int[] fieldToColumnIndex;
     private final SplitTask splitTask;
+    private final DirectConnection directConnection;
 
     //private final Iterator<String> lines;
     private long totalBytes;
@@ -64,7 +65,8 @@ public class CoverageRecordCursor
                                 List<RiakColumnHandle> columnHandles,//, InputSupplier<InputStream> inputStreamSupplier)
                                 List<HostAddress> addresses,
                                 SplitTask splitTask,
-                                RiakConfig riakConfig)
+                                RiakConfig riakConfig,
+                                DirectConnection directConnection)
     {
         checkNotNull(schemaName);
         checkState(schemaName.equals("default"));
@@ -77,39 +79,37 @@ public class CoverageRecordCursor
         this.schemaName = schemaName;
         this.tableName = tableName;
         this.splitTask = splitTask;
+        this.directConnection = checkNotNull(directConnection);
 
         bucket = null;
         keyCursor = null;
         buffer = new Vector<IRiakObject>();
         cursor = null;
         fields = new String[columnHandles.size()];
-        log.debug("here1");
 
         this.columnHandles = columnHandles;
 //        fieldToColumnIndex = new int[columnHandles.size()];
         log.debug(columnHandles.toString());
         for (int i = 0; i < columnHandles.size(); i++) {
-            log.debug("%d, %s", i, columnHandles.get(i));
+//            log.debug("%d, %s", i, columnHandles.get(i));
             RiakColumnHandle columnHandle = columnHandles.get(i);
             fields[i] = columnHandle.getColumnName();
 //            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
         totalBytes = 0;
-        log.debug("here2");
         try{
-            DirectConnection conn = new DirectConnection(riakConfig.getErlangNodeName(),
-                    riakConfig.getErlangCookie());
-            conn.connect(riakConfig.getLocalNode());
+            DirectConnection conn = directConnection;
+            //conn.connect(riakConfig.getLocalNode());
             OtpErlangList objects = splitTask.fetchAllData(conn, schemaName, tableName);
             for(OtpErlangObject o : objects){
                 buffer.add(new RiakObject(o));
-            }
-            log.info("%d key data fetched!!!", buffer.size());
 
+            }
+            log.info("%d key data fetched.", buffer.size());
         }
-        catch (IOException e){
-            log.error(e);
-        }
+//        catch (IOException e){
+//            log.error(e);
+//        }
         catch (OtpErlangExit e){
             log.error(e);
         }
@@ -119,7 +119,6 @@ public class CoverageRecordCursor
         catch (OtpErlangDecodeException e){
             log.error(e);
         }
-        log.debug("here3");
     }
 
     @Override
@@ -144,10 +143,11 @@ public class CoverageRecordCursor
     @Override
     public boolean advanceNextPosition()
     {
-
+        //log.debug("buffer length> %d", buffer.size());
         if (buffer.isEmpty()) {
             return false;
         }
+        log.debug("buffer length>> %d", buffer.size());
 
         IRiakObject riakObject = buffer.remove(0);
         //log.debug("first key: %s", riakObject.getKey());
@@ -155,6 +155,8 @@ public class CoverageRecordCursor
         //fields = LINE_SPLITTER.splitToList(line);
         ObjectMapper mapper = new ObjectMapper();
         try {
+            log.debug(riakObject.getKey());
+            log.debug(riakObject.getValueAsString());
             cursor = mapper.readValue(riakObject.getValueAsString(), HashMap.class);
             cursor.put("__pkey", riakObject.getKey());
             totalBytes += riakObject.getValueAsString().length();

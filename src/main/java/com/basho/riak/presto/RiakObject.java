@@ -26,7 +26,7 @@ public class RiakObject implements IRiakObject {
         checkRecord(object, "r_object");
 
         OtpErlangTuple rObject = (OtpErlangTuple)object;
-        System.out.println(rObject);
+//        System.out.println(rObject);
 //        -record(r_object, {
 //                bucket :: bucket(),
         this.bucket = ((OtpErlangBinary)rObject.elementAt(1)).binaryValue();
@@ -111,12 +111,12 @@ public class RiakObject implements IRiakObject {
 
     @Override
     public String getKey() {
-        return key.toString();
+        return new String(key);
     }
 
     @Override
     public String getBucket() {
-        return bucket.toString();
+        return new String(bucket);
     }
 
     @Override
@@ -237,7 +237,7 @@ public class RiakObject implements IRiakObject {
 
     @Override
     public String getValueAsString() {
-        return getValue().toString();
+        return new String(getValue());
     }
 
     @Override

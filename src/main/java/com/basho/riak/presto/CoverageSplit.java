@@ -9,6 +9,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.airlift.json.JsonCodecFactory;
 import io.airlift.log.Logger;
+import org.apache.commons.codec.DecoderException;
 
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
@@ -84,7 +85,7 @@ public class CoverageSplit implements Split{
         this.host = checkNotNull(host);
         this.splitData = "";
 
-        log.debug("%s.%s to %s: %s", schemaName, tableName, host, splitData);
+        //log.debug("%s.%s to %s: %s", schemaName, tableName, host, splitData);
         this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromString(host)));
         //this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromParts(host, 8080)));
     }
@@ -103,7 +104,7 @@ public class CoverageSplit implements Split{
 
     @Override
     public boolean isRemotelyAccessible() {
-        log.debug(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(this));
+        //log.debug(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(this));
 
         return false;
     }
@@ -122,14 +123,14 @@ public class CoverageSplit implements Split{
     @Override
     public List<HostAddress> getAddresses()
     {
-        log.debug("getAddress: %s", addresses);
-        log.debug(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(this));
+        //log.debug("getAddress: %s", addresses);
+        //log.debug(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(this));
         return addresses;
     }
 
     @NotNull
     public SplitTask getSplitTask()
-        throws OtpErlangDecodeException
+        throws OtpErlangDecodeException, DecoderException
     {
         return new SplitTask(splitData);
     }
