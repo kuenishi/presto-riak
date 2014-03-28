@@ -13,6 +13,7 @@
  */
 package com.basho.riak.presto;
 
+import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorRecordSetProvider;
 import com.facebook.presto.spi.RecordSet;
@@ -31,12 +32,20 @@ public class RiakRecordSetProvider
         implements ConnectorRecordSetProvider
 {
     private final String connectorId;
+    private final RiakConfig riakConfig;
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
     @Inject
-    public RiakRecordSetProvider(RiakConnectorId connectorId)
+    public RiakRecordSetProvider(RiakConnectorId connectorId,
+                                 RiakConfig riakConfig)
     {
         this.connectorId = checkNotNull(connectorId, "connectorId is null").toString();
+        this.riakConfig = checkNotNull(riakConfig);
+
+        log.debug(riakConfig.getHost());
+        log.debug(riakConfig.getErlangCookie());
+        log.debug(riakConfig.getErlangNodeName());
+        log.debug(riakConfig.getLocalNode());
     }
 
     @Override
@@ -44,25 +53,38 @@ public class RiakRecordSetProvider
     {
         // should be able to be casted to RiakSplit
         log.debug("canHandle: %s", split.toString());
-        return split instanceof RiakSplit && ((RiakSplit) split).getConnectorId().equals(connectorId);
+        //checkArgument(split instanceof CoverageSplit);
+        if(split instanceof CoverageSplit)
+        {
+            return ((CoverageSplit) split).getConnectorId().equals(connectorId);
+        }
+        return false;
     }
 
     @Override
     public RecordSet getRecordSet(Split split, List<? extends ColumnHandle> columns)
     {
         checkNotNull(split, "partitionChunk is null");
-        checkArgument(split instanceof RiakSplit);
+        checkArgument(split instanceof CoverageSplit);
         log.debug("getRecordSet");
 
-        RiakSplit riakSplit = (RiakSplit) split;
-        checkArgument(riakSplit.getConnectorId().equals(connectorId), "split is not for this connector");
+            CoverageSplit coverageSplit = (CoverageSplit)split;
+            checkArgument(coverageSplit.getConnectorId().equals(connectorId));
+            ImmutableList.Builder<RiakColumnHandle> handles = ImmutableList.builder();
+            for (ColumnHandle handle : columns) {
+                checkArgument(handle instanceof RiakColumnHandle);
+                handles.add((RiakColumnHandle) handle);
+            }
 
-        ImmutableList.Builder<RiakColumnHandle> handles = ImmutableList.builder();
-        for (ColumnHandle handle : columns) {
-            checkArgument(handle instanceof RiakColumnHandle);
-            handles.add((RiakColumnHandle) handle);
+            log.debug("supplying CoverageRecordSet");
+        try{
+            return new CoverageRecordSet(coverageSplit,
+                   handles.build(),
+                   riakConfig);
         }
-
-        return new RiakRecordSet(riakSplit, handles.build());
+        catch(OtpErlangDecodeException e)
+        {
+        }
+        return null;
     }
 }

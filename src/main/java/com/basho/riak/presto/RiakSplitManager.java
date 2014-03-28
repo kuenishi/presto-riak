@@ -16,6 +16,7 @@ package com.basho.riak.presto;
 import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangExit;
+import com.ericsson.otp.erlang.OtpErlangObject;
 import com.facebook.presto.spi.ConnectorSplitManager;
 import com.facebook.presto.spi.FixedSplitSource;
 import com.facebook.presto.spi.Partition;
@@ -108,6 +109,7 @@ public class RiakSplitManager
             // TODO: make coverageSplits here
             String self = riakConfig.getErlangNodeName();
             String riak = riakConfig.getLocalNode();
+            log.debug("connecting to %s from %s", riak, self);
             try {
                 DirectConnection conn = new DirectConnection(self, riakConfig.getErlangCookie());
                 conn.connect(riak);
@@ -116,15 +118,23 @@ public class RiakSplitManager
                 coverage.plan();
                 List<SplitTask> splitTasks = coverage.getSplits();
 
-                //System.out.println("print coverage plan==============");
-                //System.out.println(coverage.toString());
+                log.debug("print coverage plan==============");
+                log.debug(coverage.toString());
+
 
                 for(SplitTask split : splitTasks)
                 {
-                    //System.out.println("============printing split data at "+split.getHost()+"===============");
+                    log.debug("============printing split data at "+split.getHost()+"===============");
+                    log.debug(((OtpErlangObject)split.getTask()).toString());
+                    log.debug(split.toString());
 
                     //split.fetchAllData(conn, "default", "foobartable");
-                    splits.add(new CoverageSplit(split));
+
+                    splits.add(new CoverageSplit(connectorId,
+                            riakTableHandle.getSchemaName(),
+                            riakTableHandle.getTableName(),
+                            split.getHost(),
+                            split.toString()));
                 }
             }
             catch (java.io.IOException e){
@@ -137,21 +147,20 @@ public class RiakSplitManager
             {
                 log.error(e);
             }
-            return new FixedSplitSource(connectorId, splits);
         }
         else
         {
-        // TODO: in Riak connector, you only need single access point for each presto worker???
-        log.debug(hosts);
-        splits.add(new RiakSplit(connectorId, riakTableHandle.getSchemaName(),
-                riakTableHandle.getTableName(), hosts));
+            // TODO: in Riak connector, you only need single access point for each presto worker???
+            log.debug(hosts);
+            splits.add(new CoverageSplit(connectorId, riakTableHandle.getSchemaName(),
+                    riakTableHandle.getTableName(), hosts));
 
-        Collections.shuffle(splits);
+        }
         log.debug("table %s.%s has %d splits.",
                 riakTableHandle.getSchemaName(), riakTableHandle.getTableName(),
                 splits.size());
 
+        Collections.shuffle(splits);
         return new FixedSplitSource(connectorId, splits);
-        }
     }
 }

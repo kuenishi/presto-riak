@@ -15,36 +15,31 @@ package com.basho.riak.presto;
 
 import com.basho.riak.client.*;
 import com.basho.riak.client.bucket.Bucket;
-import com.basho.riak.client.query.MultiFetchFuture;
 import com.basho.riak.client.query.StreamingOperation;
 import com.basho.riak.client.raw.pbc.PBClientConfig;
 import com.basho.riak.client.raw.pbc.PBClusterConfig;
+import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.ColumnType;
+import com.facebook.presto.spi.HostAddress;
 import com.facebook.presto.spi.RecordCursor;
+import com.facebook.presto.spi.Split;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.io.CountingInputStream;
-import com.google.common.io.InputSupplier;
 import io.airlift.log.Logger;
-import com.facebook.presto.spi.HostAddress;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
-public class RiakRecordCursor
+public class CoverageRecordCursor
         implements RecordCursor
 {
-    private static final Logger log = Logger.get(RiakRecordCursor.class);
+    private static final Logger log = Logger.get(CoverageRecordCursor.class);
 
     //private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
 
@@ -52,13 +47,11 @@ public class RiakRecordCursor
     private final String tableName;
     private final List<RiakColumnHandle> columnHandles;
     //private final int[] fieldToColumnIndex;
+    private final SplitTask splitTask;
 
     //private final Iterator<String> lines;
     private long totalBytes;
 
-
-    private final PBClusterConfig clusterConfig;
-    private IRiakClient riakClient;
     private Bucket bucket;
     private StreamingOperation<String> keyCursor;
 
@@ -66,10 +59,12 @@ public class RiakRecordCursor
     private String[] fields;
     private Map<String, Object> cursor;
 
-    public RiakRecordCursor(String schemaName,
-                            String tableName,
-                            List<RiakColumnHandle> columnHandles,//, InputSupplier<InputStream> inputStreamSupplier)
-                            List<HostAddress> addresses)
+    public CoverageRecordCursor(String schemaName,
+                                String tableName,
+                                List<RiakColumnHandle> columnHandles,//, InputSupplier<InputStream> inputStreamSupplier)
+                                List<HostAddress> addresses,
+                                SplitTask splitTask,
+                                RiakConfig riakConfig)
     {
         checkNotNull(schemaName);
         checkState(schemaName.equals("default"));
@@ -77,25 +72,18 @@ public class RiakRecordCursor
         checkNotNull(addresses);
         checkState(!addresses.isEmpty());
         checkState(!columnHandles.isEmpty());
+        checkNotNull(splitTask);
 
         this.schemaName = schemaName;
         this.tableName = tableName;
+        this.splitTask = splitTask;
 
-        clusterConfig = new PBClusterConfig(8);
-        for(HostAddress address : addresses)
-        {
-            PBClientConfig node = new PBClientConfig.Builder()
-                    .withHost(address.getHostText())
-                    .withPort(address.getPortOrDefault(8087))
-                    .build();
-            clusterConfig.addClient(node);
-        }
-        riakClient = null;
         bucket = null;
         keyCursor = null;
         buffer = new Vector<IRiakObject>();
         cursor = null;
         fields = new String[columnHandles.size()];
+        log.debug("here1");
 
         this.columnHandles = columnHandles;
 //        fieldToColumnIndex = new int[columnHandles.size()];
@@ -107,6 +95,31 @@ public class RiakRecordCursor
 //            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
         totalBytes = 0;
+        log.debug("here2");
+        try{
+            DirectConnection conn = new DirectConnection(riakConfig.getErlangNodeName(),
+                    riakConfig.getErlangCookie());
+            conn.connect(riakConfig.getLocalNode());
+            OtpErlangList objects = splitTask.fetchAllData(conn, schemaName, tableName);
+            for(OtpErlangObject o : objects){
+                buffer.add(new RiakObject(o));
+            }
+            log.info("%d key data fetched!!!", buffer.size());
+
+        }
+        catch (IOException e){
+            log.error(e);
+        }
+        catch (OtpErlangExit e){
+            log.error(e);
+        }
+        catch (OtpAuthException e){
+            log.error(e);
+        }
+        catch (OtpErlangDecodeException e){
+            log.error(e);
+        }
+        log.debug("here3");
     }
 
     @Override
@@ -131,76 +144,13 @@ public class RiakRecordCursor
     @Override
     public boolean advanceNextPosition()
     {
-        if(riakClient == null){
-            try{
-                riakClient = RiakFactory.newClient(clusterConfig);
-                bucket = riakClient.fetchBucket(tableName).execute();
-                keyCursor = bucket.keys();
-                log.debug("connected to riak");
-            }
-            catch (RiakException e)
-            {
-                log.error(e.toString());
-                riakClient.shutdown();
-                return false;
-            }
-        }
 
         if (buffer.isEmpty()) {
-
-            List<String> keys = keyCursor.getAll();
-
-            if(keys.isEmpty() && !keyCursor.hasContinuation())
-            {
-                log.debug("no more key to fetch");
-                //TODO: is this a right place to shut down the connection?
-                //riakClient.shutdown();
-                return false;
-            }
-            log.debug("first keys fetched %s", keys);
-
-            for(String key : keys)
-            {
-                //log.debug("fetching key: %s ", key);
-                try{
-                    IRiakObject riakObject = bucket.fetch(key).execute();
-                    if(riakObject != null)
-                    {
-                       buffer.add(riakObject);
-                    }
-                    else
-                    {
-                        log.error("fetched object was null? %s", riakObject);
-                    }
-                }
-                catch (RiakRetryFailedException e)
-                {
-                    log.error(e);
-                }
-            }
-            log.info("%d key data fetched", buffer.size());
-//            String[] stringKeys = keys.toArray(new String[keys.size()]);
-//            List<MultiFetchFuture<IRiakObject>> futures = bucket.multiFetch(stringKeys).execute();
-//            for(MultiFetchFuture<IRiakObject> future : futures)
-//            {
-//                try{
-//                    buffer.add(future.get());
-//            catch (InterruptedException e)
-//            {
-//                log.error(e);
-//            }
-//            catch (ExecutionException e)
-//            {
-//                log.error(e);
-//            }
-
-//            }
+            return false;
         }
 
-        checkState(!buffer.isEmpty());
-
         IRiakObject riakObject = buffer.remove(0);
-        log.debug("first key: %s", riakObject.getKey());
+        //log.debug("first key: %s", riakObject.getKey());
         //String line = lines.next();
         //fields = LINE_SPLITTER.splitToList(line);
         ObjectMapper mapper = new ObjectMapper();

@@ -21,7 +21,7 @@ import java.net.URI;
 
 public class RiakConfig
 {
-    private String hosts;
+    private String host;
     private String localNode;
     private String erlangNodeName = null; // name for distributed erlang like 'presto@127.0.0.1'
     private String erlangCookie = null;
@@ -30,24 +30,26 @@ public class RiakConfig
     public static String ERLANG_COOKIE = "riak";
 
     @Config("riak.pb.host")
-    public RiakConfig setHosts(String hosts)
+    public RiakConfig setHost(String host)
     {
-        this.hosts = hosts;
+        this.host = host;
         return this;
     }
 
-    @Config("riak.erlang.host") // like 'riak@127.0.0.1'
+    @Config("riak.erlang.node") // like 'riak@127.0.0.1'
     public RiakConfig setLocalNode(String node)
     {
         this.localNode = node;
         return this;
     }
-    @Config("presto.erlang.host") // like 'presto@127.0.0.1'
+
+    @Config("presto.erlang.node") // like 'presto@127.0.0.1'
     public RiakConfig setErlangNodeName(String erlangNodeName)
     {
         this.erlangNodeName = erlangNodeName;
         return this;
     }
+
     @Config("presto.erlang.cookie")
     public RiakConfig setErlangCookie(String cookie)
     {
@@ -56,9 +58,9 @@ public class RiakConfig
     }
 
     @NotNull
-    public String getHosts()
+    public String getHost()
     {
-        return hosts;
+        return host;
     }
 
     public String getLocalNode() { return localNode; }

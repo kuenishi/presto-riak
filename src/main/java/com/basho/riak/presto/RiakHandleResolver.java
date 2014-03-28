@@ -52,7 +52,10 @@ public class RiakHandleResolver
     @Override
     public boolean canHandle(Split split)
     {
-        return split instanceof RiakSplit && ((RiakSplit) split).getConnectorId().equals(connectorId);
+        if(split instanceof CoverageSplit){
+            return ((CoverageSplit) split).getConnectorId().equals(connectorId);
+        }
+        return false;
     }
 
     @Override
@@ -70,6 +73,6 @@ public class RiakHandleResolver
     @Override
     public Class<? extends Split> getSplitClass()
     {
-        return RiakSplit.class;
+        return CoverageSplit.class;
     }
 }

@@ -1,6 +1,7 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.*;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 
@@ -20,11 +21,14 @@ public class SplitTask {
 
     // fromString(String)
     public SplitTask(String data)
-        throws OtpErlangDecodeException
+        throws OtpErlangDecodeException, DecoderException
     {
-        byte[] binary = Base64.decodeBase64(data);
-        task = (OtpErlangTuple)binary2term(binary);
 
+        byte[] binary = Base64.decodeBase64(Hex.decodeHex(data.toCharArray()));
+        System.out.println(data);
+        System.out.println(binary);
+        task = (OtpErlangTuple)binary2term(binary);
+        System.out.println(task);
         // task = {vnode, filterVnodes}
         OtpErlangTuple vnode = (OtpErlangTuple)task.elementAt(0);
         // vnode = {index, node}
@@ -65,7 +69,9 @@ public class SplitTask {
         return ois.read_any();
     }
 
-    public void fetchAllData(DirectConnection conn, String schemaName, String tableName)
+    public OtpErlangTuple getTask(){ return this.task; }
+
+    public OtpErlangList fetchAllData(DirectConnection conn, String schemaName, String tableName)
             throws OtpErlangDecodeException, OtpAuthException, OtpErlangExit
     {
         OtpErlangTuple t  = (OtpErlangTuple)task;
@@ -74,10 +80,12 @@ public class SplitTask {
 
         try {
             OtpErlangList riakObjects = conn.processSplit(tableName.getBytes(), vnode, filterVnodes);
-            System.out.println(riakObjects);
+            //System.out.println(riakObjects);
+            return riakObjects;
         }
         catch (java.io.IOException e){
             System.err.println(e);
         }
+        return new OtpErlangList();
     }
 }

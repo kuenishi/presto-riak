@@ -79,7 +79,7 @@ public class RiakClient
     {
         checkNotNull(config, "config is null");
 
-        this.hosts = checkNotNull(config.getHosts());
+        this.hosts = checkNotNull(config.getHost());
         log.info("Riak Config: %s", hosts);
 
         HostAndPort hp = HostAndPort.fromString(hosts);
