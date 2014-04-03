@@ -80,6 +80,9 @@ public class RiakSplitManager
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
         RiakTableHandle RiakTableHandle = (RiakTableHandle) tableHandle;
 
+        log.info("==========================tupleDomain=============================");
+        log.info(tupleDomain.toString());
+
         // Riak connector has only one partition
         List<Partition> partitions = ImmutableList.<Partition>of(new RiakPartition(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName()));
         // Riak connector does not do any additional processing/filtering with the TupleDomain, so just return the whole TupleDomain

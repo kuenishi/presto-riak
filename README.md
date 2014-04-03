@@ -111,21 +111,51 @@ as JSON like this:
 ```
 
 Each table corresponds to bucket. Table definitions are stored in
-bucket properties.
+special bucket `__presto_schema` with key
+`<schema_name>.<table_name>}`. in the key there is a JSON
 
 ```
 {
-  "props" :
-  {
-    "__presto_schema" : { ... }
-    }
+    "columns": [
+        {
+            "name": "col1", 
+            "type": "STRING",
+            "2i": true
+        }, 
+        {
+            "name": "col2", 
+            "type": "LONG",
+            "2i": true
+        }, 
+        {
+            "name": "__pkey", 
+            "type": "STRING"
+        }
+    ],
+    "format":"JSON", | "json" | "msgpack" (?) ...
+    "name": "spam"
 }
 ```
 
-At startup time, presto-riak creates it all if not existing.
+Any tool to create this style of schema?
+
+## Optimization
+
+There can be several levels of optimization.
+
+- 2i configuration
+- Operator/predicate pushdown
+
+Predicates are passed to `RiakSplitManager` (implements
+`ConnectorSplitManager`) as `TupleDomain` . It includes all
+information for selection. Normal connector generates splits in
+`ConnectorSplitManager.getPartitions()` , splits are maybe with HDFS
+location associated with predicates or partition keys.
 
 ## TODOs
 
+- nested JSON objects: handle it as a single column with
+  concatinated name.
 - modes: PB API mode and direct mode. Direct mode seems now
   working while PB API mode is cut off. Needs rewrite.
 - currently OtpConnection is protected with `synchronized`
@@ -136,6 +166,7 @@ At startup time, presto-riak creates it all if not existing.
   or custom mapreduce each time? Anyway, for now
   there are no means to know join keys or predicates
   in the backend.
+- interface: how can we force users 2i properly set?
 - custom backend: bitcask nor leveldb are not optimized
   for full scanning. A backend that supports columnar
   data format like parquet / ORCFile would make it faster

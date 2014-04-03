@@ -25,6 +25,8 @@ public class RiakPartition
 {
     private final String schemaName;
     private final String tableName;
+    private final TupleDomain tupleDomain;
+    private final SplitTask splitTask;
 
     private static final Logger log = Logger.get(RiakPartition.class);
 
