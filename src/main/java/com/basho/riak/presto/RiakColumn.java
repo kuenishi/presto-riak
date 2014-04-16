@@ -27,6 +27,7 @@ public final class RiakColumn
 {
     private final String name;
     private final ColumnType type;
+    private final boolean index;
 
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
@@ -34,11 +35,13 @@ public final class RiakColumn
     @JsonCreator
     public RiakColumn(
             @JsonProperty("name") String name,
-            @JsonProperty("type") ColumnType type)
+            @JsonProperty("type") ColumnType type,
+            @JsonProperty("index") boolean index)
     {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = checkNotNull(type, "type is null");
+        this.index = index;
     }
 
     @JsonProperty
@@ -52,6 +55,9 @@ public final class RiakColumn
     {
         return type;
     }
+
+    @JsonProperty
+    public boolean getIndex() {return index;}
 
     @Override
     public int hashCode()
@@ -71,12 +77,13 @@ public final class RiakColumn
 
         com.basho.riak.presto.RiakColumn other = (com.basho.riak.presto.RiakColumn) obj;
         return Objects.equal(this.name, other.name) &&
+                (this.index == other.index) &&
                 Objects.equal(this.type, other.type);
     }
 
     @Override
     public String toString()
     {
-        return name + ":" + type;
+        return name + ":" + type + "(index="+index+")";
     }
 }

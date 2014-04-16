@@ -85,8 +85,8 @@ public class RiakTable
     }
     public static RiakTable example(String tableName)
     {
-        List<RiakColumn> cols = Arrays.asList(new RiakColumn("col1", ColumnType.STRING),
-                new RiakColumn("col2", ColumnType.LONG));
+        List<RiakColumn> cols = Arrays.asList(new RiakColumn("col1", ColumnType.STRING, false),
+                new RiakColumn("col2", ColumnType.LONG, false));
         return new RiakTable(tableName, cols);
 
     }

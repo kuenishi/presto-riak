@@ -26,13 +26,13 @@ public class Coverage {
             this.coveragePlan = conn.getCoveragePlan(9979);
         }
         catch( java.io.IOException e ) {
-            System.out.println(e);
+          //  System.out.println(e);
         }
         catch( com.ericsson.otp.erlang.OtpAuthException e ) {
-            System.out.println(e);
+          //  System.out.println(e);
         }
         catch( com.ericsson.otp.erlang.OtpErlangExit e ) {
-            System.out.println(e);
+          //  System.out.println(e);
         }
     }
 
@@ -41,8 +41,8 @@ public class Coverage {
         OtpErlangList vnodes = (OtpErlangList)this.coveragePlan.elementAt(0);
         OtpErlangObject filterVnodes = this.coveragePlan.elementAt(1);
 
-        System.out.println(vnodes);
-        System.out.println(filterVnodes);
+        //System.out.println(vnodes);
+        //System.out.println(filterVnodes);
 
         List<SplitTask> l = new ArrayList<SplitTask>();
 

@@ -130,10 +130,10 @@ public class RiakClient
             // null return if not found
             IRiakObject riakObject = bucket.fetch(schemaKey).execute();
 
-            log.debug(riakObject.toString());
-            log.debug(riakObject.getValueAsString());
+            //log.debug(riakObject.toString());
+            //log.debug(riakObject.getValueAsString());
 
-            log.debug("checking... rawDatabase");
+            //log.debug("checking... rawDatabase");
             rawDatabase = bucket.fetch(schemaKey, RawDatabase.class).execute();
 
             checkNotNull(rawDatabase, "no schema key exists in Riak");
@@ -141,7 +141,7 @@ public class RiakClient
             //else                    log.debug("rawDatabase is not null");
 
             checkNotNull(rawDatabase.tables, "bad schema that doesn't have no table property");
-            log.debug("%s tables found for schema %s", rawDatabase.tables.size(), schema);
+            //log.debug("%s tables found for schema %s", rawDatabase.tables.size(), schema);
 
             return new HashSet<String>(rawDatabase.tables);
         }

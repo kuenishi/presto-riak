@@ -183,6 +183,7 @@ public class RiakMetadata
             throw new TableNotFoundException(tableName);
         }
         log.debug("table %s found.", tableName.getTableName());
+        log.debug("%s", table.toString());
 
         List<ColumnMetadata> l = table.getColumnsMetadata();
         log.debug("table %s with %d columns.", tableName.getTableName(), l.size());

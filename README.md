@@ -43,11 +43,11 @@ test
 (2 rows)
 > use catalog riak;
 > show schemas;
-       Schema       
+       Schema
 --------------------
- default            
- information_schema 
- sys                
+ default
+ information_schema
+ sys
 (3 rows)
 ```
 
@@ -57,27 +57,27 @@ run
 
 ```
 > show tables;
-    Table    
+    Table
 -------------
- foobartable 
+ foobartable
 (1 row)
 > explain select * from foobartable;
-                                                  Query Plan                                                   
+                                                  Query Plan
 ---------------------------------------------------------------------------------------------------------------
- - Output[col1, col2, __pkey]                                                                                  
-         __pkey :=                                                                                             
-     - TableScan[riak:default:foobartable, original constraint=true] => [col1:varchar, col2:bigint, :varchar]  
-             col1 := RiakColumnHandle{connectorId=riak, columnName=col1, columnType=STRING, ordinalPosition=0} 
-             col2 := RiakColumnHandle{connectorId=riak, columnName=col2, columnType=LONG, ordinalPosition=1}   
-              := RiakColumnHandle{connectorId=riak, columnName=__pkey, columnType=STRING, ordinalPosition=2}   
-                                                                                                               
+ - Output[col1, col2, __pkey]
+         __pkey :=
+     - TableScan[riak:default:foobartable, original constraint=true] => [col1:varchar, col2:bigint, :varchar]
+             col1 := RiakColumnHandle{connectorId=riak, columnName=col1, columnType=STRING, ordinalPosition=0}
+             col2 := RiakColumnHandle{connectorId=riak, columnName=col2, columnType=LONG, ordinalPosition=1}
+              := RiakColumnHandle{connectorId=riak, columnName=__pkey, columnType=STRING, ordinalPosition=2}
+
 (1 row)
 > select * from foobartable;
- col1 | col2 | __pkey 
+ col1 | col2 | __pkey
 ------+------+--------
- yey  |   34 | k      
- yey  | NULL | k3     
- yey  |   34 | k2     
+ yey  |   34 | k
+ yey  | NULL | k3
+ yey  |   34 | k2
 (3 rows)
 ```
 
@@ -118,18 +118,19 @@ special bucket `__presto_schema` with key
 {
     "columns": [
         {
-            "name": "col1", 
+            "name": "col1",
             "type": "STRING",
-            "2i": true
-        }, 
+            "index": false
+        },
         {
-            "name": "col2", 
+            "name": "col2",
             "type": "LONG",
-            "2i": true
-        }, 
+            "index": true
+        },
         {
-            "name": "__pkey", 
-            "type": "STRING"
+            "name": "__pkey",
+            "type": "STRING",
+            "index":false
         }
     ],
     "format":"JSON", | "json" | "msgpack" (?) ...
@@ -154,19 +155,19 @@ location associated with predicates or partition keys.
 
 ## TODOs
 
-- nested JSON objects: handle it as a single column with
-  concatinated name.
-- modes: PB API mode and direct mode. Direct mode seems now
-  working while PB API mode is cut off. Needs rewrite.
-- currently OtpConnection is protected with `synchronized`
-  method in DirectConnection#call(). Needs change with
-  request id control.
 - optimization: pushing-down predicates would make it
   much faster; or changing index to find keys
   or custom mapreduce each time? Anyway, for now
   there are no means to know join keys or predicates
   in the backend.
 - interface: how can we force users 2i properly set?
+- currently OtpConnection is protected with `synchronized`
+  method in DirectConnection#call(). Needs change with
+  request id control.
+- nested JSON objects: handle it as a single column with
+  concatinated name.
+- modes: PB API mode and direct mode. Direct mode seems now
+  working while PB API mode is cut off. Needs rewrite.
 - custom backend: bitcask nor leveldb are not optimized
   for full scanning. A backend that supports columnar
   data format like parquet / ORCFile would make it faster

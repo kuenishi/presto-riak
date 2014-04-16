@@ -23,11 +23,11 @@ curl "http://$RIAK/buckets/__presto_schema/keys/__schema"
 
 curl -XPUT "http://$RIAK/buckets/__presto_schema/keys/default.foobartable" \
   -H "content-type: application/json" \
-  -d '{"name":"foobartable", "columns":[{"name":"col1","type":"STRING"},{"name":"col2","type":"LONG"},{"name":"__pkey","type":"STRING"}]}'
+  -d '{"name":"foobartable", "columns":[{"name":"col1","type":"STRING","index":false},{"name":"col2","type":"LONG","index":false},{"name":"__pkey","type":"STRING","index":false}]}'
 
 curl -XPUT "http://$RIAK/buckets/__presto_schema/keys/default.spam" \
   -H "content-type: application/json" \
-  -d '{"name":"spam", "columns":[{"name":"col1","type":"STRING"},{"name":"col2","type":"LONG"},{"name":"__pkey","type":"STRING"}]}'
+  -d '{"name":"spam", "columns":[{"name":"col1","type":"STRING","index":false},{"name":"col2","type":"LONG", "index":true},{"name":"__pkey","type":"STRING","index":false}]}'
 
 curl "http://$RIAK/buckets/__presto_schema/keys/default.foobartable"
 curl "http://$RIAK/buckets/__presto_schema/keys/default.spam"

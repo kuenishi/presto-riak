@@ -56,7 +56,7 @@ public class RiakRecordSetProvider
     public boolean canHandle(Split split)
     {
         // should be able to be casted to RiakSplit
-        log.debug("canHandle: %s", split.toString());
+        //log.debug("canHandle: %s", split.toString());
         //checkArgument(split instanceof CoverageSplit);
         if(split instanceof CoverageSplit)
         {
@@ -70,21 +70,26 @@ public class RiakRecordSetProvider
     {
         checkNotNull(split, "partitionChunk is null");
         checkArgument(split instanceof CoverageSplit);
-        log.debug("getRecordSet");
+        //log.debug("getRecordSet");
 
             CoverageSplit coverageSplit = (CoverageSplit)split;
             checkArgument(coverageSplit.getConnectorId().equals(connectorId));
+
             ImmutableList.Builder<RiakColumnHandle> handles = ImmutableList.builder();
             for (ColumnHandle handle : columns) {
                 checkArgument(handle instanceof RiakColumnHandle);
-                handles.add((RiakColumnHandle) handle);
+                RiakColumnHandle riakColumnHandle = (RiakColumnHandle)handle;
+                boolean has2i = coverageSplit.getIndexedColumns().contains(riakColumnHandle.getColumnName());
+                riakColumnHandle.setIndex(has2i);
+                handles.add(riakColumnHandle);
             }
 
-            log.debug("supplying CoverageRecordSet");
+            //log.debug("supplying CoverageRecordSet");
         try{
             return new CoverageRecordSet(coverageSplit,
                    handles.build(),
-                   riakConfig, directConnection);
+                   riakConfig, coverageSplit.getTupleDomain(),
+                   directConnection);
         }
         catch(OtpErlangDecodeException e)
         {

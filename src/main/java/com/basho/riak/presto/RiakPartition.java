@@ -18,6 +18,9 @@ import com.facebook.presto.spi.TupleDomain;
 import com.google.common.base.Objects;
 import io.airlift.log.Logger;
 
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakPartition
@@ -26,14 +29,20 @@ public class RiakPartition
     private final String schemaName;
     private final String tableName;
     private final TupleDomain tupleDomain;
-    private final SplitTask splitTask;
+    private final List<String> indexedColumns;
 
     private static final Logger log = Logger.get(RiakPartition.class);
 
-    public RiakPartition(String schemaName, String tableName)
+    public RiakPartition(String schemaName,
+                         String tableName,
+                         TupleDomain tupleDomain,
+                         List<String> indexedColumns
+        )
     {
         this.schemaName = checkNotNull(schemaName, "schema name is null");
         this.tableName = checkNotNull(tableName, "table name is null");
+        this.tupleDomain = checkNotNull(tupleDomain);
+        this.indexedColumns = checkNotNull(indexedColumns);
     }
 
     @Override
@@ -52,10 +61,12 @@ public class RiakPartition
         return tableName;
     }
 
+    public List<String> getIndexedColumns() { return indexedColumns; }
+
     @Override
     public TupleDomain getTupleDomain()
     {
-        return TupleDomain.all();
+        return tupleDomain;
     }
 
     @Override
@@ -64,6 +75,8 @@ public class RiakPartition
         return Objects.toStringHelper(this)
                 .add("schemaName", schemaName)
                 .add("tableName", tableName)
+                .add("tupleDomain", tupleDomain)
+                .add("indexColumns", indexedColumns)
                 .toString();
     }
 }

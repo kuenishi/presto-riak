@@ -19,10 +19,7 @@ import com.basho.riak.client.query.StreamingOperation;
 import com.basho.riak.client.raw.pbc.PBClientConfig;
 import com.basho.riak.client.raw.pbc.PBClusterConfig;
 import com.ericsson.otp.erlang.*;
-import com.facebook.presto.spi.ColumnType;
-import com.facebook.presto.spi.HostAddress;
-import com.facebook.presto.spi.RecordCursor;
-import com.facebook.presto.spi.Split;
+import com.facebook.presto.spi.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -48,6 +45,7 @@ public class CoverageRecordCursor
     private final List<RiakColumnHandle> columnHandles;
     //private final int[] fieldToColumnIndex;
     private final SplitTask splitTask;
+    private final TupleDomain tupleDomain;
     private final DirectConnection directConnection;
 
     //private final Iterator<String> lines;
@@ -58,6 +56,7 @@ public class CoverageRecordCursor
 
     private List<IRiakObject> buffer;
     private String[] fields;
+    private boolean[] has2i;
     private Map<String, Object> cursor;
 
     public CoverageRecordCursor(String schemaName,
@@ -65,20 +64,18 @@ public class CoverageRecordCursor
                                 List<RiakColumnHandle> columnHandles,//, InputSupplier<InputStream> inputStreamSupplier)
                                 List<HostAddress> addresses,
                                 SplitTask splitTask,
+                                TupleDomain tupleDomain,
                                 RiakConfig riakConfig,
                                 DirectConnection directConnection)
     {
-        checkNotNull(schemaName);
+        this.schemaName = checkNotNull(schemaName);
         checkState(schemaName.equals("default"));
-        checkNotNull(tableName);
+        this.tableName = checkNotNull(tableName);
         checkNotNull(addresses);
         checkState(!addresses.isEmpty());
         checkState(!columnHandles.isEmpty());
-        checkNotNull(splitTask);
-
-        this.schemaName = schemaName;
-        this.tableName = tableName;
-        this.splitTask = splitTask;
+        this.splitTask = checkNotNull(splitTask);
+        this.tupleDomain = checkNotNull(tupleDomain);
         this.directConnection = checkNotNull(directConnection);
 
         bucket = null;
@@ -86,20 +83,30 @@ public class CoverageRecordCursor
         buffer = new Vector<IRiakObject>();
         cursor = null;
         fields = new String[columnHandles.size()];
+        has2i = new boolean[columnHandles.size()];
 
         this.columnHandles = columnHandles;
 //        fieldToColumnIndex = new int[columnHandles.size()];
+
         log.debug(columnHandles.toString());
+        log.debug(tupleDomain.toString());
+
         for (int i = 0; i < columnHandles.size(); i++) {
 //            log.debug("%d, %s", i, columnHandles.get(i));
             RiakColumnHandle columnHandle = columnHandles.get(i);
             fields[i] = columnHandle.getColumnName();
+            has2i[i] = columnHandle.getIndex();
 //            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
         totalBytes = 0;
+
         try{
             DirectConnection conn = directConnection;
-            //conn.connect(riakConfig.getLocalNode());
+
+            // TODO: if tupleDomain indicates there is a predicate and
+            //       the predicate matches to the 2i then fetch via 2i.
+            //       if the predicate is on __pkey then also use 2i with <<"key">>.
+
             OtpErlangList objects = splitTask.fetchAllData(conn, schemaName, tableName);
             for(OtpErlangObject o : objects){
                 buffer.add(new RiakObject(o));
@@ -147,7 +154,7 @@ public class CoverageRecordCursor
         if (buffer.isEmpty()) {
             return false;
         }
-        log.debug("buffer length>> %d", buffer.size());
+        //log.debug("buffer length>> %d", buffer.size());
 
         IRiakObject riakObject = buffer.remove(0);
         //log.debug("first key: %s", riakObject.getKey());
@@ -155,8 +162,8 @@ public class CoverageRecordCursor
         //fields = LINE_SPLITTER.splitToList(line);
         ObjectMapper mapper = new ObjectMapper();
         try {
-            log.debug(riakObject.getKey());
-            log.debug(riakObject.getValueAsString());
+            //log.debug(riakObject.getKey());
+            //log.debug(riakObject.getValueAsString());
             cursor = mapper.readValue(riakObject.getValueAsString(), HashMap.class);
             cursor.put("__pkey", riakObject.getKey());
             totalBytes += riakObject.getValueAsString().length();

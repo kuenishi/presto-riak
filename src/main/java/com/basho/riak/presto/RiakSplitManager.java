@@ -17,14 +17,7 @@ import com.ericsson.otp.erlang.OtpAuthException;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.ericsson.otp.erlang.OtpErlangExit;
 import com.ericsson.otp.erlang.OtpErlangObject;
-import com.facebook.presto.spi.ConnectorSplitManager;
-import com.facebook.presto.spi.FixedSplitSource;
-import com.facebook.presto.spi.Partition;
-import com.facebook.presto.spi.PartitionResult;
-import com.facebook.presto.spi.Split;
-import com.facebook.presto.spi.SplitSource;
-import com.facebook.presto.spi.TableHandle;
-import com.facebook.presto.spi.TupleDomain;
+import com.facebook.presto.spi.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import io.airlift.log.Logger;
@@ -32,7 +25,9 @@ import io.airlift.log.Logger;
 import javax.inject.Inject;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -76,15 +71,30 @@ public class RiakSplitManager
     @Override
     public PartitionResult getPartitions(TableHandle tableHandle, TupleDomain tupleDomain)
     {
-        log.debug("splitter");
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
-        RiakTableHandle RiakTableHandle = (RiakTableHandle) tableHandle;
+        RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
 
         log.info("==========================tupleDomain=============================");
         log.info(tupleDomain.toString());
 
+        RiakTable table = //RiakTable.example(riakTableHandle.getTableName());
+                riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+
+        List<String> indexedColumns = new LinkedList<String>();
+        for(RiakColumn riakColumn : table.getColumns())
+        {
+            if(riakColumn.getIndex())
+            {
+                indexedColumns.add(riakColumn.getName());
+            }
+        }
+
         // Riak connector has only one partition
-        List<Partition> partitions = ImmutableList.<Partition>of(new RiakPartition(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName()));
+        List<Partition> partitions = ImmutableList.<Partition>of(new RiakPartition(riakTableHandle.getSchemaName(),
+                riakTableHandle.getTableName(),
+                tupleDomain,
+                indexedColumns));
+
         // Riak connector does not do any additional processing/filtering with the TupleDomain, so just return the whole TupleDomain
         return new PartitionResult(partitions, tupleDomain);
     }
@@ -98,7 +108,7 @@ public class RiakSplitManager
         Partition partition = partitions.get(0);
 
         checkArgument(partition instanceof RiakPartition, "partition is not an instance of RiakPartition");
-        RiakPartition RiakPartition = (RiakPartition) partition;
+        RiakPartition riakPartition = (RiakPartition) partition;
 
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
         RiakTable table = //RiakTable.example(riakTableHandle.getTableName());
@@ -106,6 +116,7 @@ public class RiakSplitManager
         // this can happen if table is removed during a query
         checkState(table != null, "Table %s.%s no longer exists", riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
 
+        log.debug("%s", table.getColumns().toString());
         // add all nodes at the cluster here
         List<Split> splits = Lists.newArrayList();
         String hosts = riakClient.getHosts();
@@ -122,15 +133,15 @@ public class RiakSplitManager
                 coverage.plan();
                 List<SplitTask> splitTasks = coverage.getSplits();
 
-                log.debug("print coverage plan==============");
-                log.debug(coverage.toString());
+                //log.debug("print coverage plan==============");
+                //log.debug(coverage.toString());
 
 
                 for(SplitTask split : splitTasks)
                 {
-                    log.debug("============printing split data at "+split.getHost()+"===============");
-                    log.debug(((OtpErlangObject)split.getTask()).toString());
-                    log.debug(split.toString());
+                    //log.debug("============printing split data at "+split.getHost()+"===============");
+                    //log.debug(((OtpErlangObject)split.getTask()).toString());
+                    //log.debug(split.toString());
 
                     //split.fetchAllData(conn, "default", "foobartable");
 
@@ -138,7 +149,9 @@ public class RiakSplitManager
                             riakTableHandle.getSchemaName(),
                             riakTableHandle.getTableName(),
                             split.getHost(),
-                            split.toString()));
+                            split.toString(),
+                            partition.getTupleDomain(),
+                            ((RiakPartition) partition).getIndexedColumns()));
                 }
             //}
 //            catch (java.io.IOException e){
@@ -157,7 +170,9 @@ public class RiakSplitManager
             // TODO: in Riak connector, you only need single access point for each presto worker???
             log.debug(hosts);
             splits.add(new CoverageSplit(connectorId, riakTableHandle.getSchemaName(),
-                    riakTableHandle.getTableName(), hosts));
+                    riakTableHandle.getTableName(), hosts,
+                    partition.getTupleDomain(),
+                    ((RiakPartition) partition).getIndexedColumns()));
 
         }
         log.debug("table %s.%s has %d splits.",

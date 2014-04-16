@@ -30,13 +30,19 @@ public final class RiakColumnHandle
     private final String connectorId;
     private final String columnName;
     private final ColumnType columnType;
+    private boolean index;
     private final int ordinalPosition;
 
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
     public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata)
     {
-        this(connectorId, columnMetadata.getName(), columnMetadata.getType(), columnMetadata.getOrdinalPosition());
+        this(connectorId, columnMetadata.getName(),
+                columnMetadata.getType(),
+                // NOTE: this default 'false' can be implicit performance lose
+                //       if there be a bug that indexedColumns lost somewhere
+                false,
+                columnMetadata.getOrdinalPosition());
     }
 
     @JsonCreator
@@ -44,11 +50,13 @@ public final class RiakColumnHandle
             @JsonProperty("connectorId") String connectorId,
             @JsonProperty("columnName") String columnName,
             @JsonProperty("columnType") ColumnType columnType,
+            @JsonProperty("index") boolean index,
             @JsonProperty("ordinalPosition") int ordinalPosition)
     {
         this.connectorId = checkNotNull(connectorId, "connectorId is null");
         this.columnName = checkNotNull(columnName, "columnName is null");
         this.columnType = checkNotNull(columnType, "columnType is null");
+        this.index = checkNotNull(index);
         this.ordinalPosition = ordinalPosition;
     }
 
@@ -69,6 +77,17 @@ public final class RiakColumnHandle
     {
         return columnType;
     }
+
+    @JsonProperty
+    public boolean getIndex()
+    {
+        return index;
+    }
+
+    public void setIndex(boolean index) {
+        this.index = index;
+    }
+
 
     @JsonProperty
     public int getOrdinalPosition()
@@ -100,6 +119,7 @@ public final class RiakColumnHandle
 
         com.basho.riak.presto.RiakColumnHandle other = (com.basho.riak.presto.RiakColumnHandle) obj;
         return Objects.equal(this.connectorId, other.connectorId) &&
+                (this.index == other.index) &&
                 Objects.equal(this.columnName, other.columnName);
     }
 
@@ -110,6 +130,7 @@ public final class RiakColumnHandle
                 .add("connectorId", connectorId)
                 .add("columnName", columnName)
                 .add("columnType", columnType)
+                .add("index", index)
                 .add("ordinalPosition", ordinalPosition)
                 .toString();
     }
