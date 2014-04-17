@@ -1,6 +1,7 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.*;
+import com.facebook.presto.spi.TupleDomain;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -88,4 +89,25 @@ public class SplitTask {
         }
         return new OtpErlangList();
     }
+
+    public OtpErlangList fetchViaIndex(DirectConnection conn, String schemaName, String tableName,
+                                       OtpErlangTuple query)
+            throws OtpErlangDecodeException, OtpAuthException, OtpErlangExit
+    {
+        OtpErlangTuple t  = (OtpErlangTuple)task;
+        OtpErlangTuple vnode = (OtpErlangTuple)t.elementAt(0);
+        OtpErlangList filterVnodes = (OtpErlangList)t.elementAt(1);
+
+        try {
+            OtpErlangList riakObjects = conn.processSplitIndex(tableName.getBytes(), vnode,
+                    filterVnodes, query);
+            //System.out.println(riakObjects);
+            return riakObjects;
+        }
+        catch (java.io.IOException e){
+            System.err.println(e);
+        }
+        return new OtpErlangList();
+    }
+
 }

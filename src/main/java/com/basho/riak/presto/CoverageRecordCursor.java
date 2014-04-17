@@ -98,6 +98,11 @@ public class CoverageRecordCursor
             has2i[i] = columnHandle.getIndex();
 //            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
+        fetchData();
+    }
+
+    private void fetchData()
+    {
         totalBytes = 0;
 
         try{
@@ -107,7 +112,26 @@ public class CoverageRecordCursor
             //       the predicate matches to the 2i then fetch via 2i.
             //       if the predicate is on __pkey then also use 2i with <<"key">>.
 
-            OtpErlangList objects = splitTask.fetchAllData(conn, schemaName, tableName);
+            OtpErlangList objects = null;
+
+            if(tupleDomain.isAll()) {
+                objects = splitTask.fetchAllData(conn, schemaName, tableName);
+
+            }else if(!tupleDomain.isNone()){
+
+                OtpErlangTuple t = buildQuery();
+                if(t == null){
+                    log.warn("there are no matching index btw %s and %s",
+                            columnHandles, tupleDomain);
+                    objects = splitTask.fetchAllData(conn, schemaName, tableName);
+                }
+                else
+                {
+                    objects = splitTask.fetchViaIndex(conn,
+                            schemaName, tableName,
+                            buildQuery());
+                }
+            }
             for(OtpErlangObject o : objects){
                 buffer.add(new RiakObject(o));
 
@@ -126,6 +150,94 @@ public class CoverageRecordCursor
         catch (OtpErlangDecodeException e){
             log.error(e);
         }
+    }
+
+    // {range, Field, Start, End} or {eq, Field, Val} <- columnHandles and tupleDomain
+    private OtpErlangTuple buildQuery() //List<RiakColumnHandle> columnHandles,
+                                        //TupleDomain tupleDom)
+    {
+
+        // case where a='b'
+        Map<ColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
+        for(Map.Entry<ColumnHandle, ?> fixedValue : fixedValues.entrySet()){
+            RiakColumnHandle c = (RiakColumnHandle)fixedValue.getKey();
+            for(RiakColumnHandle columnHandle : columnHandles)
+            {
+                if(c.getColumnName().equals(columnHandle.getColumnName())
+                        && c.getColumnType().equals(columnHandle.getColumnType())
+                        && columnHandle.getIndex())
+                {
+                    String field = null;
+                    OtpErlangObject value;
+                    if(columnHandle.getColumnType() == ColumnType.LONG)
+                    {
+                        field = columnHandle.getColumnName() + "_int";
+                        Long l = (Long)fixedValue.getValue();
+                        value = new OtpErlangLong(l.longValue());
+                    }
+                    else if(columnHandle.getColumnType() == ColumnType.STRING)
+                    {
+                        field = columnHandle.getColumnName() + "_bin";
+                        String s = (String)fixedValue.getValue();
+                        value = new OtpErlangBinary(s.getBytes());
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    OtpErlangObject[] t = {
+                                    new OtpErlangAtom("eq"),
+                                    new OtpErlangBinary(field.toCharArray()),
+                                    value};
+
+                    return new OtpErlangTuple(t);
+                }
+            }
+        }
+
+        //case where a < b and ... blah
+        for(Map.Entry<ColumnHandle, Domain> entry : tupleDomain.getDomains().entrySet())
+        {
+            RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
+            for(RiakColumnHandle columnHandle: columnHandles)
+            {
+                if(c.getColumnName().equals(columnHandle.getColumnName())
+                        && c.getColumnType().equals(columnHandle.getColumnType())
+                        && columnHandle.getIndex())
+                {
+                    String field = null;
+                    OtpErlangObject lhs, rhs;
+                    Range span = entry.getValue().getRanges().getSpan();
+                    if(columnHandle.getColumnType() == ColumnType.LONG)
+                    {
+                        field = columnHandle.getColumnName() + "_int";
+                        Long l = (Long)span.getLow().getValue();
+                        Long r = (Long)span.getHigh().getValue();
+                        lhs = new OtpErlangLong(l.longValue());
+                        rhs = new OtpErlangLong(l.longValue());
+                    }
+                    else if(columnHandle.getColumnType() == ColumnType.STRING)
+                    {
+                        field = columnHandle.getColumnName() + "_bin";
+                        String l = (String)span.getLow().getValue();
+                        String r = (String)span.getHigh().getValue();
+                        lhs = new OtpErlangBinary(l.getBytes());
+                        rhs = new OtpErlangBinary(r.getBytes());
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    OtpErlangObject[] t = {
+                            new OtpErlangAtom("range"),
+                            new OtpErlangBinary(field.toCharArray()),
+                            lhs, rhs};
+
+                    return new OtpErlangTuple(t);
+                }
+            }
+        }
+        return null;
     }
 
     @Override

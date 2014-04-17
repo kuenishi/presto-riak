@@ -3,6 +3,7 @@ package com.basho.riak.presto;
 // /usr/local/erlang/R16B03-1/lib/erlang/lib/jinterface-1.5.8/priv/OtpErlang.jar
 // or 1.5.6 on maven repo.
 import com.ericsson.otp.erlang.*;
+import com.facebook.presto.spi.Range;
 import com.google.inject.Inject;
 
 import java.io.IOException;
@@ -134,6 +135,17 @@ public class DirectConnection {
         OtpErlangObject[] argv = {new OtpErlangBinary(bucket), vnode, filterVnodes};
         return this.call("ldna", "process_split", new OtpErlangList(argv));
     }
+
+    // index : in Riak it's foobar_int, foobar_bin but this is just a column name
+    public OtpErlangList processSplitIndex(byte[] bucket, OtpErlangTuple vnode,
+                                           OtpErlangList filterVnodes,
+                                           OtpErlangTuple query)
+            throws java.io.IOException , OtpErlangExit , OtpAuthException
+    {
+        OtpErlangObject[] argv = {new OtpErlangBinary(bucket), vnode, filterVnodes, query};
+        return this.call("ldna", "process_split", new OtpErlangList(argv));
+    }
+
 
     // vnode, bucket -> [riak_object()]
     public OtpErlangObject fetchVNodeData(OtpErlangObject vnode,

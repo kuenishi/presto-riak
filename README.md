@@ -160,7 +160,7 @@ location associated with predicates or partition keys.
   or custom mapreduce each time? Anyway, for now
   there are no means to know join keys or predicates
   in the backend.
-- interface: how can we force users 2i properly set?
+- interface: how can we force users 2i properly set? - nothing.
 - currently OtpConnection is protected with `synchronized`
   method in DirectConnection#call(). Needs change with
   request id control.
