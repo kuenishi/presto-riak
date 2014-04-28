@@ -79,8 +79,9 @@ public class SplitTask {
         OtpErlangTuple vnode = (OtpErlangTuple)t.elementAt(0);
         OtpErlangList filterVnodes = (OtpErlangList)t.elementAt(1);
 
+        String bucket = schemaName + "." + tableName;
         try {
-            OtpErlangList riakObjects = conn.processSplit(tableName.getBytes(), vnode, filterVnodes);
+            OtpErlangList riakObjects = conn.processSplit(bucket.getBytes(), vnode, filterVnodes);
             //System.out.println(riakObjects);
             return riakObjects;
         }
@@ -98,8 +99,10 @@ public class SplitTask {
         OtpErlangTuple vnode = (OtpErlangTuple)t.elementAt(0);
         OtpErlangList filterVnodes = (OtpErlangList)t.elementAt(1);
 
+        String bucket = schemaName + "." + tableName;
+
         try {
-            OtpErlangList riakObjects = conn.processSplitIndex(tableName.getBytes(), vnode,
+            OtpErlangList riakObjects = conn.processSplitIndex(bucket.getBytes(), vnode,
                     filterVnodes, query);
             //System.out.println(riakObjects);
             return riakObjects;
