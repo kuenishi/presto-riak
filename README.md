@@ -155,12 +155,14 @@ location associated with predicates or partition keys.
 
 ## TODOs
 
+- sibling handling: can they be handled as multiple tuples?
+  or never use allow_mult, choose first, or whatever.
 - optimization: pushing-down predicates would make it
   much faster; or changing index to find keys
   or custom mapreduce each time? Anyway, for now
   there are no means to know join keys or predicates
   in the backend.
-- interface: how can we force users 2i properly set? - nothing.
+   => maybe HyperLogLog in Riak, or eleveldb ????
 - currently OtpConnection is protected with `synchronized`
   method in DirectConnection#call(). Needs change with
   request id control.
@@ -171,3 +173,7 @@ location associated with predicates or partition keys.
 - custom backend: bitcask nor leveldb are not optimized
   for full scanning. A backend that supports columnar
   data format like parquet / ORCFile would make it faster
+
+## DONE
+
+- interface: how can we force users 2i properly set? - nothing.
