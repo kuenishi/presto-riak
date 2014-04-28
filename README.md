@@ -177,3 +177,19 @@ location associated with predicates or partition keys.
 ## DONE
 
 - interface: how can we force users 2i properly set? - nothing.
+
+
+## dev setup
+
+Riak
+
+```sh
+$ git clone git:github.com/basho/riak
+$ cd riak
+$ make stage
+$ sed -e 's/storage_backend = bitcask/storage_backend = leveldb/' -i.back rel/riak/etc/riak.conf
+$ sed -e 's/## ring_size = 64/ring_size = 8/' -i.back rel/riak/etc/riak.conf
+$ cp ldna.beam rel/riak/lib/basho-patches
+$ ulimit -n 4096
+$ rel/riak/bin/riak start
+```
