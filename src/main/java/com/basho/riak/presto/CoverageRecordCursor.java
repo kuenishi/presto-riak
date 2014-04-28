@@ -115,6 +115,8 @@ public class CoverageRecordCursor
             OtpErlangList objects = null;
 
             if(tupleDomain.isAll()) {
+                log.info("using coverage query on %s:%s, this may take a long time!!",
+                        schemaName, tableName);
                 objects = splitTask.fetchAllData(conn, schemaName, tableName);
 
             }else if(!tupleDomain.isNone()){
