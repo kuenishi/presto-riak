@@ -26,10 +26,7 @@ public class SplitTask {
     {
 
         byte[] binary = Base64.decodeBase64(Hex.decodeHex(data.toCharArray()));
-        System.out.println(data);
-        System.out.println(binary);
         task = (OtpErlangTuple)binary2term(binary);
-        System.out.println(task);
         // task = {vnode, filterVnodes}
         OtpErlangTuple vnode = (OtpErlangTuple)task.elementAt(0);
         // vnode = {index, node}
