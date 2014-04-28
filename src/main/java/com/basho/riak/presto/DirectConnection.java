@@ -137,7 +137,7 @@ public class DirectConnection {
     }
 
     // index : in Riak it's foobar_int, foobar_bin but this is just a column name
-    public OtpErlangList processSplitIndex(byte[] bucket, OtpErlangTuple vnode,
+    public OtpErlangTuple processSplitIndex(byte[] bucket, OtpErlangTuple vnode,
                                            OtpErlangList filterVnodes,
                                            OtpErlangTuple query)
             throws java.io.IOException , OtpErlangExit , OtpAuthException

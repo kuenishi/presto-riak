@@ -102,8 +102,9 @@ public class SplitTask {
         String bucket = schemaName + "." + tableName;
 
         try {
-            OtpErlangList riakObjects = conn.processSplitIndex(bucket.getBytes(), vnode,
+            OtpErlangTuple result = conn.processSplitIndex(bucket.getBytes(), vnode,
                     filterVnodes, query);
+            OtpErlangList riakObjects = (OtpErlangList)result.elementAt(1);
             //System.out.println(riakObjects);
             return riakObjects;
         }

@@ -121,17 +121,18 @@ public class CoverageRecordCursor
 
             }else if(!tupleDomain.isNone()){
 
-                OtpErlangTuple t = buildQuery();
-                if(t == null){
+                OtpErlangTuple query = buildQuery();
+                log.info("2i query '%s' on %s:%s", query, schemaName, tableName);
+                if(query == null){
                     log.warn("there are no matching index btw %s and %s",
                             columnHandles, tupleDomain);
                     objects = splitTask.fetchAllData(conn, schemaName, tableName);
                 }
                 else
                 {
+
                     objects = splitTask.fetchViaIndex(conn,
-                            schemaName, tableName,
-                            buildQuery());
+                            schemaName, tableName, query);
                 }
             }
             for(OtpErlangObject o : objects){
@@ -189,7 +190,7 @@ public class CoverageRecordCursor
                     }
                     OtpErlangObject[] t = {
                                     new OtpErlangAtom("eq"),
-                                    new OtpErlangBinary(field.toCharArray()),
+                                    new OtpErlangBinary(field.getBytes()),
                                     value};
 
                     return new OtpErlangTuple(t);
@@ -232,7 +233,7 @@ public class CoverageRecordCursor
                     }
                     OtpErlangObject[] t = {
                             new OtpErlangAtom("range"),
-                            new OtpErlangBinary(field.toCharArray()),
+                            new OtpErlangBinary(field.getBytes()),
                             lhs, rhs};
 
                     return new OtpErlangTuple(t);
