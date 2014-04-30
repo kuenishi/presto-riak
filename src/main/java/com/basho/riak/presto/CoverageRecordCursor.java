@@ -211,21 +211,42 @@ public class CoverageRecordCursor
                     String field = null;
                     OtpErlangObject lhs, rhs;
                     Range span = entry.getValue().getRanges().getSpan();
+                    //log.debug("value:%s, range:%s, span:%s",
+                    //        entry.getValue(), entry.getValue().getRanges(),span);
+                    //log.debug("min: %s max:%s", span.getLow(), span.getHigh());
                     if(columnHandle.getColumnType() == ColumnType.LONG)
                     {
                         field = columnHandle.getColumnName() + "_int";
-                        Long l = (Long)span.getLow().getValue();
-                        Long r = (Long)span.getHigh().getValue();
+                        // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
+                        Long l = Long.MIN_VALUE;
+                        if(! span.getLow().isLowerUnbounded()){
+                            l = (Long)span.getLow().getValue();
+                        }
+                        // NOTE: Both Erlang and JSON can express greater integer lang Long.MAX_VALUE
+                        Long r = Long.MAX_VALUE;
+                        if(! span.getHigh().isUpperUnbounded()){
+                            r = (Long)span.getHigh().getValue();
+                        }
+
                         lhs = new OtpErlangLong(l.longValue());
-                        rhs = new OtpErlangLong(l.longValue());
+                        rhs = new OtpErlangLong(r.longValue());
                     }
                     else if(columnHandle.getColumnType() == ColumnType.STRING)
                     {
                         field = columnHandle.getColumnName() + "_bin";
-                        String l = (String)span.getLow().getValue();
-                        String r = (String)span.getHigh().getValue();
-                        lhs = new OtpErlangBinary(l.getBytes());
-                        rhs = new OtpErlangBinary(r.getBytes());
+                        //Byte m = Byte.MIN_VALUE;
+                        byte[] l = {0};
+                        if(!span.getLow().isLowerUnbounded()){
+                            l = ((String)span.getLow().getValue()).getBytes();
+                        }
+                        Byte m2 = Byte.MAX_VALUE;
+                        byte[] r = {m2.byteValue()};
+                        if(!span.getHigh().isUpperUnbounded()){
+                            r = ((String)span.getHigh().getValue()).getBytes();
+                        }
+                        lhs = new OtpErlangBinary(l);
+                        rhs = new OtpErlangBinary(r);
+
                     }
                     else
                     {
@@ -235,7 +256,6 @@ public class CoverageRecordCursor
                             new OtpErlangAtom("range"),
                             new OtpErlangBinary(field.getBytes()),
                             lhs, rhs};
-
                     return new OtpErlangTuple(t);
                 }
             }
