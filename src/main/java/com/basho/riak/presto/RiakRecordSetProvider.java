@@ -14,10 +14,10 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
-import com.facebook.presto.spi.ColumnHandle;
+import com.facebook.presto.spi.ConnectorColumnHandle;
 import com.facebook.presto.spi.ConnectorRecordSetProvider;
 import com.facebook.presto.spi.RecordSet;
-import com.facebook.presto.spi.Split;
+import com.facebook.presto.spi.ConnectorSplit;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
 import org.apache.commons.codec.DecoderException;
@@ -53,20 +53,8 @@ public class RiakRecordSetProvider
     }
 
     @Override
-    public boolean canHandle(Split split)
-    {
-        // should be able to be casted to RiakSplit
-        //log.debug("canHandle: %s", split.toString());
-        //checkArgument(split instanceof CoverageSplit);
-        if(split instanceof CoverageSplit)
-        {
-            return ((CoverageSplit) split).getConnectorId().equals(connectorId);
-        }
-        return false;
-    }
-
-    @Override
-    public RecordSet getRecordSet(Split split, List<? extends ColumnHandle> columns)
+    public RecordSet getRecordSet(ConnectorSplit split,
+                                  List<? extends ConnectorColumnHandle> columns)
     {
         checkNotNull(split, "partitionChunk is null");
         checkArgument(split instanceof CoverageSplit);
@@ -76,7 +64,7 @@ public class RiakRecordSetProvider
             checkArgument(coverageSplit.getConnectorId().equals(connectorId));
 
             ImmutableList.Builder<RiakColumnHandle> handles = ImmutableList.builder();
-            for (ColumnHandle handle : columns) {
+            for (ConnectorColumnHandle handle : columns) {
                 checkArgument(handle instanceof RiakColumnHandle);
                 RiakColumnHandle riakColumnHandle = (RiakColumnHandle)handle;
                 boolean has2i = coverageSplit.getIndexedColumns().contains(riakColumnHandle.getColumnName());

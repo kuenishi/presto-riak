@@ -1,8 +1,8 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
+import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.HostAddress;
-import com.facebook.presto.spi.Split;
 import com.facebook.presto.spi.TupleDomain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Created by kuenishi on 14/03/28.
  */
-public class CoverageSplit implements Split{
+public class CoverageSplit implements ConnectorSplit {
 
 
     private final String connectorId;

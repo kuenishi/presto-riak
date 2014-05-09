@@ -44,37 +44,35 @@ public class RiakMetadata
     }
 
     @Override
-    public boolean canHandle(TableHandle tableHandle)
-    {
-        return tableHandle instanceof RiakTableHandle && ((RiakTableHandle) tableHandle).getConnectorId().equals(connectorId);
+    public ConnectorTableHandle getTableHandle(ConnectorSession connectorSession, SchemaTableName schemaTableName) {
+        log.info("getTableHandle;");
+        if (!listSchemaNames(connectorSession).contains(schemaTableName.getSchemaName())) {
+            log.error("no schema %d found", schemaTableName);
+            return null;
+        }
+
+        RiakTable table = riakClient.getTable(schemaTableName.getSchemaName(),
+                                            schemaTableName.getTableName());
+        if (table == null) {
+            log.error("no tables found at %d", schemaTableName);
+            return null;
+        }
+        return new RiakTableHandle(connectorId, schemaTableName.getSchemaName(), schemaTableName.getTableName());
     }
 
     // called from `show schemas`;
     @Override
-    public List<String> listSchemaNames()
-    {
+    public List<String> listSchemaNames(ConnectorSession connectorSession) {
+        // TODO: support other schema name than default!!
         log.info("RiakMetadata.listSchemaNames();");
+        log.info("%s", connectorSession);
         List<String> list = Arrays.asList("default");
         return ImmutableList.copyOf(riakClient.getSchemaNames());
     }
 
-    @Override
-    public RiakTableHandle getTableHandle(SchemaTableName tableName)
-    {
-        log.info("getTableHandle;");
-        if (!listSchemaNames().contains(tableName.getSchemaName())) {
-            return null;
-        }
-
-//        RiakTable table = RiakClient.getTable(tableName.getSchemaName(), tableName.getTableName());
-//        if (table == null) {
-//            return null;
-//        }
-        return new RiakTableHandle(connectorId, tableName.getSchemaName(), tableName.getTableName());
-    }
 
     @Override
-    public ConnectorTableMetadata getTableMetadata(TableHandle table)
+    public ConnectorTableMetadata getTableMetadata(ConnectorTableHandle table)
     {
         log.info("getTableMetadata");
         checkArgument(table instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
@@ -87,14 +85,12 @@ public class RiakMetadata
 
     // called from `show tables;`
     @Override
-    public List<SchemaTableName> listTables(String schemaNameOrNull)
-    {
+    public List<SchemaTableName> listTables(ConnectorSession connectorSession, String schemaNameOrNull) {
+
         log.info("listTables for %s;", schemaNameOrNull);
 
         Set<String> schemaNames;
         if (schemaNameOrNull != null) {
-            log.info("here");
-
             schemaNames = ImmutableSet.of(schemaNameOrNull);
         }
         else {
@@ -102,7 +98,6 @@ public class RiakMetadata
             log.info("%s schemas.", schemaNames);
             log.info(schemaNames.toString());
         }
-        log.info("here");
 
         ImmutableList.Builder<SchemaTableName> builder = ImmutableList.builder();
         for (String schemaName : schemaNames) {
@@ -113,27 +108,44 @@ public class RiakMetadata
             }
         }
         log.info("listTables for %s: %d tables found", schemaNameOrNull,
-                2345);
+                schemaNames.size());
 
         return builder.build();
     }
 
     @Override
-    public ColumnHandle getColumnHandle(TableHandle tableHandle, String columnName)
+    public Map<SchemaTableName, List<ColumnMetadata>> listTableColumns(ConnectorSession connectorSession,
+                                                                       SchemaTablePrefix prefix)
+    {
+        log.info("listTableColumns");
+        checkNotNull(prefix, "prefix is null");
+        ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
+        for (SchemaTableName tableName : listTables(connectorSession, prefix.getSchemaName())) {
+            ConnectorTableMetadata tableMetadata = getTableMetadata(tableName);
+            // table can disappear during listing operation
+            if (tableMetadata != null) {
+                columns.put(tableName, tableMetadata.getColumns());
+            }
+        }
+        return columns.build();
+    }
+
+    @Override
+    public ConnectorColumnHandle getColumnHandle(ConnectorTableHandle tableHandle, String columnName)
     {
         log.info("getColumnHandle");
         return getColumnHandles(tableHandle).get(columnName);
     }
 
     @Override
-    public ColumnHandle getSampleWeightColumnHandle(TableHandle tableHandle)
+    public ConnectorColumnHandle getSampleWeightColumnHandle(ConnectorTableHandle tableHandle)
     {
         log.debug("getSampleWeightColumnHandle;");
         return null;
     }
 
     @Override
-    public Map<String, ColumnHandle> getColumnHandles(TableHandle tableHandle)
+    public Map<String, ConnectorColumnHandle> getColumnHandles(ConnectorTableHandle tableHandle)
     {
         checkNotNull(tableHandle, "tableHandle is null");
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
@@ -147,35 +159,20 @@ public class RiakMetadata
         }
         log.debug("table %s found.", riakTableHandle.getTableName());
 
-        ImmutableMap.Builder<String, ColumnHandle> columnHandles = ImmutableMap.builder();
+        ImmutableMap.Builder<String, ConnectorColumnHandle> columnHandles = ImmutableMap.builder();
         for (ColumnMetadata columnMetadata : table.getColumnsMetadata()) {
             columnHandles.put(columnMetadata.getName(), new RiakColumnHandle(connectorId, columnMetadata));
         }
         return columnHandles.build();
     }
 
-    @Override
-    public Map<SchemaTableName, List<ColumnMetadata>> listTableColumns(SchemaTablePrefix prefix)
-    {
-        log.info("listTableColumns");
-        checkNotNull(prefix, "prefix is null");
-        ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
-        for (SchemaTableName tableName : listTables(prefix)) {
-            ConnectorTableMetadata tableMetadata = getTableMetadata(tableName);
-            // table can disappear during listing operation
-            if (tableMetadata != null) {
-                columns.put(tableName, tableMetadata.getColumns());
-            }
-        }
-        return columns.build();
-    }
 
     private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName)
     {
         log.info("getTableMetadata>> %s", tableName.toString());
-        if (!listSchemaNames().contains(tableName.getSchemaName())) {
-            return null;
-        }
+//        if (!listSchemaNames().contains(tableName.getSchemaName())) {
+ //           return null;
+  //      }
 
         RiakTable table = //RiakTable.example(tableName.getTableName());
                 riakClient.getTable(tableName.getSchemaName(), tableName.getTableName());
@@ -191,17 +188,17 @@ public class RiakMetadata
         return new ConnectorTableMetadata(tableName,l);
     }
 
-    private List<SchemaTableName> listTables(SchemaTablePrefix prefix)
+  /*  private List<SchemaTableName> listTables(SchemaTablePrefix prefix)
     {
         log.debug("listTalbles for %s", prefix.getSchemaName());
         if (prefix.getSchemaName() == null) {
-            return listTables(prefix.getSchemaName());
+          //  return listTables(prefix.getSchemaName());
         }
         return ImmutableList.of(new SchemaTableName(prefix.getSchemaName(), prefix.getTableName()));
     }
-
+*/
     @Override
-    public ColumnMetadata getColumnMetadata(TableHandle tableHandle, ColumnHandle columnHandle)
+    public ColumnMetadata getColumnMetadata(ConnectorTableHandle tableHandle, ConnectorColumnHandle columnHandle)
     {
         log.info("getColumnMetadata");
         checkNotNull(tableHandle, "tableHandle is null");

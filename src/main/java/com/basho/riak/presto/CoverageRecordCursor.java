@@ -20,10 +20,12 @@ import com.basho.riak.client.raw.pbc.PBClientConfig;
 import com.basho.riak.client.raw.pbc.PBClusterConfig;
 import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.*;
+import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import io.airlift.log.Logger;
+import io.airlift.slice.Slice;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -155,30 +157,42 @@ public class CoverageRecordCursor
         }
     }
 
+    @Override
+    public Slice getSlice(int i) {
+        log.debug("getSlice called");
+        return null;
+    }
+
+    @Override
+    public long getReadTimeNanos() {
+        log.debug("getReadTimeNanos");
+        return 0;
+    }
+
     // {range, Field, Start, End} or {eq, Field, Val} <- columnHandles and tupleDomain
     private OtpErlangTuple buildQuery() //List<RiakColumnHandle> columnHandles,
                                         //TupleDomain tupleDom)
     {
 
         // case where a='b'
-        Map<ColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
-        for(Map.Entry<ColumnHandle, ?> fixedValue : fixedValues.entrySet()){
+        Map<ConnectorColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
+        for(Map.Entry<ConnectorColumnHandle, ?> fixedValue : fixedValues.entrySet()){
             RiakColumnHandle c = (RiakColumnHandle)fixedValue.getKey();
             for(RiakColumnHandle columnHandle : columnHandles)
             {
                 if(c.getColumnName().equals(columnHandle.getColumnName())
-                        && c.getColumnType().equals(columnHandle.getColumnType())
+                        && c.getType().equals(columnHandle.getType())
                         && columnHandle.getIndex())
                 {
                     String field = null;
                     OtpErlangObject value;
-                    if(columnHandle.getColumnType() == ColumnType.LONG)
+                    if(columnHandle.getType() == BigintType.BIGINT)
                     {
                         field = columnHandle.getColumnName() + "_int";
                         Long l = (Long)fixedValue.getValue();
                         value = new OtpErlangLong(l.longValue());
                     }
-                    else if(columnHandle.getColumnType() == ColumnType.STRING)
+                    else if(columnHandle.getType() == VarcharType.VARCHAR)
                     {
                         field = columnHandle.getColumnName() + "_bin";
                         String s = (String)fixedValue.getValue();
@@ -199,13 +213,14 @@ public class CoverageRecordCursor
         }
 
         //case where a < b and ... blah
-        for(Map.Entry<ColumnHandle, Domain> entry : tupleDomain.getDomains().entrySet())
+        Map<ConnectorColumnHandle, Domain> map = tupleDomain.getDomains();
+        for(Map.Entry<ConnectorColumnHandle, Domain> entry : map.entrySet())
         {
             RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
             for(RiakColumnHandle columnHandle: columnHandles)
             {
                 if(c.getColumnName().equals(columnHandle.getColumnName())
-                        && c.getColumnType().equals(columnHandle.getColumnType())
+                        && c.getType().equals(columnHandle.getType())
                         && columnHandle.getIndex())
                 {
                     String field = null;
@@ -214,7 +229,7 @@ public class CoverageRecordCursor
                     //log.debug("value:%s, range:%s, span:%s",
                     //        entry.getValue(), entry.getValue().getRanges(),span);
                     //log.debug("min: %s max:%s", span.getLow(), span.getHigh());
-                    if(columnHandle.getColumnType() == ColumnType.LONG)
+                    if(columnHandle.getType() == BigintType.BIGINT)
                     {
                         field = columnHandle.getColumnName() + "_int";
                         // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
@@ -231,7 +246,7 @@ public class CoverageRecordCursor
                         lhs = new OtpErlangLong(l.longValue());
                         rhs = new OtpErlangLong(r.longValue());
                     }
-                    else if(columnHandle.getColumnType() == ColumnType.STRING)
+                    else if(columnHandle.getType() == VarcharType.VARCHAR)
                     {
                         field = columnHandle.getColumnName() + "_bin";
                         //Byte m = Byte.MIN_VALUE;
@@ -276,10 +291,10 @@ public class CoverageRecordCursor
     }
 
     @Override
-    public ColumnType getType(int field)
+    public Type getType(int field)
     {
         checkArgument(field < columnHandles.size(), "Invalid field index");
-        return columnHandles.get(field).getColumnType();
+        return columnHandles.get(field).getType();
     }
 
     @Override
@@ -331,28 +346,27 @@ public class CoverageRecordCursor
     @Override
     public boolean getBoolean(int field)
     {
-        checkFieldType(field, ColumnType.BOOLEAN);
+        checkFieldType(field, BooleanType.BOOLEAN);
         return Boolean.parseBoolean(getFieldValue(field));
     }
 
     @Override
     public long getLong(int field)
     {
-        checkFieldType(field, ColumnType.LONG);
+        checkFieldType(field, BigintType.BIGINT);
         return Long.parseLong(getFieldValue(field));
     }
 
     @Override
     public double getDouble(int field)
     {
-        checkFieldType(field, ColumnType.DOUBLE);
+        checkFieldType(field, DoubleType.DOUBLE);
         return Double.parseDouble(getFieldValue(field));
     }
 
-    @Override
     public byte[] getString(int field)
     {
-        checkFieldType(field, ColumnType.STRING);
+        checkFieldType(field, VarcharType.VARCHAR);
         return getFieldValue(field).getBytes(Charsets.UTF_8);
     }
 
@@ -363,9 +377,9 @@ public class CoverageRecordCursor
         return Strings.isNullOrEmpty(getFieldValue(field));
     }
 
-    private void checkFieldType(int field, ColumnType expected)
+    private void checkFieldType(int field, Type expected)
     {
-        ColumnType actual = getType(field);
+        Type actual = getType(field);
         checkArgument(actual == expected, "Expected field %s to be type %s but is %s", field, expected, actual);
     }
 

@@ -14,7 +14,8 @@
 package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.ColumnType;
+import com.facebook.presto.spi.type.BigintType;
+import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
@@ -49,7 +50,7 @@ public class RiakTable
         int index = 0;
         ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
         for (RiakColumn column : this.columns) {
-            columnsMetadata.add(new ColumnMetadata(column.getName(), column.getType(), index, false));
+            columnsMetadata.add(new ColumnMetadata(column.getName(), column.getSpiType(), index, false));
             index++;
         }
         this.columnsMetadata = columnsMetadata.build();
@@ -85,8 +86,8 @@ public class RiakTable
     }
     public static RiakTable example(String tableName)
     {
-        List<RiakColumn> cols = Arrays.asList(new RiakColumn("col1", ColumnType.STRING, false),
-                new RiakColumn("col2", ColumnType.LONG, false));
+        List<RiakColumn> cols = Arrays.asList(new RiakColumn("col1", "STRING", false),
+                new RiakColumn("col2", "LONG", false));
         return new RiakTable(tableName, cols);
 
     }

@@ -13,9 +13,9 @@
  */
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.ColumnType;
+import com.facebook.presto.spi.ConnectorColumnHandle;
+import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -24,12 +24,12 @@ import io.airlift.log.Logger;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakColumnHandle
-        implements ColumnHandle
+        implements ConnectorColumnHandle
 {
     public static final String PKEY_COLUMN_NAME = "__pkey";
     private final String connectorId;
     private final String columnName;
-    private final ColumnType columnType;
+    private final Type type;
     private boolean index;
     private final int ordinalPosition;
 
@@ -49,13 +49,13 @@ public final class RiakColumnHandle
     public RiakColumnHandle(
             @JsonProperty("connectorId") String connectorId,
             @JsonProperty("columnName") String columnName,
-            @JsonProperty("columnType") ColumnType columnType,
+            @JsonProperty("type") Type type,
             @JsonProperty("index") boolean index,
             @JsonProperty("ordinalPosition") int ordinalPosition)
     {
         this.connectorId = checkNotNull(connectorId, "connectorId is null");
         this.columnName = checkNotNull(columnName, "columnName is null");
-        this.columnType = checkNotNull(columnType, "columnType is null");
+        this.type = checkNotNull(type, "type is null");
         this.index = checkNotNull(index);
         this.ordinalPosition = ordinalPosition;
     }
@@ -73,9 +73,9 @@ public final class RiakColumnHandle
     }
 
     @JsonProperty
-    public ColumnType getColumnType()
+    public Type getType()
     {
-        return columnType;
+        return type;
     }
 
     @JsonProperty
@@ -98,7 +98,7 @@ public final class RiakColumnHandle
     public ColumnMetadata getColumnMetadata()
     {
         //boolean isPartitionKey = columnName.equals(PKEY_COLUMN_NAME);
-        return new ColumnMetadata(columnName, columnType, ordinalPosition, false);
+        return new ColumnMetadata(columnName, type, ordinalPosition, false);
     }
 
     @Override
@@ -129,7 +129,7 @@ public final class RiakColumnHandle
         return Objects.toStringHelper(this)
                 .add("connectorId", connectorId)
                 .add("columnName", columnName)
-                .add("columnType", columnType)
+                .add("type", type)
                 .add("index", index)
                 .add("ordinalPosition", ordinalPosition)
                 .toString();

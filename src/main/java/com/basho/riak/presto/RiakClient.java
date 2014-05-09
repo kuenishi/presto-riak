@@ -171,8 +171,10 @@ public class RiakClient
             Bucket bucket = client.createBucket(META_BUCKET_NAME).execute();
 
             String tableKey = schema + "." + tableName;
+            log.debug("foobar;-");
             RiakTable table = bucket.fetch(tableKey, RiakTable.class).execute();
 
+            log.debug("foobar;--");
             checkNotNull(table, "table schema (%s) wasn't found.", tableKey);
             log.debug("table %s schema found.", tableName);
 

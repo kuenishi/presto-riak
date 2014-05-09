@@ -15,6 +15,7 @@ package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.facebook.presto.spi.*;
+import com.facebook.presto.spi.type.Type;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
 import org.apache.commons.codec.DecoderException;
@@ -32,7 +33,7 @@ public class CoverageRecordSet
     private final String schemaName;
     private final String tableName;
     private final List<RiakColumnHandle> columnHandles;
-    private final List<ColumnType> columnTypes;
+    private final List<Type> types;
     private final List<HostAddress> addresses;
     //private final InputSupplier<InputStream> inputStreamSupplier;
     private final SplitTask splitTask;
@@ -52,16 +53,16 @@ public class CoverageRecordSet
     {
         checkNotNull(split, "split is null");
         this.columnHandles = checkNotNull(columnHandles, "column handles is null");
-        ImmutableList.Builder<ColumnType> types = ImmutableList.builder();
+        ImmutableList.Builder<Type> types = ImmutableList.builder();
         for (RiakColumnHandle column : columnHandles) {
-            types.add(column.getColumnType());
+            types.add(column.getType());
         }
 
         //log.debug("new CoverageRecordSet: %s", split.getSplitData());
 
         this.schemaName = checkNotNull(split.getSchemaName());
         this.tableName = checkNotNull(split.getTableName());
-        this.columnTypes = types.build();
+        this.types = types.build();
         this.addresses = ImmutableList.copyOf(split.getAddresses());
         this.splitTask = checkNotNull(split.getSplitTask());
         this.tupleDomain = checkNotNull(tupleDomain);
@@ -70,9 +71,9 @@ public class CoverageRecordSet
     }
 
     @Override
-    public List<ColumnType> getColumnTypes()
+    public List<Type> getColumnTypes()
     {
-        return columnTypes;
+        return types;
     }
 
     @Override

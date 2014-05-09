@@ -13,7 +13,9 @@
  */
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.ColumnType;
+import com.facebook.presto.spi.type.BigintType;
+import com.facebook.presto.spi.type.Type;
+import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -26,8 +28,9 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 public final class RiakColumn
 {
     private final String name;
-    private final ColumnType type;
+    private final String type;
     private final boolean index;
+    private final Type spiType;
 
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
@@ -35,13 +38,28 @@ public final class RiakColumn
     @JsonCreator
     public RiakColumn(
             @JsonProperty("name") String name,
-            @JsonProperty("type") ColumnType type,
+            @JsonProperty("type") String type,
             @JsonProperty("index") boolean index)
     {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = checkNotNull(type, "type is null");
         this.index = index;
+        this.spiType = toSpiType(type);
+    }
+
+    Type toSpiType(String t) {
+
+        if (t.equals("LONG"))
+        {
+            return BigintType.BIGINT;
+        }
+        else if(t.equals("STRING"))
+        {
+            return VarcharType.VARCHAR;
+        }
+        log.error("unknown type in table schema: %s", t);
+        return null;
     }
 
     @JsonProperty
@@ -51,10 +69,9 @@ public final class RiakColumn
     }
 
     @JsonProperty
-    public ColumnType getType()
-    {
-        return type;
-    }
+    public String getType() { return type; }
+
+    public Type getSpiType() { return spiType; }
 
     @JsonProperty
     public boolean getIndex() {return index;}

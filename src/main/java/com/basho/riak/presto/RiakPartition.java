@@ -13,7 +13,7 @@
  */
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.Partition;
+import com.facebook.presto.spi.ConnectorPartition;
 import com.facebook.presto.spi.TupleDomain;
 import com.google.common.base.Objects;
 import io.airlift.log.Logger;
@@ -24,7 +24,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakPartition
-        implements Partition
+        implements ConnectorPartition
 {
     private final String schemaName;
     private final String tableName;

@@ -13,13 +13,7 @@
  */
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.Connector;
-import com.facebook.presto.spi.ConnectorHandleResolver;
-import com.facebook.presto.spi.ConnectorMetadata;
-import com.facebook.presto.spi.ConnectorOutputHandleResolver;
-import com.facebook.presto.spi.ConnectorRecordSetProvider;
-import com.facebook.presto.spi.ConnectorRecordSinkProvider;
-import com.facebook.presto.spi.ConnectorSplitManager;
+import com.facebook.presto.spi.*;
 
 import javax.inject.Inject;
 
@@ -44,6 +38,12 @@ public class RiakConnector
         this.splitManager = checkNotNull(splitManager, "splitManager is null");
         this.recordSetProvider = checkNotNull(recordSetProvider, "recordSetProvider is null");
         this.handleResolver = checkNotNull(handleResolver, "handleResolver is null");
+    }
+
+    @Override
+    public ConnectorIndexResolver getIndexResolver() {
+        //TODO: implement index resolver
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -79,6 +79,7 @@ public class RiakConnector
     @Override
     public ConnectorOutputHandleResolver getOutputHandleResolver()
     {
+        // TODO: output handle resolver???
         throw new UnsupportedOperationException();
     }
 }

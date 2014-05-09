@@ -13,10 +13,7 @@
  */
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.ColumnHandle;
-import com.facebook.presto.spi.ConnectorHandleResolver;
-import com.facebook.presto.spi.Split;
-import com.facebook.presto.spi.TableHandle;
+import com.facebook.presto.spi.*;
 import io.airlift.log.Logger;
 
 import javax.inject.Inject;
@@ -38,19 +35,29 @@ public class RiakHandleResolver
     }
 
     @Override
-    public boolean canHandle(TableHandle tableHandle)
+    public boolean canHandle(ConnectorIndexHandle connectorIndexHandle) {
+        return false;
+    }
+
+    @Override
+    public Class<? extends ConnectorIndexHandle> getIndexHandleClass() {
+        return null;
+    }
+
+    @Override
+    public boolean canHandle(ConnectorTableHandle tableHandle)
     {
         return tableHandle instanceof RiakTableHandle && ((RiakTableHandle) tableHandle).getConnectorId().equals(connectorId);
     }
 
     @Override
-    public boolean canHandle(ColumnHandle columnHandle)
+    public boolean canHandle(ConnectorColumnHandle columnHandle)
     {
         return columnHandle instanceof RiakColumnHandle && ((RiakColumnHandle) columnHandle).getConnectorId().equals(connectorId);
     }
 
     @Override
-    public boolean canHandle(Split split)
+    public boolean canHandle(ConnectorSplit split)
     {
         if(split instanceof CoverageSplit){
             return ((CoverageSplit) split).getConnectorId().equals(connectorId);
@@ -59,19 +66,19 @@ public class RiakHandleResolver
     }
 
     @Override
-    public Class<? extends TableHandle> getTableHandleClass()
+    public Class<? extends ConnectorTableHandle> getTableHandleClass()
     {
         return RiakTableHandle.class;
     }
 
     @Override
-    public Class<? extends ColumnHandle> getColumnHandleClass()
+    public Class<? extends ConnectorColumnHandle> getColumnHandleClass()
     {
         return RiakColumnHandle.class;
     }
 
     @Override
-    public Class<? extends Split> getSplitClass()
+    public Class<? extends ConnectorSplit> getSplitClass()
     {
         return CoverageSplit.class;
     }

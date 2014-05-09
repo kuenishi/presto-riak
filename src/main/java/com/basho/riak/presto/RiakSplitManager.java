@@ -61,15 +61,10 @@ public class RiakSplitManager
         return connectorId;
     }
 
-    @Override
-    public boolean canHandle(TableHandle tableHandle)
-    {
-        return tableHandle instanceof RiakTableHandle && ((RiakTableHandle) tableHandle).getConnectorId().equals(connectorId);
-    }
 
     // TODO: get the right partitions right here
     @Override
-    public PartitionResult getPartitions(TableHandle tableHandle, TupleDomain tupleDomain)
+    public ConnectorPartitionResult getPartitions(ConnectorTableHandle tableHandle, TupleDomain tupleDomain)
     {
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
@@ -90,22 +85,23 @@ public class RiakSplitManager
         }
 
         // Riak connector has only one partition
-        List<Partition> partitions = ImmutableList.<Partition>of(new RiakPartition(riakTableHandle.getSchemaName(),
+        List<ConnectorPartition> partitions = ImmutableList.<ConnectorPartition>of(new RiakPartition(riakTableHandle.getSchemaName(),
                 riakTableHandle.getTableName(),
                 tupleDomain,
                 indexedColumns));
 
         // Riak connector does not do any additional processing/filtering with the TupleDomain, so just return the whole TupleDomain
-        return new PartitionResult(partitions, tupleDomain);
+        return new ConnectorPartitionResult(partitions, tupleDomain);
     }
 
     // TODO: return correct splits from partitions
     @Override
-    public SplitSource getPartitionSplits(TableHandle tableHandle, List<Partition> partitions)
+    public ConnectorSplitSource getPartitionSplits(ConnectorTableHandle tableHandle,
+                                                   List<ConnectorPartition> partitions)
     {
         checkNotNull(partitions, "partitions is null");
         checkArgument(partitions.size() == 1, "Expected one partition but got %s", partitions.size());
-        Partition partition = partitions.get(0);
+        ConnectorPartition partition = partitions.get(0);
 
         checkArgument(partition instanceof RiakPartition, "partition is not an instance of RiakPartition");
         RiakPartition riakPartition = (RiakPartition) partition;
@@ -118,7 +114,7 @@ public class RiakSplitManager
 
         log.debug("%s", table.getColumns().toString());
         // add all nodes at the cluster here
-        List<Split> splits = Lists.newArrayList();
+        List<ConnectorSplit> splits = Lists.newArrayList();
         String hosts = riakClient.getHosts();
 
         if(riakConfig.getLocalNode() != null)

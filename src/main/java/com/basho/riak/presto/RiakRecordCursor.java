@@ -19,8 +19,8 @@ import com.basho.riak.client.query.MultiFetchFuture;
 import com.basho.riak.client.query.StreamingOperation;
 import com.basho.riak.client.raw.pbc.PBClientConfig;
 import com.basho.riak.client.raw.pbc.PBClusterConfig;
-import com.facebook.presto.spi.ColumnType;
 import com.facebook.presto.spi.RecordCursor;
+import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -30,6 +30,7 @@ import com.google.common.io.CountingInputStream;
 import com.google.common.io.InputSupplier;
 import io.airlift.log.Logger;
 import com.facebook.presto.spi.HostAddress;
+import io.airlift.slice.Slice;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -122,10 +123,10 @@ public class RiakRecordCursor
     }
 
     @Override
-    public ColumnType getType(int field)
+    public Type getType(int field)
     {
         checkArgument(field < columnHandles.size(), "Invalid field index");
-        return columnHandles.get(field).getColumnType();
+        return columnHandles.get(field).getType();
     }
 
     @Override
@@ -217,6 +218,17 @@ public class RiakRecordCursor
         return false;
     }
 
+
+    @Override
+    public long getReadTimeNanos() {
+        return 0;
+    }
+
+    @Override
+    public Slice getSlice(int i) {
+        return null;
+    }
+
     private String getFieldValue(int field)
     {
         checkState(fields != null, "Cursor has not been advanced yes");
@@ -237,29 +249,22 @@ public class RiakRecordCursor
     @Override
     public boolean getBoolean(int field)
     {
-        checkFieldType(field, ColumnType.BOOLEAN);
+        checkFieldType(field, BooleanType.BOOLEAN);
         return Boolean.parseBoolean(getFieldValue(field));
     }
 
     @Override
     public long getLong(int field)
     {
-        checkFieldType(field, ColumnType.LONG);
+        checkFieldType(field, BigintType.BIGINT);
         return Long.parseLong(getFieldValue(field));
     }
 
     @Override
     public double getDouble(int field)
     {
-        checkFieldType(field, ColumnType.DOUBLE);
+        checkFieldType(field, DoubleType.DOUBLE);
         return Double.parseDouble(getFieldValue(field));
-    }
-
-    @Override
-    public byte[] getString(int field)
-    {
-        checkFieldType(field, ColumnType.STRING);
-        return getFieldValue(field).getBytes(Charsets.UTF_8);
     }
 
     @Override
@@ -269,9 +274,9 @@ public class RiakRecordCursor
         return Strings.isNullOrEmpty(getFieldValue(field));
     }
 
-    private void checkFieldType(int field, ColumnType expected)
+    private void checkFieldType(int field, Type expected)
     {
-        ColumnType actual = getType(field);
+        Type actual = getType(field);
         checkArgument(actual == expected, "Expected field %s to be type %s but is %s", field, expected, actual);
     }
 
