@@ -8,8 +8,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.internal.cglib.core.$TypeUtils;
-import io.airlift.json.JsonCodecFactory;
 import io.airlift.log.Logger;
 import org.apache.commons.codec.DecoderException;
 

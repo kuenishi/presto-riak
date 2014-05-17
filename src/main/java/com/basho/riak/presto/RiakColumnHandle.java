@@ -58,6 +58,19 @@ public final class RiakColumnHandle
              columnMetadata.getOrdinalPosition());
     }
 
+    // {type=riak, connectorId=riak, column={name=id,
+    //type=bigint, index=false}, ordinalPosition=0}=2 (class java.util.HashMap$Node)
+    public RiakColumnHandle(Map<String, Object> m)
+    {
+        this.connectorId = (String)m.get("type");
+        Map<String, Object> m2 = (Map)m.get("column");
+        this.column = new RiakColumn(
+                (String)m2.get("name"),
+                (String)m2.get("type"),
+                (boolean)m2.get("index"));
+        this.ordinalPosition = (int)m.get("ordinalPosition");
+    }
+
     @JsonProperty
     public String getConnectorId()
     {

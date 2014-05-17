@@ -172,18 +172,27 @@ public class CoverageRecordCursor
     {
 
         // case where a='b'
-        Map<ConnectorColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
-        for(Map.Entry<ConnectorColumnHandle, Comparable<?>> fixedValue : fixedValues.entrySet()){
-            log.debug("> %s (%s)", fixedValue, fixedValue.getClass());
-            log.debug(">> %s", fixedValue.getKey());
+        Map<Map<String, Object>, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
+        for(Map.Entry<Map<String, Object>, Comparable<?>> fixedValue : fixedValues.entrySet()){
+            //log.debug("> %s (%s)", fixedValue, fixedValue.getClass());
+            //log.debug(">> %s", fixedValue.getKey());
 
-            Map m = (Map)fixedValue.getKey();
-            log.debug("|> %s", m);
+            // TODO: this fails if,
+            //   Map<ConnectorColumnHandle, Domain> map = ...
+            //RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
+            // TODO: very strange behaviour below
 
-            log.debug(">>> %s", fixedValue.getValue());
+            /*
+            checkNotNull(fixedValue.getKey());
+            checkArgument(fixedValue.getKey() instanceof ConnectorColumnHandle);
+            checkArgument(fixedValue.getKey() instanceof RiakColumnHandle);
+*/
 
-            //RiakColumnHandle c = new RiakColumnHandle(m);
-            RiakColumnHandle c = (RiakColumnHandle)(fixedValue.getKey());
+            RiakColumnHandle c = new RiakColumnHandle(fixedValue.getKey());
+            // This SHOULD work;
+            //RiakColumnHandle c = (RiakColumnHandle)(fixedValue.getKey());
+            //RiakColumnHandle c = fixedValue.getKey();
+
             for(RiakColumnHandle columnHandle : columnHandles)
             {
                 if(c.getColumn().getName().equals(columnHandle.getColumn().getName())
@@ -219,10 +228,14 @@ public class CoverageRecordCursor
         }
 
         //case where a < b and ... blah
-        Map<ConnectorColumnHandle, Domain> map = tupleDomain.getDomains();
-        for(Map.Entry<ConnectorColumnHandle, Domain> entry : map.entrySet())
+        Map<Map<String, Object>, Domain> map = tupleDomain.getDomains();
+        for(Map.Entry<Map<String, Object>, Domain> entry : map.entrySet())
         {
-            RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
+            // TODO: this fails if,
+            //   Map<ConnectorColumnHandle, Domain> map = ...
+            //RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
+            // TODO: very strange behaviour below
+            RiakColumnHandle c = new RiakColumnHandle(entry.getKey());
             for(RiakColumnHandle columnHandle: columnHandles)
             {
                 if(c.getColumn().getName().equals(columnHandle.getColumn().getName())

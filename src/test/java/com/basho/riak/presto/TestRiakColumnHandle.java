@@ -1,6 +1,7 @@
 package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
+import com.facebook.presto.spi.TupleDomain;
 import com.facebook.presto.spi.type.BooleanType;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
@@ -65,5 +66,11 @@ public class TestRiakColumnHandle {
         assert(c2.getColumn().spiType() == VarcharType.VARCHAR);
         System.out.println(c);
         System.out.println(c2);
+    }
+
+    @Test
+    public void testTupleDomain()
+    {
+        //TupleDomain<>
     }
 }
