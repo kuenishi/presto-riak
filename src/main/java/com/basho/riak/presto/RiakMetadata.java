@@ -206,7 +206,8 @@ public class RiakMetadata
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
         checkArgument(((RiakTableHandle) tableHandle).getConnectorId().equals(connectorId), "tableHandle is not for this connector");
         checkArgument(columnHandle instanceof RiakColumnHandle, "columnHandle is not an instance of RiakColumnHandle");
-
-        return ((RiakColumnHandle) columnHandle).getColumnMetadata();
+        RiakColumnHandle h = (RiakColumnHandle)columnHandle;
+        //return ((RiakColumnHandle) columnHandle).getColumnMetadata();
+        return new ColumnMetadata(h.getColumn().getName(), h.getColumn().spiType(), h.getOrdinalPosition(), false);
     }
 }

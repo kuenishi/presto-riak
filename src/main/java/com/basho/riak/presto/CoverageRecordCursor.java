@@ -99,8 +99,8 @@ public class CoverageRecordCursor
         for (int i = 0; i < columnHandles.size(); i++) {
 //            log.debug("%d, %s", i, columnHandles.get(i));
             RiakColumnHandle columnHandle = columnHandles.get(i);
-            fields[i] = columnHandle.getColumnName();
-            has2i[i] = columnHandle.getIndex();
+            fields[i] = columnHandle.getColumn().getName();
+            has2i[i] = columnHandle.getColumn().getIndex();
 //            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
         fetchData();
@@ -182,25 +182,25 @@ public class CoverageRecordCursor
 
             log.debug(">>> %s", fixedValue.getValue());
 
-            RiakColumnHandle c = new RiakColumnHandle(m);
-            //RiakColumnHandle c = (RiakColumnHandle)(fixedValue.getKey());
+            //RiakColumnHandle c = new RiakColumnHandle(m);
+            RiakColumnHandle c = (RiakColumnHandle)(fixedValue.getKey());
             for(RiakColumnHandle columnHandle : columnHandles)
             {
-                if(c.getColumnName().equals(columnHandle.getColumnName())
-                        && c.getType().equals(columnHandle.getType())
-                        && columnHandle.getIndex())
+                if(c.getColumn().getName().equals(columnHandle.getColumn().getName())
+                        && c.getColumn().spiType().equals(columnHandle.getColumn().spiType())
+                        && columnHandle.getColumn().getIndex())
                 {
                     String field = null;
                     OtpErlangObject value;
-                    if(columnHandle.getType() == BigintType.BIGINT)
+                    if(columnHandle.getColumn().spiType() == BigintType.BIGINT)
                     {
-                        field = columnHandle.getColumnName() + "_int";
+                        field = columnHandle.getColumn().getName() + "_int";
                         Long l = (Long)fixedValue.getValue();
                         value = new OtpErlangLong(l.longValue());
                     }
-                    else if(columnHandle.getType() == VarcharType.VARCHAR)
+                    else if(columnHandle.getColumn().spiType() == VarcharType.VARCHAR)
                     {
-                        field = columnHandle.getColumnName() + "_bin";
+                        field = columnHandle.getColumn().getName() + "_bin";
                         String s = (String)fixedValue.getValue();
                         value = new OtpErlangBinary(s.getBytes());
                     }
@@ -225,9 +225,9 @@ public class CoverageRecordCursor
             RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
             for(RiakColumnHandle columnHandle: columnHandles)
             {
-                if(c.getColumnName().equals(columnHandle.getColumnName())
-                        && c.getType().equals(columnHandle.getType())
-                        && columnHandle.getIndex())
+                if(c.getColumn().getName().equals(columnHandle.getColumn().getName())
+                        && c.getColumn().spiType().equals(columnHandle.getColumn().spiType())
+                        && columnHandle.getColumn().getIndex())
                 {
                     String field = null;
                     OtpErlangObject lhs, rhs;
@@ -235,9 +235,9 @@ public class CoverageRecordCursor
                     //log.debug("value:%s, range:%s, span:%s",
                     //        entry.getValue(), entry.getValue().getRanges(),span);
                     //log.debug("min: %s max:%s", span.getLow(), span.getHigh());
-                    if(columnHandle.getType() == BigintType.BIGINT)
+                    if(columnHandle.getColumn().spiType() == BigintType.BIGINT)
                     {
-                        field = columnHandle.getColumnName() + "_int";
+                        field = columnHandle.getColumn().getName() + "_int";
                         // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
                         Long l = Long.MIN_VALUE;
                         if(! span.getLow().isLowerUnbounded()){
@@ -252,9 +252,9 @@ public class CoverageRecordCursor
                         lhs = new OtpErlangLong(l.longValue());
                         rhs = new OtpErlangLong(r.longValue());
                     }
-                    else if(columnHandle.getType() == VarcharType.VARCHAR)
+                    else if(columnHandle.getColumn().spiType() == VarcharType.VARCHAR)
                     {
-                        field = columnHandle.getColumnName() + "_bin";
+                        field = columnHandle.getColumn().getName() + "_bin";
                         //Byte m = Byte.MIN_VALUE;
                         byte[] l = {0};
                         if(!span.getLow().isLowerUnbounded()){
@@ -300,7 +300,7 @@ public class CoverageRecordCursor
     public Type getType(int field)
     {
         checkArgument(field < columnHandles.size(), "Invalid field index");
-        return columnHandles.get(field).getType();
+        return columnHandles.get(field).getColumn().spiType();
     }
 
     @Override

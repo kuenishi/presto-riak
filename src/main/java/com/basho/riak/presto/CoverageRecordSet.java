@@ -55,7 +55,7 @@ public class CoverageRecordSet
         this.columnHandles = checkNotNull(columnHandles, "column handles is null");
         ImmutableList.Builder<Type> types = ImmutableList.builder();
         for (RiakColumnHandle column : columnHandles) {
-            types.add(column.getType());
+            types.add(column.getColumn().spiType());
         }
 
         //log.debug("new CoverageRecordSet: %s", split.getSplitData());

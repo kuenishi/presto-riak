@@ -16,6 +16,7 @@ package com.basho.riak.presto;
 import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.ConnectorColumnHandle;
 import com.facebook.presto.spi.type.Type;
+import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -30,50 +31,31 @@ public final class RiakColumnHandle
 {
     public static final String PKEY_COLUMN_NAME = "__pkey";
     private final String connectorId;
-    private final String columnName;
-    private final Type type;
-    private boolean index;
+    private final RiakColumn column;
     private final int ordinalPosition;
 
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
-    public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata)
-    {
-        this(connectorId, columnMetadata.getName(),
-                columnMetadata.getType(),
-                // NOTE: this default 'false' can be implicit performance lose
-                //       if there be a bug that indexedColumns lost somewhere
-                false,
-                columnMetadata.getOrdinalPosition());
-    }
-
-    public RiakColumnHandle(Map<String, Object> m){
-        // {type=varchar, connectorId=riak, columnName=name, index=false, ordinalPosition=1}
-        this.connectorId = (String)m.get("connectorId");
-        this.type = parseType((String)m.get("type"));
-        this.index = (boolean)m.get("index");
-        this.columnName = (String)m.get("columnName");
-        this.ordinalPosition = (int)m.get("ordinalPosition");
-    }
-
-    private Type parseType(String t) {
-        checkNotNull(t);
-        if(t == )
-    }
-
     @JsonCreator
     public RiakColumnHandle(
             @JsonProperty("connectorId") String connectorId,
-            @JsonProperty("columnName") String columnName,
-            @JsonProperty("type") Type type,
-            @JsonProperty("index") boolean index,
+            @JsonProperty("column") RiakColumn column,
             @JsonProperty("ordinalPosition") int ordinalPosition)
     {
         this.connectorId = checkNotNull(connectorId, "connectorId is null");
-        this.columnName = checkNotNull(columnName, "columnName is null");
-        this.type = checkNotNull(type, "type is null");
-        this.index = checkNotNull(index);
+        this.column = checkNotNull(column, "column is null");
         this.ordinalPosition = ordinalPosition;
+    }
+
+    public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata)
+    {
+        this(connectorId,
+             new RiakColumn(columnMetadata.getName(),
+                     columnMetadata.getType(),
+                     // TODO: this default 'false' can be implicit performance lose
+                     // TODO: if there be a bug that indexedColumns lost somewhere
+                     false),
+             columnMetadata.getOrdinalPosition());
     }
 
     @JsonProperty
@@ -83,27 +65,10 @@ public final class RiakColumnHandle
     }
 
     @JsonProperty
-    public String getColumnName()
+    public RiakColumn getColumn()
     {
-        return columnName;
+        return column;
     }
-
-    @JsonProperty
-    public Type getType()
-    {
-        return type;
-    }
-
-    @JsonProperty
-    public boolean getIndex()
-    {
-        return index;
-    }
-
-    public void setIndex(boolean index) {
-        this.index = index;
-    }
-
 
     @JsonProperty
     public int getOrdinalPosition()
@@ -111,16 +76,10 @@ public final class RiakColumnHandle
         return ordinalPosition;
     }
 
-    public ColumnMetadata getColumnMetadata()
-    {
-        //boolean isPartitionKey = columnName.equals(PKEY_COLUMN_NAME);
-        return new ColumnMetadata(columnName, type, ordinalPosition, false);
-    }
-
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(connectorId, columnName);
+        return Objects.hashCode(connectorId, column);
     }
 
     @Override
@@ -133,10 +92,10 @@ public final class RiakColumnHandle
             return false;
         }
 
-        com.basho.riak.presto.RiakColumnHandle other = (com.basho.riak.presto.RiakColumnHandle) obj;
+        RiakColumnHandle other = (RiakColumnHandle) obj;
         return Objects.equal(this.connectorId, other.connectorId) &&
-                (this.index == other.index) &&
-                Objects.equal(this.columnName, other.columnName);
+                this.column.equals(other.column) &&
+                this.ordinalPosition == other.ordinalPosition;
     }
 
     @Override
@@ -144,9 +103,7 @@ public final class RiakColumnHandle
     {
         return Objects.toStringHelper(this)
                 .add("connectorId", connectorId)
-                .add("columnName", columnName)
-                .add("type", type)
-                .add("index", index)
+                .add("column", column)
                 .add("ordinalPosition", ordinalPosition)
                 .toString();
     }

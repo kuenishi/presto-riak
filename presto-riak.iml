@@ -23,7 +23,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.datatype:jackson-datatype-joda:2.2.2" level="project" />
     <orderEntry type="library" name="Maven: joda-time:joda-time:2.1" level="project" />
     <orderEntry type="library" name="Maven: org.erlang.otp:jinterface:1.5.6" level="project" />
-    <orderEntry type="library" name="Maven: com.facebook.presto:presto-spi:0.66" level="project" />
+    <orderEntry type="library" name="Maven: com.facebook.presto:presto-spi:0.68" level="project" />
     <orderEntry type="library" name="Maven: io.airlift:slice:0.5" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.airlift:bootstrap:0.88" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.airlift:log:0.88" level="project" />

@@ -67,8 +67,8 @@ public class RiakRecordSetProvider
             for (ConnectorColumnHandle handle : columns) {
                 checkArgument(handle instanceof RiakColumnHandle);
                 RiakColumnHandle riakColumnHandle = (RiakColumnHandle)handle;
-                boolean has2i = coverageSplit.getIndexedColumns().contains(riakColumnHandle.getColumnName());
-                riakColumnHandle.setIndex(has2i);
+                boolean has2i = coverageSplit.getIndexedColumns().contains(riakColumnHandle.getColumn().getName());
+                riakColumnHandle.getColumn().setIndex(has2i);
                 handles.add(riakColumnHandle);
             }
 

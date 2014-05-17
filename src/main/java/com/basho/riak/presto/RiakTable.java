@@ -50,7 +50,7 @@ public class RiakTable
         int index = 0;
         ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
         for (RiakColumn column : this.columns) {
-            columnsMetadata.add(new ColumnMetadata(column.getName(), column.getSpiType(), index, false));
+            columnsMetadata.add(new ColumnMetadata(column.getName(), column.spiType(), index, false));
             index++;
         }
         this.columnsMetadata = columnsMetadata.build();

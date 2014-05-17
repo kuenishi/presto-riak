@@ -13,9 +13,7 @@
  */
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.type.BigintType;
-import com.facebook.presto.spi.type.Type;
-import com.facebook.presto.spi.type.VarcharType;
+import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -29,12 +27,18 @@ public final class RiakColumn
 {
     private final String name;
     private final String type;
-    private final boolean index;
+    private boolean index;
     private final Type spiType;
 
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
-
+    public RiakColumn(String name, Type type, boolean index)
+    {
+        this.name = name;
+        this.spiType = type;
+        this.type = this.spiType.getName();
+        this.index = index;
+    }
     @JsonCreator
     public RiakColumn(
             @JsonProperty("name") String name,
@@ -58,6 +62,42 @@ public final class RiakColumn
         {
             return VarcharType.VARCHAR;
         }
+        else if(t.equals("varchar"))
+        {
+            return VarcharType.VARCHAR;
+        }
+        else if(t.equals(BigintType.BIGINT.getName()))
+        {
+            return BigintType.BIGINT;
+        }
+        else if(t.equals(BooleanType.BOOLEAN.getName()))
+        {
+            return BooleanType.BOOLEAN;
+        }
+        else if(t.equals(DateType.DATE.getName()))
+        {
+            return DateType.DATE;
+        }
+        else if(t.equals(DoubleType.DOUBLE.getName()))
+        {
+            return DoubleType.DOUBLE;
+        }
+        else if(t.equals(HyperLogLogType.HYPER_LOG_LOG.getName()))
+        {
+            return HyperLogLogType.HYPER_LOG_LOG;
+        }
+        else if(t.equals(IntervalDayTimeType.INTERVAL_DAY_TIME.getName()))
+        {
+            return IntervalDayTimeType.INTERVAL_DAY_TIME;
+        }
+        else if(t.equals(IntervalYearMonthType.INTERVAL_YEAR_MONTH.getName()))
+        {
+            return IntervalYearMonthType.INTERVAL_YEAR_MONTH;
+        }
+        else if(t.equals(TimestampType.TIMESTAMP.getName()))
+        {
+            return TimestampType.TIMESTAMP;
+        }
         log.error("unknown type in table schema: %s", t);
         return null;
     }
@@ -71,10 +111,15 @@ public final class RiakColumn
     @JsonProperty
     public String getType() { return type; }
 
-    public Type getSpiType() { return spiType; }
+    public Type spiType() { return spiType; }
 
     @JsonProperty
     public boolean getIndex() {return index;}
+
+    public void setIndex(boolean b)
+    {
+        this.index = b;
+    }
 
     @Override
     public int hashCode()
@@ -92,7 +137,7 @@ public final class RiakColumn
             return false;
         }
 
-        com.basho.riak.presto.RiakColumn other = (com.basho.riak.presto.RiakColumn) obj;
+        RiakColumn other = (RiakColumn) obj;
         return Objects.equal(this.name, other.name) &&
                 (this.index == other.index) &&
                 Objects.equal(this.type, other.type);

@@ -104,7 +104,7 @@ public class RiakRecordCursor
         for (int i = 0; i < columnHandles.size(); i++) {
             log.debug("%d, %s", i, columnHandles.get(i));
             RiakColumnHandle columnHandle = columnHandles.get(i);
-            fields[i] = columnHandle.getColumnName();
+            fields[i] = columnHandle.getColumn().getName();
 //            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
         totalBytes = 0;
@@ -126,7 +126,7 @@ public class RiakRecordCursor
     public Type getType(int field)
     {
         checkArgument(field < columnHandles.size(), "Invalid field index");
-        return columnHandles.get(field).getType();
+        return columnHandles.get(field).getColumn().spiType();
     }
 
     @Override
