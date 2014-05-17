@@ -227,3 +227,8 @@ $ cp ldna.beam rel/riak/lib/basho-patches
 $ ulimit -n 4096
 $ rel/riak/bin/riak start
 ```
+
+
+# rights
+
+Distributed under Apached 2.0 license, (C) Kota UENISHI.
