@@ -35,14 +35,14 @@ $ ./presto-cli --server localhost:8008 --catalog riak
 test
 
 ```
-> show catalogs;
+presto:default> show catalogs;
  Catalog
 ---------
  jmx
  riak
 (2 rows)
-> use catalog riak;
-> show schemas;
+presto:default> use catalog riak;
+presto:default> show schemas;
        Schema
 --------------------
  default
@@ -56,12 +56,12 @@ Now Riak connector working.
 run
 
 ```
-> show tables;
+presto:default> show tables;
     Table
 -------------
  foobartable
 (1 row)
-> explain select * from foobartable;
+presto:default> explain select * from foobartable;
                                                   Query Plan
 ---------------------------------------------------------------------------------------------------------------
  - Output[col1, col2, __pkey]
@@ -72,13 +72,47 @@ run
               := RiakColumnHandle{connectorId=riak, columnName=__pkey, columnType=STRING, ordinalPosition=2}
 
 (1 row)
-> select * from foobartable;
+presto:default> select * from foobartable;
  col1 | col2 | __pkey
 ------+------+--------
  yey  |   34 | k
  yey  | NULL | k3
  yey  |   34 | k2
 (3 rows)
+
+presto:default> select * from logs cross join users where logs.accessor = users.id;
+      timestamp      | method | status | accessor | id | name |   army
+---------------------+--------+--------+----------+----+------+-----------
+ 2014-04-12-00:03:00 | GET    |    200 |        0 |  0 | Solo | Freelance
+ 2014-04-12-00:03:00 | GET    |    204 |        5 |  5 | Solo | Freelance
+ 2014-04-12-00:03:00 | GET    |    503 |        4 |  4 | Fett | Freelance
+ 2014-04-12-00:03:00 | GET    |    404 |        2 |  2 | Solo | Freelance
+ 2014-04-15-00:04:00 | GET    |    301 |        1 |  1 | Fett | Freelance
+ 2014-04-15-00:04:00 | GET    |    200 |        5 |  5 | Solo | Freelance
+ 2014-04-15-00:04:00 | GET    |    200 |        2 |  2 | Solo | Freelance
+(7 rows)
+
+Query 20140517_073059_00004_hk6si, FINISHED, 1 node
+Splits: 8 total, 8 done (100.00%)
+0:00 [6 rows, 258B] [12 rows/s, 522B/s]
+
+presto:default> explain select * from logs cross join users where logs.accessor = users.id;
+                                                                     Query Plan
+----------------------------------------------------------------------------------------------------------------------------------------------------
+ - Output[timestamp, method, status, accessor, id, name, army]
+     - InnerJoin[("accessor" = "id")] => [timestamp:varchar, method:varchar, status:bigint, accessor:bigint, id:bigint, name:varchar, army:varchar]
+         - TableScan[riak:riak:default:logs, original constraint=true] => [timestamp:varchar, method:varchar, status:bigint, accessor:bigint]
+                 timestamp := riak:RiakColumnHandle{connectorId=riak, columnName=timestamp, type=varchar, index=false, ordinalPosition=0}
+                 method := riak:RiakColumnHandle{connectorId=riak, columnName=method, type=varchar, index=false, ordinalPosition=1}
+                 status := riak:RiakColumnHandle{connectorId=riak, columnName=status, type=bigint, index=false, ordinalPosition=2}
+                 accessor := riak:RiakColumnHandle{connectorId=riak, columnName=accessor, type=bigint, index=false, ordinalPosition=3}
+         - TableScan[riak:riak:default:users, original constraint=true] => [id:bigint, name:varchar, army:varchar]
+                 id := riak:RiakColumnHandle{connectorId=riak, columnName=id, type=bigint, index=false, ordinalPosition=0}
+                 name := riak:RiakColumnHandle{connectorId=riak, columnName=name, type=varchar, index=false, ordinalPosition=1}
+                 army := riak:RiakColumnHandle{connectorId=riak, columnName=army, type=varchar, index=false, ordinalPosition=2}
+
+(1 row)
+
 ```
 
 ## CLI

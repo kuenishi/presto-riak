@@ -26,6 +26,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
+import io.airlift.slice.Slices;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -53,12 +54,13 @@ public class CoverageRecordCursor
     //private final Iterator<String> lines;
     private long totalBytes;
 
-    private Bucket bucket;
-    private StreamingOperation<String> keyCursor;
+    private final Bucket bucket;
+    private final StreamingOperation<String> keyCursor;
 
-    private List<IRiakObject> buffer;
-    private String[] fields;
-    private boolean[] has2i;
+    private final List<IRiakObject> buffer;
+    private final String[] fields;
+    private final Slice[] slices;
+    private final boolean[] has2i;
     private Map<String, Object> cursor;
 
     public CoverageRecordCursor(String schemaName,
@@ -85,6 +87,7 @@ public class CoverageRecordCursor
         buffer = new Vector<IRiakObject>();
         cursor = null;
         fields = new String[columnHandles.size()];
+        slices = new Slice[columnHandles.size()];
         has2i = new boolean[columnHandles.size()];
 
         this.columnHandles = columnHandles;
@@ -158,12 +161,6 @@ public class CoverageRecordCursor
     }
 
     @Override
-    public Slice getSlice(int i) {
-        log.debug("getSlice called");
-        return null;
-    }
-
-    @Override
     public long getReadTimeNanos() {
         log.debug("getReadTimeNanos");
         return 0;
@@ -176,8 +173,17 @@ public class CoverageRecordCursor
 
         // case where a='b'
         Map<ConnectorColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
-        for(Map.Entry<ConnectorColumnHandle, ?> fixedValue : fixedValues.entrySet()){
-            RiakColumnHandle c = (RiakColumnHandle)fixedValue.getKey();
+        for(Map.Entry<ConnectorColumnHandle, Comparable<?>> fixedValue : fixedValues.entrySet()){
+            log.debug("> %s (%s)", fixedValue, fixedValue.getClass());
+            log.debug(">> %s", fixedValue.getKey());
+
+            Map m = (Map)fixedValue.getKey();
+            log.debug("|> %s", m);
+
+            log.debug(">>> %s", fixedValue.getValue());
+
+            RiakColumnHandle c = new RiakColumnHandle(m);
+            //RiakColumnHandle c = (RiakColumnHandle)(fixedValue.getKey());
             for(RiakColumnHandle columnHandle : columnHandles)
             {
                 if(c.getColumnName().equals(columnHandle.getColumnName())
@@ -369,6 +375,17 @@ public class CoverageRecordCursor
         checkFieldType(field, VarcharType.VARCHAR);
         return getFieldValue(field).getBytes(Charsets.UTF_8);
     }
+
+    @Override
+    public Slice getSlice(int field) {
+        //return slices[i];
+        if(slices[field] == null)
+            slices[field] = Slices.utf8Slice(getFieldValue(field));
+        //log.debug("getSlice called: %s", slices[field]);
+
+        return slices[field];
+    }
+
 
     @Override
     public boolean isNull(int field)

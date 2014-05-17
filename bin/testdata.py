@@ -24,7 +24,7 @@ users:
   0 | Luke    | Rebellion
   1 | Anakin  | Imperial
   2 | Leia    | Rebellion
-  3 | Seth    | Imperial
+  3 | Sith    | Imperial
   4 | Fett    | Freelance
   5 | Solo    | Freelance
 
@@ -136,7 +136,7 @@ if __name__ == '__main__':
     insert_with_index('default.users', '0', '{"id":0, "name":"Luke", "army":"Rebellion"}')
     insert_with_index('default.users', '1', '{"id":1, "name":"Anakin", "army":"Imperial"}')
     insert_with_index('default.users', '2', '{"id":2, "name":"Leia", "army":"Rebellion"}')
-    insert_with_index('default.users', '3', '{"id":3, "name":"Seth", "army":"Imperial"}')
+    insert_with_index('default.users', '3', '{"id":3, "name":"Sith", "army":"Imperial"}')
     insert_with_index('default.users', '4', '{"id":4, "name":"Fett", "army":"Freelance"}')
     insert_with_index('default.users', '5', '{"id":5, "name":"Solo", "army":"Freelance"}')
     for i in xrange(0, 6):

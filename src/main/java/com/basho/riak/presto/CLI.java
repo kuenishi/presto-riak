@@ -13,7 +13,6 @@ import com.basho.riak.client.bucket.Bucket;
 import com.basho.riak.client.cap.DefaultRetrier;
 import com.basho.riak.client.raw.pbc.PBClientConfig;
 import com.basho.riak.client.raw.pbc.PBClusterConfig;
-import com.facebook.presto.spi.Split;
 
 /**
  * Created by kuenishi on 14/03/21.

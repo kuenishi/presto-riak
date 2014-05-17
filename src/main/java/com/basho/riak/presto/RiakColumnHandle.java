@@ -21,6 +21,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import io.airlift.log.Logger;
 
+import java.util.Map;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakColumnHandle
@@ -43,6 +45,20 @@ public final class RiakColumnHandle
                 //       if there be a bug that indexedColumns lost somewhere
                 false,
                 columnMetadata.getOrdinalPosition());
+    }
+
+    public RiakColumnHandle(Map<String, Object> m){
+        // {type=varchar, connectorId=riak, columnName=name, index=false, ordinalPosition=1}
+        this.connectorId = (String)m.get("connectorId");
+        this.type = parseType((String)m.get("type"));
+        this.index = (boolean)m.get("index");
+        this.columnName = (String)m.get("columnName");
+        this.ordinalPosition = (int)m.get("ordinalPosition");
+    }
+
+    private Type parseType(String t) {
+        checkNotNull(t);
+        if(t == )
     }
 
     @JsonCreator
