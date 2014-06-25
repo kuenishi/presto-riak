@@ -1,0 +1,23 @@
+#!/usr/bin/env python
+
+'''
+you need riak client installed before (Using virtualenv is recommended to keep your system clean).
+
+```
+$ pip install riak
+$ bin/presto-riak-ctl show tables
+$ bin/presto-riak-ctl create table foobartable;
+$ bin/presto-riak-ctl show table foobartable;
+$ bin/presto-riak-ctl 
+```
+
+This tool is very primitive. Be careful enough not to break the schema in Riak. It's fragile.
+
+This also uses localhost:8087 by default. No other way to ... hmm.
+
+'''
+
+import riak
+
+if __name__ == '__main__':
+    print "hello"

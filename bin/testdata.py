@@ -97,6 +97,8 @@ if __name__ == '__main__':
 ''')
     print(get(SCHEMA_BUCKET,  'default.logs'))
 
+    # host, user, method, path, code, size, referer, agent, time, tag
+
     # create table 2
     insert(SCHEMA_BUCKET, 'default.users',
            '''
