@@ -55,12 +55,6 @@ public class RiakSplitManager
         this.directConnection = checkNotNull(directConnection);
     }
 
-    @Override
-    public String getConnectorId()
-    {
-        return connectorId;
-    }
-
 
     // TODO: get the right partitions right here
     @Override
