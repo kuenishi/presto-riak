@@ -33,7 +33,7 @@
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
-            <version>0.72</version>
+            <version>0.74</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -45,7 +45,7 @@
             <groupId>io.airlift</groupId>
             <artifactId>bootstrap</artifactId>
             <scope>provided</scope>
-            <version>0.91</version>
+            <version>0.92</version>
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
@@ -66,28 +66,28 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
-            <version>1.7.5</version>
+            <version>1.7.7</version>
             <scope>runtime</scope>
         </dependency>
 
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>json</artifactId>
-            <version>0.91</version>
+            <version>0.92</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>configuration</artifactId>
-            <version>0.91</version>
+            <version>0.92</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>16.0.1</version>
+            <version>17.0</version>
             <scope>provided</scope>
         </dependency>
 
