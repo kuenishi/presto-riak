@@ -106,30 +106,31 @@ public class RiakSplitManager
         // this can happen if table is removed during a query
         checkState(table != null, "Table %s.%s no longer exists", riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
 
-        log.debug("%s", table.getColumns().toString());
+        log.debug("> %s", table.getColumns().toString());
         // add all nodes at the cluster here
         List<ConnectorSplit> splits = Lists.newArrayList();
         String hosts = riakClient.getHosts();
+        log.debug(hosts);
 
         if(riakConfig.getLocalNode() != null)
         {
             // TODO: make coverageSplits here
-            //log.debug("connecting to %s from %s", riak, self);
+
             //try {
                 DirectConnection conn = directConnection;
                 //conn.connect(riak);
                 //conn.ping();
-                Coverage coverage = new Coverage(conn);
-                coverage.plan();
-                List<SplitTask> splitTasks = coverage.getSplits();
+             Coverage coverage = new Coverage(conn);
+             coverage.plan();
+            List<SplitTask> splitTasks = coverage.getSplits();
 
-                //log.debug("print coverage plan==============");
-                //log.debug(coverage.toString());
+                log.debug("print coverage plan==============");
+                log.debug(coverage.toString());
 
 
                 for(SplitTask split : splitTasks)
                 {
-                    //log.debug("============printing split data at "+split.getHost()+"===============");
+                    log.debug("============printing split data at "+split.getHost()+"===============");
                     //log.debug(((OtpErlangObject)split.getTask()).toString());
                     //log.debug(split.toString());
 

@@ -21,7 +21,9 @@ import java.net.URI;
 
 public class RiakConfig
 {
-    private String host;
+    private String host = "localhost";
+    private int port = 8087;
+    private int prestoPort = 8080;
     private String localNode;
     private String erlangNodeName = null; // name for distributed erlang like 'presto@127.0.0.1'
     private String erlangCookie = null;
@@ -57,11 +59,21 @@ public class RiakConfig
         return this;
     }
 
+    @Config("http-server.http.port")
+    public RiakConfig setPrestoPort(int port)
+    {
+        this.prestoPort = port;
+        return this;
+    }
+
     @NotNull
     public String getHost()
     {
         return host;
     }
+
+    public int getPort(){return port;}
+    public int getPrestoPort(){return prestoPort;}
 
     public String getLocalNode() { return localNode; }
 

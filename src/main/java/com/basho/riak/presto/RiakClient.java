@@ -71,13 +71,15 @@ public class RiakClient
     private final PBClusterConfig clusterConfig;
     private final String hosts;
 
+    private final RiakConfig config;
+
     private static final Logger log = Logger.get(RiakClient.class);
 
     @Inject
     public RiakClient(RiakConfig config) //}, JsonCodec<Map<String, List<RiakTable>>> catalogCodec)
-            throws IOException
+            throws IOException, RiakException
     {
-        checkNotNull(config, "config is null");
+        this.config = checkNotNull(config, "config is null");
 
         this.hosts = checkNotNull(config.getHost());
         log.info("Riak Config: %s", hosts);
@@ -104,6 +106,26 @@ public class RiakClient
         //String json = Resources.toString(metadataUri.toURL(), Charsets.UTF_8);
         //Map<String, List<RiakTable>> catalog = catalogCodec.fromJson(json);
         //this.schemas = ImmutableMap.copyOf(transformValues(catalog, resolveAndIndexTables(metadataUri)));
+
+        // insert your names;
+        // TODO: how do we unregister when presto node shuts down?
+        register();
+    }
+
+    // @doc register presto node's hostname and port to Riak,
+    // so as to Riak can return correct presto node corresponding to a vnode.
+    private void register() throws RiakException
+    {
+        IRiakClient client = RiakFactory.newClient(clusterConfig);
+        Bucket bucket = client.createBucket(META_BUCKET_NAME).execute();
+
+        String host = HostAndPort.fromString(config.getHost()).getHostText();
+        log.debug("presto port ===> %s:%s", host, config.getPrestoPort());
+        // riak.erlang.node => { presto.erlang.node, node.ip, http-server.http.port }
+        PairwiseNode pairNode = new PairwiseNode(config.getLocalNode(), host, config.getPrestoPort());
+        bucket.store(config.getLocalNode(), pairNode).execute();
+        log.info("membership registered: %s => %s:%s",
+                config.getLocalNode(), pairNode.getHost(), pairNode.getPort());
     }
 
     public Set<String> getSchemaNames()
@@ -171,10 +193,8 @@ public class RiakClient
             Bucket bucket = client.createBucket(META_BUCKET_NAME).execute();
 
             String tableKey = schema + "." + tableName;
-            log.debug("foobar;-");
             RiakTable table = bucket.fetch(tableKey, RiakTable.class).execute();
 
-            log.debug("foobar;--");
             checkNotNull(table, "table schema (%s) wasn't found.", tableKey);
             log.debug("table %s schema found.", tableName);
 
