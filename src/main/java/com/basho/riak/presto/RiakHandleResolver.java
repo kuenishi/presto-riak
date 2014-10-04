@@ -20,8 +20,7 @@ import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class RiakHandleResolver
-        implements ConnectorHandleResolver
+public class RiakHandleResolver implements ConnectorHandleResolver
 {
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
@@ -36,6 +35,16 @@ public class RiakHandleResolver
 
     @Override
     public boolean canHandle(ConnectorIndexHandle connectorIndexHandle) {
+        return false;
+    }
+
+    @Override
+    public boolean canHandle(ConnectorOutputTableHandle connectorOutputTableHandle) {
+        return false;
+    }
+
+    @Override
+    public boolean canHandle(ConnectorInsertTableHandle connectorInsertTableHandle) {
         return false;
     }
 
@@ -81,5 +90,15 @@ public class RiakHandleResolver
     public Class<? extends ConnectorSplit> getSplitClass()
     {
         return CoverageSplit.class;
+    }
+
+    @Override
+    public Class<? extends ConnectorOutputTableHandle> getOutputTableHandleClass() {
+        return null;
+    }
+
+    @Override
+    public Class<? extends ConnectorInsertTableHandle> getInsertTableHandleClass() {
+        return null;
     }
 }

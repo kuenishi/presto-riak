@@ -13,11 +13,15 @@
  */
 package com.basho.riak.presto;
 
-import com.basho.riak.client.IRiakObject;
-import com.basho.riak.client.RiakException;
-import com.basho.riak.client.RiakFactory;
-import com.basho.riak.client.bucket.BucketProperties;
-import com.basho.riak.pbc.RiakObject;
+
+import com.basho.riak.client.core.RiakCluster;
+import com.basho.riak.client.core.RiakNode;
+import com.basho.riak.client.core.operations.FetchOperation;
+import com.basho.riak.client.core.operations.StoreOperation;
+import com.basho.riak.client.core.query.Location;
+import com.basho.riak.client.core.query.Namespace;
+import com.basho.riak.client.core.query.RiakObject;
+import com.basho.riak.client.core.util.BinaryValue;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -25,6 +29,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import com.google.common.net.HostAndPort;
+import com.google.gson.Gson;
 import io.airlift.json.JsonCodec;
 
 import javax.inject.Inject;
@@ -32,6 +37,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static com.basho.riak.presto.RiakTable.nameGetter;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -39,36 +45,22 @@ import static com.google.common.collect.Iterables.transform;
 import static com.google.common.collect.Maps.transformValues;
 import static com.google.common.collect.Maps.uniqueIndex;
 
-import com.basho.riak.client.raw.pbc.PBClientConfig;
-import com.basho.riak.client.raw.pbc.PBClusterConfig;
-import com.basho.riak.client.IRiakClient;
-
-import com.basho.riak.client.bucket.Bucket;
 import io.airlift.log.Logger;
 
 public class RiakClient
 {
-    private static final int THREAD_POOL_SIZE = 50;
-    private static final int MAX_JOB_QUEUE_CAPACITY = 50;
 
-    private static final int TOTAL_MAX_CONNECTIONS = 0; // unlimited
-
-    private static final int MAX_CONNECTION_SIZE = 50;
-    private static final int INIT_CONNECTION_SIZE = 50;
-
-    private static final int BUFFER_KB = 1;
-    private static final int IDLE_CONN_TIMEOUT_MIL = 2000;
     private static final int CONNECTION_TIMEOUT_MIL = 2000;
-    private static final int REQUEST_TIMEOUT_MIL = 2000;
 
-    public static final String META_BUCKET_NAME = "__presto_schema";
-    public static final String SCHEMA_KEY_NAME = "__schema";
-
+    public static final BinaryValue META_BUCKET_NAME = BinaryValue.create("__presto_schema");
+    public static final BinaryValue SCHEMA_KEY_NAME = BinaryValue.create("__schema");
+    //private static final BinaryValue BUCKET = BinaryValue.create("test");
+    private static final Namespace NAMESPACE = new Namespace(META_BUCKET_NAME); // with default bucket type.
     /**
      * SchemaName -> (TableName -> TableMetadata)
      */
     private final List<String> schemas;
-    private final PBClusterConfig clusterConfig;
+    private final RiakCluster cluster;
     private final String hosts;
 
     private final RiakConfig config;
@@ -77,7 +69,7 @@ public class RiakClient
 
     @Inject
     public RiakClient(RiakConfig config) //}, JsonCodec<Map<String, List<RiakTable>>> catalogCodec)
-            throws IOException, RiakException
+            throws IOException, InterruptedException
     {
         this.config = checkNotNull(config, "config is null");
 
@@ -87,19 +79,13 @@ public class RiakClient
         HostAndPort hp = HostAndPort.fromString(hosts);
 //		PBClientConfig node1 = PBClientConfig.defaults();
 
-        PBClientConfig node1 = new PBClientConfig.Builder()
-                .withHost(hp.getHostText())
-                .withPort(hp.getPortOrDefault(8087))
-                .withConnectionTimeoutMillis(CONNECTION_TIMEOUT_MIL)
-                .withIdleConnectionTTLMillis(IDLE_CONN_TIMEOUT_MIL)
-                .withSocketBufferSizeKb(BUFFER_KB)
-                .withRequestTimeoutMillis(REQUEST_TIMEOUT_MIL)
-                .withInitialPoolSize(INIT_CONNECTION_SIZE)
-                .withPoolSize(MAX_CONNECTION_SIZE)
+        RiakNode node = new RiakNode.Builder()
+                .withRemoteAddress(hp.getHostText())
+                .withRemotePort(hp.getPortOrDefault(8087))
+                .withMaxConnections(10)
+                .withConnectionTimeout(CONNECTION_TIMEOUT_MIL)
                 .build();
-
-        clusterConfig = new PBClusterConfig(TOTAL_MAX_CONNECTIONS);
-        clusterConfig.addClient(node1);
+        cluster = RiakCluster.builder(Arrays.asList(node)).build();
 
         //final String hosts = config.getHosts();
         this.schemas = Arrays.asList("default");
@@ -114,18 +100,31 @@ public class RiakClient
 
     // @doc register presto node's hostname and port to Riak,
     // so as to Riak can return correct presto node corresponding to a vnode.
-    private void register() throws RiakException
+    private void register() throws InterruptedException
     {
-        IRiakClient client = RiakFactory.newClient(clusterConfig);
-        Bucket bucket = client.createBucket(META_BUCKET_NAME).execute();
 
         String host = HostAndPort.fromString(config.getHost()).getHostText();
         log.debug("presto port ===> %s:%s", host, config.getPrestoPort());
         // riak.erlang.node => { presto.erlang.node, node.ip, http-server.http.port }
         PairwiseNode pairNode = new PairwiseNode(config.getLocalNode(), host, config.getPrestoPort());
-        bucket.store(config.getLocalNode(), pairNode).execute();
-        log.info("membership registered: %s => %s:%s",
-                config.getLocalNode(), pairNode.getHost(), pairNode.getPort());
+        RiakObject obj = new RiakObject();
+        obj.setContentType("application/json");
+        obj.setValue(BinaryValue.create(pairNode.toString()));
+        log.debug("Registering membership: %s", pairNode.toString());
+
+        BinaryValue localNode = BinaryValue.create(config.getLocalNode());
+        StoreOperation op = new StoreOperation.Builder(new Location(NAMESPACE, localNode))
+            .withContent(obj).build();
+
+        cluster.execute(op);
+
+        op.await();
+        if (op.isSuccess()) {
+            log.info("membership registered: %s => %s:%s",
+                    config.getLocalNode(), pairNode.getHost(), pairNode.getPort());
+        }else{
+            log.error("failed to register membership");
+        }
     }
 
     public Set<String> getSchemaNames()
@@ -135,51 +134,51 @@ public class RiakClient
         return new HashSet<String>(this.schemas);
     }
 
-    public Set<String> getTableNames(String schema)
+    public Set<String> getTableNames(String schema) throws InterruptedException, ExecutionException
     {
         log.info("checking... rawDatabaseaaaaa %s", schema);
-        IRiakClient client = null;
-        try{
-            client = RiakFactory.newClient(clusterConfig);
-            Bucket bucket = client.createBucket(META_BUCKET_NAME).execute();
+
 
             RawDatabase rawDatabase = null;
-            String schemaKey = schema;
+            BinaryValue schemaKey = BinaryValue.create(schema);
             if(schema.equals("default")){
                 schemaKey = SCHEMA_KEY_NAME;
             }
 
             // null return if not found
-            IRiakObject riakObject = bucket.fetch(schemaKey).execute();
+            FetchOperation op = new FetchOperation.Builder(new Location(NAMESPACE, schemaKey)).build();
+            cluster.execute(op);
 
-            //log.debug(riakObject.toString());
-            //log.debug(riakObject.getValueAsString());
-
-            //log.debug("checking... rawDatabase");
-            rawDatabase = bucket.fetch(schemaKey, RawDatabase.class).execute();
-
-            checkNotNull(rawDatabase, "no schema key exists in Riak");
-            //if(rawDatabase == null) log.debug("rawDatabase is null");
-            //else                    log.debug("rawDatabase is not null");
-
-            checkNotNull(rawDatabase.tables, "bad schema that doesn't have no table property");
-            //log.debug("%s tables found for schema %s", rawDatabase.tables.size(), schema);
-
-            return new HashSet<String>(rawDatabase.tables);
+            op.await();
+        if(! op.isSuccess()) {
+            return null;
         }
-        catch (RiakException e)
-        {
-            log.error(e);
-        }
-        finally{
-            if(client != null) client.shutdown();
-        }
-        Set<String> s = new HashSet<String>(Arrays.asList("foobartable"));
+            List<RiakObject> objects = op.get().getObjectList();
+
+            for (RiakObject o : objects) {
+                log.debug(o.toString());
+                log.debug(o.getValue().toStringUtf8());
+                Gson gson = new Gson();
+
+                rawDatabase = gson.fromJson(o.getValue().toStringUtf8(), RawDatabase.class);
+
+                checkNotNull(rawDatabase, "no schema key exists in Riak");
+                //if(rawDatabase == null) log.debug("rawDatabase is null");
+                //else                    log.debug("rawDatabase is not null");
+
+                checkNotNull(rawDatabase.tables, "bad schema that doesn't have no table property");
+                //log.debug("%s tables found for schema %s", rawDatabase.tables.size(), schema);
+
+                return new HashSet<String>(rawDatabase.tables);
+            }
+        Set<String> s = new HashSet<String>();
         return ImmutableSet.copyOf(s);
     }
 
+
+
     public RiakTable getTable(String schema, String tableName)
-    {
+            throws InterruptedException, ExecutionException {
         checkNotNull(schema, "schema is null");
         checkNotNull(tableName, "tableName is null");
 
@@ -187,59 +186,27 @@ public class RiakClient
         //Map<String, RiakTable> tables = schemas.get(schema);
         //if (tables == null) {
         //    return null;
-        IRiakClient client = null;
-        try{
-            client = RiakFactory.newClient(clusterConfig);
-            Bucket bucket = client.createBucket(META_BUCKET_NAME).execute();
 
-            String tableKey = schema + "." + tableName;
-            RiakTable table = bucket.fetch(tableKey, RiakTable.class).execute();
+        BinaryValue tableKey = BinaryValue.create(schema + "." + tableName);
+        FetchOperation op = new FetchOperation.Builder(new Location(NAMESPACE, tableKey)).build();
+        cluster.execute(op);
+        op.await();
+        if (!op.isSuccess()) {
+            return null;
+        }
+        Gson gson = new Gson();
+        List<RiakObject> objects = op.get().getObjectList();
+        for (RiakObject o : objects) {
+            RiakTable table = gson.fromJson(o.getValue().toStringUtf8(), RiakTable.class);
 
             checkNotNull(table, "table schema (%s) wasn't found.", tableKey);
             log.debug("table %s schema found.", tableName);
 
             return table;
         }
-        catch (RiakException e)
-        {
-            log.error(e);
-            return null;
-        }
-        finally{
-            if(client != null) client.shutdown();
-        }
-    }
-
-    public List<RiakTable> getTables(String schema)
-    {
-        IRiakClient client = null;
-        try{
-            client = RiakFactory.newClient(clusterConfig);
-            Bucket bucket = client.createBucket(META_BUCKET_NAME).execute();
-
-            RawDatabase rawDatabase = bucket.fetch(SCHEMA_KEY_NAME, RawDatabase.class).execute();
-            log.debug("%d tables found for schema %s", rawDatabase.tables.size(),
-                    schema);
-
-            List<RiakTable> riakTableList = new LinkedList<RiakTable>();
-            for (String table : rawDatabase.tables)
-            {
-                log.info("table %s found.", table);
-                BucketProperties bucketProperties = client.fetchBucket(table).execute();
-                log.debug(bucketProperties.toString());
-                //RiakTable tableObject = bucketProperties.toString();
-            }
-            return riakTableList;
-        }
-        catch (RiakException e)
-        {
-            log.error(e);
-        }
-        finally{
-            if(client != null) client.shutdown();
-        }
         return null;
     }
+
 
     public String getHosts(){ return hosts; }
 

@@ -1,0 +1,99 @@
+/*
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+
+package com.basho.riak.presto;
+
+import com.ericsson.otp.erlang.*;
+
+import java.util.*;
+import static com.google.common.base.Preconditions.*;
+
+
+/**
+ * Created by kuenishi on 14/03/29.
+ */
+// @doc translated from internal riak_object.
+// direct translation.
+public class InternalRiakObject {
+    public byte[] getKey() {
+        return key;
+    }
+
+    private final byte[] key;
+
+    public byte[] getBucket() {
+        return bucket;
+    }
+
+    private final byte[] bucket;
+    private List<byte[]> values;
+
+    public InternalRiakObject(OtpErlangObject object)
+    {
+        checkRecord(object, "r_object");
+
+        OtpErlangTuple rObject = (OtpErlangTuple)object;
+//        System.out.println(rObject);
+//        -record(r_object, {
+//                bucket :: bucket(),
+        this.bucket = ((OtpErlangBinary)rObject.elementAt(1)).binaryValue();
+//                key :: key(),
+        this.key = ((OtpErlangBinary)rObject.elementAt(2)).binaryValue();
+//                contents :: [#r_content{}],
+        OtpErlangList contents = (OtpErlangList)rObject.elementAt(3);
+        values = new ArrayList();
+        for(OtpErlangObject content : contents)
+        {
+            checkRecord(content, "r_content");
+//            -record(r_content, {
+//                    metadata :: dict() | list(),
+//                    value :: term()
+            OtpErlangBinary b = (OtpErlangBinary)((OtpErlangTuple)content).elementAt(2);
+            values.add(b.binaryValue());
+//            }).
+        }
+//        vclock = vclock:fresh() :: vclock:vclock(),
+//            updatemetadata=dict:store(clean, true, dict:new()) :: dict(),
+//            updatevalue :: term()
+//        }).
+    }
+
+    private void checkRecord(OtpErlangObject o, String v)
+    {
+        checkAtom(((OtpErlangTuple)o).elementAt(0), v);
+    }
+    private void checkAtom(OtpErlangObject o, String v)
+    {
+        checkState(((OtpErlangAtom)o).atomValue().equals(v));
+    }
+
+    public void setValue(byte[] bytes) {
+    }
+
+    public void setValue(String s) {
+
+    }
+
+    public byte[] getValue() {
+//        if(values.size()==1)
+        return values.get(0);
+    }
+
+    public String getValueAsString() {
+        return new String(getValue());
+    }
+
+
+}

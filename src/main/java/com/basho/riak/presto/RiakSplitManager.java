@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -59,15 +60,20 @@ public class RiakSplitManager
     // TODO: get the right partitions right here
     @Override
     public ConnectorPartitionResult getPartitions(ConnectorTableHandle tableHandle, TupleDomain tupleDomain)
-    {
+     {
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
 
         log.info("==========================tupleDomain=============================");
         log.info(tupleDomain.toString());
 
-        RiakTable table = //RiakTable.example(riakTableHandle.getTableName());
-                riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+        RiakTable table = null;//RiakTable.example(riakTableHandle.getTableName());
+        try {
+            table = riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+
+        }catch (Exception e){
+            log.error("interrupted: %s", e.toString());
+        }
 
         List<String> indexedColumns = new LinkedList<String>();
         for(RiakColumn riakColumn : table.getColumns())
@@ -101,8 +107,10 @@ public class RiakSplitManager
         RiakPartition riakPartition = (RiakPartition) partition;
 
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
-        RiakTable table = //RiakTable.example(riakTableHandle.getTableName());
-                riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+        RiakTable table = null; //RiakTable.example(riakTableHandle.getTableName());
+        try {
+            table = riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+        }catch(Exception e){}
         // this can happen if table is removed during a query
         checkState(table != null, "Table %s.%s no longer exists", riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
 
