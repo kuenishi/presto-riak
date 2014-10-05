@@ -23,28 +23,25 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-public final class RiakColumn
-{
+public final class RiakColumn {
+    private static final Logger log = Logger.get(RiakRecordSetProvider.class);
     private final String name;
     private final String type;
-    private boolean index;
     private final Type spiType;
+    private boolean index;
 
-    private static final Logger log = Logger.get(RiakRecordSetProvider.class);
-
-    public RiakColumn(String name, Type type, boolean index)
-    {
+    public RiakColumn(String name, Type type, boolean index) {
         this.name = name;
         this.spiType = type;
         this.type = this.spiType.getName();
         this.index = index;
     }
+
     @JsonCreator
     public RiakColumn(
             @JsonProperty("name") String name,
             @JsonProperty("type") String type,
-            @JsonProperty("index") boolean index)
-    {
+            @JsonProperty("index") boolean index) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = checkNotNull(type, "type is null");
@@ -54,48 +51,27 @@ public final class RiakColumn
 
     Type toSpiType(String t) {
 
-        if (t.equals("LONG"))
-        {
+        if (t.equals("LONG")) {
             return BigintType.BIGINT;
-        }
-        else if(t.equals("STRING"))
-        {
+        } else if (t.equals("STRING")) {
             return VarcharType.VARCHAR;
-        }
-        else if(t.equals("varchar"))
-        {
+        } else if (t.equals("varchar")) {
             return VarcharType.VARCHAR;
-        }
-        else if(t.equals(BigintType.BIGINT.getName()))
-        {
+        } else if (t.equals(BigintType.BIGINT.getName())) {
             return BigintType.BIGINT;
-        }
-        else if(t.equals(BooleanType.BOOLEAN.getName()))
-        {
+        } else if (t.equals(BooleanType.BOOLEAN.getName())) {
             return BooleanType.BOOLEAN;
-        }
-        else if(t.equals(DateType.DATE.getName()))
-        {
+        } else if (t.equals(DateType.DATE.getName())) {
             return DateType.DATE;
-        }
-        else if(t.equals(DoubleType.DOUBLE.getName()))
-        {
+        } else if (t.equals(DoubleType.DOUBLE.getName())) {
             return DoubleType.DOUBLE;
-        }
-        else if(t.equals(HyperLogLogType.HYPER_LOG_LOG.getName()))
-        {
+        } else if (t.equals(HyperLogLogType.HYPER_LOG_LOG.getName())) {
             return HyperLogLogType.HYPER_LOG_LOG;
-        }
-        else if(t.equals(IntervalDayTimeType.INTERVAL_DAY_TIME.getName()))
-        {
+        } else if (t.equals(IntervalDayTimeType.INTERVAL_DAY_TIME.getName())) {
             return IntervalDayTimeType.INTERVAL_DAY_TIME;
-        }
-        else if(t.equals(IntervalYearMonthType.INTERVAL_YEAR_MONTH.getName()))
-        {
+        } else if (t.equals(IntervalYearMonthType.INTERVAL_YEAR_MONTH.getName())) {
             return IntervalYearMonthType.INTERVAL_YEAR_MONTH;
-        }
-        else if(t.equals(TimestampType.TIMESTAMP.getName()))
-        {
+        } else if (t.equals(TimestampType.TIMESTAMP.getName())) {
             return TimestampType.TIMESTAMP;
         }
         log.error("unknown type in table schema: %s", t);
@@ -103,33 +79,35 @@ public final class RiakColumn
     }
 
     @JsonProperty
-    public String getName()
-    {
+    public String getName() {
         return name;
     }
 
     @JsonProperty
-    public String getType() { return type; }
+    public String getType() {
+        return type;
+    }
 
-    public Type spiType() { return spiType; }
+    public Type spiType() {
+        return spiType;
+    }
 
     @JsonProperty
-    public boolean getIndex() {return index;}
+    public boolean getIndex() {
+        return index;
+    }
 
-    public void setIndex(boolean b)
-    {
+    public void setIndex(boolean b) {
         this.index = b;
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hashCode(name, type);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -144,8 +122,7 @@ public final class RiakColumn
     }
 
     @Override
-    public String toString()
-    {
-        return name + ":" + type + "(index="+index+")";
+    public String toString() {
+        return name + ":" + type + "(index=" + index + ")";
     }
 }

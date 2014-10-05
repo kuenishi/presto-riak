@@ -37,6 +37,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class CoverageSplit implements ConnectorSplit {
 
 
+    private static final Logger log = Logger.get(CoverageSplit.class);
     private final String connectorId;
     private final String schemaName;
     private final String tableName;
@@ -44,11 +45,7 @@ public class CoverageSplit implements ConnectorSplit {
     private final String splitData;
     private final TupleDomain tupleDomain;
     private final List<String> indexedColumns;
-
-
     private final ImmutableList<HostAddress> addresses;
-
-    private static final Logger log = Logger.get(CoverageSplit.class);
 
     @JsonCreator
     public CoverageSplit(
@@ -58,8 +55,7 @@ public class CoverageSplit implements ConnectorSplit {
             @JsonProperty("host") String host,
             @JsonProperty("splitData") String splitData,
             @JsonProperty("tupleDomain") TupleDomain tupleDomain,
-            @JsonProperty("indexedColumns") List<String> indexedColumns)
-    {
+            @JsonProperty("indexedColumns") List<String> indexedColumns) {
         this.schemaName = checkNotNull(schemaName, "schema name is null");
         this.connectorId = checkNotNull(connectorId, "connector id is null");
         this.tableName = checkNotNull(tableName, "table name is null");
@@ -80,8 +76,7 @@ public class CoverageSplit implements ConnectorSplit {
             @JsonProperty("tableName") String tableName,
             @JsonProperty("host") String host,
             @JsonProperty("tupleDomain") TupleDomain tupleDomain,
-            @JsonProperty("indexedColumns") List<String> indexedColumns)
-    {
+            @JsonProperty("indexedColumns") List<String> indexedColumns) {
         this.schemaName = checkNotNull(schemaName, "schema name is null");
         this.connectorId = checkNotNull(connectorId, "connector id is null");
         this.tableName = checkNotNull(tableName, "table name is null");
@@ -96,19 +91,39 @@ public class CoverageSplit implements ConnectorSplit {
     }
 
     @JsonProperty
-    public String getConnectorId(){ return connectorId; }
+    public String getConnectorId() {
+        return connectorId;
+    }
+
     @JsonProperty
-    public String getSchemaName(){ return schemaName; }
+    public String getSchemaName() {
+        return schemaName;
+    }
+
     @JsonProperty
-    public String getTableName(){ return tableName; }
+    public String getTableName() {
+        return tableName;
+    }
+
     @JsonProperty
-    public String getHost(){ return host; }
+    public String getHost() {
+        return host;
+    }
+
     @JsonProperty
-    public String getSplitData(){ return splitData; }
+    public String getSplitData() {
+        return splitData;
+    }
+
     @JsonProperty
-    public TupleDomain getTupleDomain() { return tupleDomain; }
+    public TupleDomain getTupleDomain() {
+        return tupleDomain;
+    }
+
     @JsonProperty
-    public List<String> getIndexedColumns() { return indexedColumns; }
+    public List<String> getIndexedColumns() {
+        return indexedColumns;
+    }
 
     @Override
     public boolean isRemotelyAccessible() {
@@ -131,8 +146,7 @@ public class CoverageSplit implements ConnectorSplit {
     }
 
     @Override
-    public List<HostAddress> getAddresses()
-    {
+    public List<HostAddress> getAddresses() {
         //log.debug("getAddress: %s", addresses);
         //log.debug(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(this));
         return addresses;
@@ -140,8 +154,7 @@ public class CoverageSplit implements ConnectorSplit {
 
     @NotNull
     public SplitTask getSplitTask()
-        throws OtpErlangDecodeException, DecoderException
-    {
+            throws OtpErlangDecodeException, DecoderException {
         return new SplitTask(splitData);
     }
 

@@ -19,8 +19,7 @@ public class PairwiseNode implements Node {
 
     PairwiseNode(@JsonProperty("localNode") String localNode,
                  @JsonProperty("host") String host,
-                 @JsonProperty("port") int port)
-    {
+                 @JsonProperty("port") int port) {
         this.host = host;
         this.port = port;
         this.localNode = localNode;
@@ -29,29 +28,28 @@ public class PairwiseNode implements Node {
     @JsonIgnore
     @Override
     public HostAddress getHostAndPort() {
-        return HostAddress.fromParts(host,port);
+        return HostAddress.fromParts(host, port);
     }
 
     @JsonProperty
-    public String getHost()
-    {
+    public String getHost() {
         return host;
     }
+
     @JsonProperty
-    public int getPort()
-    {
+    public int getPort() {
         return port;
     }
+
     @JsonProperty
-    public String getLocalNode()
-    {
+    public String getLocalNode() {
         return localNode;
     }
 
     @JsonIgnore
     @Override
     public URI getHttpUri() {
-        return URI.create("http://"+host+":"+port);
+        return URI.create("http://" + host + ":" + port);
     }
 
     @JsonIgnore

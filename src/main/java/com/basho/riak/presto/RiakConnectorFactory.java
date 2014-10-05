@@ -26,24 +26,20 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakConnectorFactory
-        implements ConnectorFactory
-{
+        implements ConnectorFactory {
     private final Map<String, String> optionalConfig;
 
-    public RiakConnectorFactory(Map<String, String> optionalConfig)
-    {
+    public RiakConnectorFactory(Map<String, String> optionalConfig) {
         this.optionalConfig = ImmutableMap.copyOf(checkNotNull(optionalConfig, "optionalConfig is null"));
     }
 
     @Override
-    public String getName()
-    {
+    public String getName() {
         return "riak";
     }
 
     @Override
-    public Connector create(final String connectorId, Map<String, String> requiredConfig)
-    {
+    public Connector create(final String connectorId, Map<String, String> requiredConfig) {
         checkNotNull(requiredConfig, "requiredConfig is null");
         checkNotNull(optionalConfig, "optionalConfig is null");
 
@@ -61,8 +57,7 @@ public class RiakConnectorFactory
                     .initialize();
 
             return injector.getInstance(RiakConnector.class);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw Throwables.propagate(e);
         }
     }

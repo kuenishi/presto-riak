@@ -24,20 +24,17 @@ import io.airlift.log.Logger;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakTableHandle
-        implements ConnectorTableHandle
-{
+        implements ConnectorTableHandle {
+    private static final Logger log = Logger.get(RiakTableHandle.class);
     private final String connectorId;
     private final String schemaName;
     private final String tableName;
-
-    private static final Logger log = Logger.get(RiakTableHandle.class);
 
     @JsonCreator
     public RiakTableHandle(
             @JsonProperty("connectorId") String connectorId,
             @JsonProperty("schemaName") String schemaName,
-            @JsonProperty("tableName") String tableName)
-    {
+            @JsonProperty("tableName") String tableName) {
         this.connectorId = checkNotNull(connectorId, "connectorId is null");
         this.schemaName = checkNotNull(schemaName, "schemaName is null");
         this.tableName = checkNotNull(tableName, "tableName is null");
@@ -45,37 +42,31 @@ public final class RiakTableHandle
     }
 
     @JsonProperty
-    public String getConnectorId()
-    {
+    public String getConnectorId() {
         return connectorId;
     }
 
     @JsonProperty
-    public String getSchemaName()
-    {
+    public String getSchemaName() {
         return schemaName;
     }
 
     @JsonProperty
-    public String getTableName()
-    {
+    public String getTableName() {
         return tableName;
     }
 
-    public SchemaTableName toSchemaTableName()
-    {
+    public SchemaTableName toSchemaTableName() {
         return new SchemaTableName(schemaName, tableName);
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hashCode(connectorId, schemaName, tableName);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -90,8 +81,7 @@ public final class RiakTableHandle
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         log.debug("toString?");
 
         return Joiner.on(":").join(connectorId, schemaName, tableName);

@@ -43,7 +43,6 @@
     <orderEntry type="library" name="Maven: com.facebook.presto:presto-spi:0.77" level="project" />
     <orderEntry type="library" name="Maven: io.airlift:slice:0.7" level="project" />
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.9" level="project" />
-    <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.3" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.airlift:bootstrap:0.95" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: io.airlift:log:0.95" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: javax.inject:javax.inject:1" level="project" />

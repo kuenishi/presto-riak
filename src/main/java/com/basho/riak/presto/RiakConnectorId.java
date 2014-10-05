@@ -17,30 +17,25 @@ import com.google.common.base.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public final class RiakConnectorId
-{
+public final class RiakConnectorId {
     private final String id;
 
-    public RiakConnectorId(String id)
-    {
+    public RiakConnectorId(String id) {
         this.id = checkNotNull(id, "id is null");
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return id;
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hashCode(id);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }

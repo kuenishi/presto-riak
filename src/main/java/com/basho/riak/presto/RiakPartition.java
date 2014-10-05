@@ -20,25 +20,21 @@ import io.airlift.log.Logger;
 
 import java.util.List;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakPartition
-        implements ConnectorPartition
-{
+        implements ConnectorPartition {
+    private static final Logger log = Logger.get(RiakPartition.class);
     private final String schemaName;
     private final String tableName;
     private final TupleDomain tupleDomain;
     private final List<String> indexedColumns;
 
-    private static final Logger log = Logger.get(RiakPartition.class);
-
     public RiakPartition(String schemaName,
                          String tableName,
                          TupleDomain tupleDomain,
                          List<String> indexedColumns
-        )
-    {
+    ) {
         this.schemaName = checkNotNull(schemaName, "schema name is null");
         this.tableName = checkNotNull(tableName, "table name is null");
         this.tupleDomain = checkNotNull(tupleDomain);
@@ -46,32 +42,29 @@ public class RiakPartition
     }
 
     @Override
-    public String getPartitionId()
-    {
+    public String getPartitionId() {
         return schemaName + ":" + tableName;
     }
 
-    public String getSchemaName()
-    {
+    public String getSchemaName() {
         return schemaName;
     }
 
-    public String getTableName()
-    {
+    public String getTableName() {
         return tableName;
     }
 
-    public List<String> getIndexedColumns() { return indexedColumns; }
+    public List<String> getIndexedColumns() {
+        return indexedColumns;
+    }
 
     @Override
-    public TupleDomain getTupleDomain()
-    {
+    public TupleDomain getTupleDomain() {
         return tupleDomain;
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return Objects.toStringHelper(this)
                 .add("schemaName", schemaName)
                 .add("tableName", tableName)

@@ -23,53 +23,41 @@ import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Resources;
 import com.google.common.net.HostAndPort;
-
-import javax.inject.Inject;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-
-import static com.basho.riak.presto.RiakTable.nameGetter;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Iterables.transform;
-import static com.google.common.collect.Maps.transformValues;
-import static com.google.common.collect.Maps.uniqueIndex;
-
 import io.airlift.log.Logger;
 
-public class RiakClient
-{
+import javax.inject.Inject;
+import java.io.IOException;
+import java.net.URI;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
-    private static final int CONNECTION_TIMEOUT_MIL = 2000;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+public class RiakClient {
 
     public static final BinaryValue META_BUCKET_NAME = BinaryValue.create("__presto_schema");
-    public static final BinaryValue SCHEMA_KEY_NAME = BinaryValue.create("__schema");
     //private static final BinaryValue BUCKET = BinaryValue.create("test");
     private static final Namespace NAMESPACE = new Namespace(META_BUCKET_NAME); // with default bucket type.
+    public static final BinaryValue SCHEMA_KEY_NAME = BinaryValue.create("__schema");
+    private static final int CONNECTION_TIMEOUT_MIL = 2000;
+    private static final Logger log = Logger.get(RiakClient.class);
     /**
      * SchemaName -> (TableName -> TableMetadata)
      */
     private final List<String> schemas;
     private final RiakCluster cluster;
     private final String hosts;
-
     private final RiakConfig config;
-
-    private static final Logger log = Logger.get(RiakClient.class);
 
     @Inject
     public RiakClient(RiakConfig config) //}, JsonCodec<Map<String, List<RiakTable>>> catalogCodec)
-            throws IOException, InterruptedException
-    {
+            throws IOException, InterruptedException {
         this.config = checkNotNull(config, "config is null");
 
         this.hosts = checkNotNull(config.getHost());
@@ -97,10 +85,18 @@ public class RiakClient
         register();
     }
 
+    private static Function<URI, URI> uriResolver(final URI baseUri) {
+        return new Function<URI, URI>() {
+            @Override
+            public URI apply(URI source) {
+                return baseUri.resolve(source);
+            }
+        };
+    }
+
     // @doc register presto node's hostname and port to Riak,
     // so as to Riak can return correct presto node corresponding to a vnode.
-    private void register() throws InterruptedException
-    {
+    private void register() throws InterruptedException {
 
         String host = HostAndPort.fromString(config.getHost()).getHostText();
         log.debug("presto port ===> %s:%s", host, config.getPrestoPort());
@@ -113,7 +109,7 @@ public class RiakClient
 
         BinaryValue localNode = BinaryValue.create(config.getLocalNode());
         StoreOperation op = new StoreOperation.Builder(new Location(NAMESPACE, localNode))
-            .withContent(obj).build();
+                .withContent(obj).build();
 
         cluster.execute(op);
 
@@ -121,64 +117,60 @@ public class RiakClient
         if (op.isSuccess()) {
             log.info("membership registered: %s => %s:%s",
                     config.getLocalNode(), pairNode.getHost(), pairNode.getPort());
-        }else{
+        } else {
             log.error("failed to register membership");
         }
     }
 
-    public Set<String> getSchemaNames()
-    {
+    public Set<String> getSchemaNames() {
         // TODO: fetch all bucket types from somewhere,
         // maybe from configuration or a key that stores metadata
         return new HashSet<String>(this.schemas);
     }
 
-    public Set<String> getTableNames(String schema) throws InterruptedException, ExecutionException, IOException
-    {
+    public Set<String> getTableNames(String schema) throws InterruptedException, ExecutionException, IOException {
         log.info("checking... rawDatabaseaaaaa %s", schema);
 
+        RawDatabase rawDatabase = null;
+        BinaryValue schemaKey = BinaryValue.create(schema);
+        if (schema.equals("default")) {
+            schemaKey = SCHEMA_KEY_NAME;
+        }
 
-            RawDatabase rawDatabase = null;
-            BinaryValue schemaKey = BinaryValue.create(schema);
-            if(schema.equals("default")){
-                schemaKey = SCHEMA_KEY_NAME;
-            }
+        // null return if not found
+        FetchOperation op = new FetchOperation.Builder(new Location(NAMESPACE, schemaKey)).build();
+        cluster.execute(op);
 
-            // null return if not found
-            FetchOperation op = new FetchOperation.Builder(new Location(NAMESPACE, schemaKey)).build();
-            cluster.execute(op);
-
-            op.await();
-        if(! op.isSuccess()) {
+        op.await();
+        if (!op.isSuccess()) {
             return null;
         }
-            List<RiakObject> objects = op.get().getObjectList();
 
-            ObjectMapper om = new ObjectMapper();
-            for (RiakObject o : objects) {
-                log.debug(o.toString());
-                log.debug(o.getValue().toStringUtf8());
+        List<RiakObject> objects = op.get().getObjectList();
 
-                rawDatabase = om.readValue(o.getValue().toStringUtf8(), RawDatabase.class);
 
-                checkNotNull(rawDatabase, "no schema key exists in Riak");
-                //if(rawDatabase == null) log.debug("rawDatabase is null");
-                //else                    log.debug("rawDatabase is not null");
+        ObjectMapper om = new ObjectMapper();
+        for (RiakObject o : objects) {
+            log.debug(o.toString());
+            log.debug(o.getValue().toStringUtf8());
 
-                checkNotNull(rawDatabase.tables, "bad schema that doesn't have no table property");
-                //log.debug("%s tables found for schema %s", rawDatabase.tables.size(), schema);
+            rawDatabase = om.readValue(o.getValue().toStringUtf8(), RawDatabase.class);
 
-                return new HashSet<String>(rawDatabase.tables);
-            }
+            checkNotNull(rawDatabase, "no schema key exists in Riak");
+            //if(rawDatabase == null) log.debug("rawDatabase is null");
+            //else                    log.debug("rawDatabase is not null");
+
+            checkNotNull(rawDatabase.tables, "bad schema that doesn't have no table property");
+            //log.debug("%s tables found for schema %s", rawDatabase.tables.size(), schema);
+
+            return new HashSet<String>(rawDatabase.tables);
+        }
         Set<String> s = new HashSet<String>();
         return ImmutableSet.copyOf(s);
     }
 
-
-
     public RiakTable getTable(String schema, String tableName)
-            throws InterruptedException, ExecutionException, IOException
-    {
+            throws InterruptedException, ExecutionException, IOException {
         checkNotNull(schema, "schema is null");
         checkNotNull(tableName, "tableName is null");
 
@@ -206,18 +198,7 @@ public class RiakClient
         return null;
     }
 
-
-    public String getHosts(){ return hosts; }
-
-    private static Function<URI, URI> uriResolver(final URI baseUri)
-    {
-        return new Function<URI, URI>()
-        {
-            @Override
-            public URI apply(URI source)
-            {
-                return baseUri.resolve(source);
-            }
-        };
+    public String getHosts() {
+        return hosts;
     }
 }

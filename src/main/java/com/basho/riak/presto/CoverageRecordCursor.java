@@ -20,7 +20,6 @@ import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
-import com.google.protobuf.Internal;
 import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
@@ -34,8 +33,7 @@ import java.util.Vector;
 import static com.google.common.base.Preconditions.*;
 
 public class CoverageRecordCursor
-        implements RecordCursor
-{
+        implements RecordCursor {
     private static final Logger log = Logger.get(CoverageRecordCursor.class);
 
     //private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
@@ -47,14 +45,12 @@ public class CoverageRecordCursor
     private final SplitTask splitTask;
     private final TupleDomain tupleDomain;
     private final DirectConnection directConnection;
-
-    //private final Iterator<String> lines;
-    private long totalBytes;
-
     private final List<InternalRiakObject> buffer;
     private final String[] fields;
     private final Slice[] slices;
     private final boolean[] has2i;
+    //private final Iterator<String> lines;
+    private long totalBytes;
     private Map<String, Object> cursor;
 
     public CoverageRecordCursor(String schemaName,
@@ -64,8 +60,7 @@ public class CoverageRecordCursor
                                 SplitTask splitTask,
                                 TupleDomain tupleDomain,
                                 RiakConfig riakConfig,
-                                DirectConnection directConnection)
-    {
+                                DirectConnection directConnection) {
         this.schemaName = checkNotNull(schemaName);
         checkState(schemaName.equals("default"));
         this.tableName = checkNotNull(tableName);
@@ -98,11 +93,10 @@ public class CoverageRecordCursor
         fetchData();
     }
 
-    private void fetchData()
-    {
+    private void fetchData() {
         totalBytes = 0;
 
-        try{
+        try {
             DirectConnection conn = directConnection;
 
             // TODO: if tupleDomain indicates there is a predicate and
@@ -111,28 +105,26 @@ public class CoverageRecordCursor
 
             OtpErlangList objects = null;
 
-            if(tupleDomain.isAll()) {
+            if (tupleDomain.isAll()) {
                 log.info("using coverage query on %s:%s, this may take a long time!!",
                         schemaName, tableName);
                 objects = splitTask.fetchAllData(conn, schemaName, tableName);
 
-            }else if(!tupleDomain.isNone()){
+            } else if (!tupleDomain.isNone()) {
 
                 OtpErlangTuple query = buildQuery();
                 log.info("2i query '%s' on %s:%s", query, schemaName, tableName);
-                if(query == null){
+                if (query == null) {
                     log.warn("there are no matching index btw %s and %s",
                             columnHandles, tupleDomain);
                     objects = splitTask.fetchAllData(conn, schemaName, tableName);
-                }
-                else
-                {
+                } else {
 
                     objects = splitTask.fetchViaIndex(conn,
                             schemaName, tableName, query);
                 }
             }
-            for(OtpErlangObject o : objects){
+            for (OtpErlangObject o : objects) {
                 buffer.add(new InternalRiakObject(o));
 
             }
@@ -141,13 +133,11 @@ public class CoverageRecordCursor
 //        catch (IOException e){
 //            log.error(e);
 //        }
-        catch (OtpErlangExit e){
+        catch (OtpErlangExit e) {
             log.error(e);
-        }
-        catch (OtpAuthException e){
+        } catch (OtpAuthException e) {
             log.error(e);
-        }
-        catch (OtpErlangDecodeException e){
+        } catch (OtpErlangDecodeException e) {
             log.error(e);
         }
     }
@@ -160,12 +150,12 @@ public class CoverageRecordCursor
 
     // {range, Field, Start, End} or {eq, Field, Val} <- columnHandles and tupleDomain
     private OtpErlangTuple buildQuery() //List<RiakColumnHandle> columnHandles,
-                                        //TupleDomain tupleDom)
+    //TupleDomain tupleDom)
     {
 
         // case where a='b'
         Map<Map<String, Object>, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
-        for(Map.Entry<Map<String, Object>, Comparable<?>> fixedValue : fixedValues.entrySet()){
+        for (Map.Entry<Map<String, Object>, Comparable<?>> fixedValue : fixedValues.entrySet()) {
             //log.debug("> %s (%s)", fixedValue, fixedValue.getClass());
             //log.debug(">> %s", fixedValue.getKey());
 
@@ -185,34 +175,27 @@ public class CoverageRecordCursor
             //RiakColumnHandle c = (RiakColumnHandle)(fixedValue.getKey());
             //RiakColumnHandle c = fixedValue.getKey();
 
-            for(RiakColumnHandle columnHandle : columnHandles)
-            {
-                if(c.getColumn().getName().equals(columnHandle.getColumn().getName())
+            for (RiakColumnHandle columnHandle : columnHandles) {
+                if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
                         && c.getColumn().spiType().equals(columnHandle.getColumn().spiType())
-                        && columnHandle.getColumn().getIndex())
-                {
+                        && columnHandle.getColumn().getIndex()) {
                     String field = null;
                     OtpErlangObject value;
-                    if(columnHandle.getColumn().spiType() == BigintType.BIGINT)
-                    {
+                    if (columnHandle.getColumn().spiType() == BigintType.BIGINT) {
                         field = columnHandle.getColumn().getName() + "_int";
-                        Long l = (Long)fixedValue.getValue();
+                        Long l = (Long) fixedValue.getValue();
                         value = new OtpErlangLong(l.longValue());
-                    }
-                    else if(columnHandle.getColumn().spiType() == VarcharType.VARCHAR)
-                    {
+                    } else if (columnHandle.getColumn().spiType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
-                        String s = (String)fixedValue.getValue();
+                        String s = (String) fixedValue.getValue();
                         value = new OtpErlangBinary(s.getBytes());
-                    }
-                    else
-                    {
+                    } else {
                         continue;
                     }
                     OtpErlangObject[] t = {
-                                    new OtpErlangAtom("eq"),
-                                    new OtpErlangBinary(field.getBytes()),
-                                    value};
+                            new OtpErlangAtom("eq"),
+                            new OtpErlangBinary(field.getBytes()),
+                            value};
 
                     return new OtpErlangTuple(t);
                 }
@@ -221,61 +204,53 @@ public class CoverageRecordCursor
 
         //case where a < b and ... blah
         Map<Map<String, Object>, Domain> map = tupleDomain.getDomains();
-        for(Map.Entry<Map<String, Object>, Domain> entry : map.entrySet())
-        {
+        for (Map.Entry<Map<String, Object>, Domain> entry : map.entrySet()) {
             // TODO: this fails if,
             //   Map<ConnectorColumnHandle, Domain> map = ...
             //RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
             // TODO: very strange behaviour below
             RiakColumnHandle c = new RiakColumnHandle(entry.getKey());
-            for(RiakColumnHandle columnHandle: columnHandles)
-            {
-                if(c.getColumn().getName().equals(columnHandle.getColumn().getName())
+            for (RiakColumnHandle columnHandle : columnHandles) {
+                if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
                         && c.getColumn().spiType().equals(columnHandle.getColumn().spiType())
-                        && columnHandle.getColumn().getIndex())
-                {
+                        && columnHandle.getColumn().getIndex()) {
                     String field = null;
                     OtpErlangObject lhs, rhs;
                     Range span = entry.getValue().getRanges().getSpan();
                     //log.debug("value:%s, range:%s, span:%s",
                     //        entry.getValue(), entry.getValue().getRanges(),span);
                     //log.debug("min: %s max:%s", span.getLow(), span.getHigh());
-                    if(columnHandle.getColumn().spiType() == BigintType.BIGINT)
-                    {
+                    if (columnHandle.getColumn().spiType() == BigintType.BIGINT) {
                         field = columnHandle.getColumn().getName() + "_int";
                         // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
                         Long l = Long.MIN_VALUE;
-                        if(! span.getLow().isLowerUnbounded()){
-                            l = (Long)span.getLow().getValue();
+                        if (!span.getLow().isLowerUnbounded()) {
+                            l = (Long) span.getLow().getValue();
                         }
                         // NOTE: Both Erlang and JSON can express greater integer lang Long.MAX_VALUE
                         Long r = Long.MAX_VALUE;
-                        if(! span.getHigh().isUpperUnbounded()){
-                            r = (Long)span.getHigh().getValue();
+                        if (!span.getHigh().isUpperUnbounded()) {
+                            r = (Long) span.getHigh().getValue();
                         }
 
                         lhs = new OtpErlangLong(l.longValue());
                         rhs = new OtpErlangLong(r.longValue());
-                    }
-                    else if(columnHandle.getColumn().spiType() == VarcharType.VARCHAR)
-                    {
+                    } else if (columnHandle.getColumn().spiType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
                         //Byte m = Byte.MIN_VALUE;
                         byte[] l = {0};
-                        if(!span.getLow().isLowerUnbounded()){
-                            l = ((String)span.getLow().getValue()).getBytes();
+                        if (!span.getLow().isLowerUnbounded()) {
+                            l = ((String) span.getLow().getValue()).getBytes();
                         }
                         Byte m2 = Byte.MAX_VALUE;
                         byte[] r = {m2.byteValue()};
-                        if(!span.getHigh().isUpperUnbounded()){
-                            r = ((String)span.getHigh().getValue()).getBytes();
+                        if (!span.getHigh().isUpperUnbounded()) {
+                            r = ((String) span.getHigh().getValue()).getBytes();
                         }
                         lhs = new OtpErlangBinary(l);
                         rhs = new OtpErlangBinary(r);
 
-                    }
-                    else
-                    {
+                    } else {
                         continue;
                     }
                     OtpErlangObject[] t = {
@@ -290,27 +265,23 @@ public class CoverageRecordCursor
     }
 
     @Override
-    public long getTotalBytes()
-    {
+    public long getTotalBytes() {
         return totalBytes;
     }
 
     @Override
-    public long getCompletedBytes()
-    {
+    public long getCompletedBytes() {
         return totalBytes;
     }
 
     @Override
-    public Type getType(int field)
-    {
+    public Type getType(int field) {
         checkArgument(field < columnHandles.size(), "Invalid field index");
         return columnHandles.get(field).getColumn().spiType();
     }
 
     @Override
-    public boolean advanceNextPosition()
-    {
+    public boolean advanceNextPosition() {
         //log.debug("buffer length> %d", buffer.size());
         if (buffer.isEmpty()) {
             return false;
@@ -329,54 +300,46 @@ public class CoverageRecordCursor
             cursor.put("__pkey", riakObject.getKey());
             totalBytes += riakObject.getValueAsString().length();
             return true;
-        }catch (IOException e)
-        {
+        } catch (IOException e) {
             log.debug(e.toString());
         }
 
         return false;
     }
 
-    private String getFieldValue(int field)
-    {
+    private String getFieldValue(int field) {
         checkState(fields != null, "Cursor has not been advanced yes");
 
         //int columnIndex = fieldToColumnIndex[field];
         //return fields[columnIndex];
 
         Object o = cursor.get(fields[field]);
-        if(o == null){
+        if (o == null) {
             return null;
-        }
-        else
-        {
+        } else {
             return o.toString();
         }
     }
 
     @Override
-    public boolean getBoolean(int field)
-    {
+    public boolean getBoolean(int field) {
         checkFieldType(field, BooleanType.BOOLEAN);
         return Boolean.parseBoolean(getFieldValue(field));
     }
 
     @Override
-    public long getLong(int field)
-    {
+    public long getLong(int field) {
         checkFieldType(field, BigintType.BIGINT);
         return Long.parseLong(getFieldValue(field));
     }
 
     @Override
-    public double getDouble(int field)
-    {
+    public double getDouble(int field) {
         checkFieldType(field, DoubleType.DOUBLE);
         return Double.parseDouble(getFieldValue(field));
     }
 
-    public byte[] getString(int field)
-    {
+    public byte[] getString(int field) {
         checkFieldType(field, VarcharType.VARCHAR);
         return getFieldValue(field).getBytes(Charsets.UTF_8);
     }
@@ -384,7 +347,7 @@ public class CoverageRecordCursor
     @Override
     public Slice getSlice(int field) {
         //return slices[i];
-        if(slices[field] == null)
+        if (slices[field] == null)
             slices[field] = Slices.utf8Slice(getFieldValue(field));
         //log.debug("getSlice called: %s", slices[field]);
 
@@ -393,20 +356,17 @@ public class CoverageRecordCursor
 
 
     @Override
-    public boolean isNull(int field)
-    {
+    public boolean isNull(int field) {
         checkArgument(field < columnHandles.size(), "Invalid field index");
         return Strings.isNullOrEmpty(getFieldValue(field));
     }
 
-    private void checkFieldType(int field, Type expected)
-    {
+    private void checkFieldType(int field, Type expected) {
         Type actual = getType(field);
         checkArgument(actual == expected, "Expected field %s to be type %s but is %s", field, expected, actual);
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
     }
 }

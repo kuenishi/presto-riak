@@ -24,24 +24,20 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakPlugin
-        implements Plugin
-{
+        implements Plugin {
     private Map<String, String> optionalConfig = ImmutableMap.of();
 
-    @Override
-    public synchronized void setOptionalConfig(Map<String, String> optionalConfig)
-    {
-        this.optionalConfig = ImmutableMap.copyOf(checkNotNull(optionalConfig, "optionalConfig is null"));
-    }
-
-    public synchronized Map<String, String> getOptionalConfig()
-    {
+    public synchronized Map<String, String> getOptionalConfig() {
         return optionalConfig;
     }
 
     @Override
-    public <T> List<T> getServices(Class<T> type)
-    {
+    public synchronized void setOptionalConfig(Map<String, String> optionalConfig) {
+        this.optionalConfig = ImmutableMap.copyOf(checkNotNull(optionalConfig, "optionalConfig is null"));
+    }
+
+    @Override
+    public <T> List<T> getServices(Class<T> type) {
         if (type == ConnectorFactory.class) {
             return ImmutableList.of(type.cast(new RiakConnectorFactory(getOptionalConfig())));
         }

@@ -14,32 +14,23 @@
 package com.basho.riak.presto;
 
 import com.basho.riak.client.core.util.BinaryValue;
-import com.facebook.presto.spi.RecordCursor;
-import com.facebook.presto.spi.type.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.base.Throwables;
-import com.google.common.io.CountingInputStream;
-import com.google.common.io.InputSupplier;
-import io.airlift.log.Logger;
 import com.facebook.presto.spi.HostAddress;
+import com.facebook.presto.spi.RecordCursor;
+import com.facebook.presto.spi.type.BigintType;
+import com.facebook.presto.spi.type.BooleanType;
+import com.facebook.presto.spi.type.DoubleType;
+import com.facebook.presto.spi.type.Type;
+import com.google.common.base.Strings;
+import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.List;
+import java.util.Map;
 
-import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.*;
 
 public class RiakRecordCursor
-        implements RecordCursor
-{
+        implements RecordCursor {
     private static final Logger log = Logger.get(RiakRecordCursor.class);
 
     //private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
@@ -59,8 +50,7 @@ public class RiakRecordCursor
     public RiakRecordCursor(String schemaName,
                             String tableName,
                             List<RiakColumnHandle> columnHandles,//, InputSupplier<InputStream> inputStreamSupplier)
-                            List<HostAddress> addresses)
-    {
+                            List<HostAddress> addresses) {
         checkNotNull(schemaName);
         checkState(schemaName.equals("default"));
         checkNotNull(tableName);
@@ -87,27 +77,23 @@ public class RiakRecordCursor
     }
 
     @Override
-    public long getTotalBytes()
-    {
+    public long getTotalBytes() {
         return totalBytes;
     }
 
     @Override
-    public long getCompletedBytes()
-    {
+    public long getCompletedBytes() {
         return totalBytes;
     }
 
     @Override
-    public Type getType(int field)
-    {
+    public Type getType(int field) {
         checkArgument(field < columnHandles.size(), "Invalid field index");
         return columnHandles.get(field).getColumn().spiType();
     }
 
     @Override
-    public boolean advanceNextPosition()
-    { /*
+    public boolean advanceNextPosition() { /*
         if(riakClient == null){
             try{
                 riakClient = RiakFactory.newClient(clusterConfig);
@@ -205,59 +191,50 @@ public class RiakRecordCursor
         return null;
     }
 
-    private String getFieldValue(int field)
-    {
+    private String getFieldValue(int field) {
         checkState(fields != null, "Cursor has not been advanced yes");
 
         //int columnIndex = fieldToColumnIndex[field];
         //return fields[columnIndex];
 
         Object o = cursor.get(fields[field]);
-        if(o == null){
+        if (o == null) {
             return null;
-        }
-        else
-        {
+        } else {
             return o.toString();
         }
     }
 
     @Override
-    public boolean getBoolean(int field)
-    {
+    public boolean getBoolean(int field) {
         checkFieldType(field, BooleanType.BOOLEAN);
         return Boolean.parseBoolean(getFieldValue(field));
     }
 
     @Override
-    public long getLong(int field)
-    {
+    public long getLong(int field) {
         checkFieldType(field, BigintType.BIGINT);
         return Long.parseLong(getFieldValue(field));
     }
 
     @Override
-    public double getDouble(int field)
-    {
+    public double getDouble(int field) {
         checkFieldType(field, DoubleType.DOUBLE);
         return Double.parseDouble(getFieldValue(field));
     }
 
     @Override
-    public boolean isNull(int field)
-    {
+    public boolean isNull(int field) {
         checkArgument(field < columnHandles.size(), "Invalid field index");
         return Strings.isNullOrEmpty(getFieldValue(field));
     }
 
-    private void checkFieldType(int field, Type expected)
-    {
+    private void checkFieldType(int field, Type expected) {
         Type actual = getType(field);
         checkArgument(actual == expected, "Expected field %s to be type %s but is %s", field, expected, actual);
     }
 
     @Override
-    public void close()
-    {
+    public void close() {
     }
 }

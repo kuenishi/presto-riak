@@ -15,8 +15,6 @@ package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.ConnectorColumnHandle;
-import com.facebook.presto.spi.type.Type;
-import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -27,77 +25,67 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakColumnHandle
-        implements ConnectorColumnHandle
-{
+        implements ConnectorColumnHandle {
     public static final String PKEY_COLUMN_NAME = "__pkey";
+    private static final Logger log = Logger.get(RiakRecordSetProvider.class);
     private final String connectorId;
     private final RiakColumn column;
     private final int ordinalPosition;
-
-    private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
     @JsonCreator
     public RiakColumnHandle(
             @JsonProperty("connectorId") String connectorId,
             @JsonProperty("column") RiakColumn column,
-            @JsonProperty("ordinalPosition") int ordinalPosition)
-    {
+            @JsonProperty("ordinalPosition") int ordinalPosition) {
         this.connectorId = checkNotNull(connectorId, "connectorId is null");
         this.column = checkNotNull(column, "column is null");
         this.ordinalPosition = ordinalPosition;
     }
 
-    public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata)
-    {
+    public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata) {
         this(connectorId,
-             new RiakColumn(columnMetadata.getName(),
-                     columnMetadata.getType(),
-                     // TODO: this default 'false' can be implicit performance lose
-                     // TODO: if there be a bug that indexedColumns lost somewhere
-                     false),
-             columnMetadata.getOrdinalPosition());
+                new RiakColumn(columnMetadata.getName(),
+                        columnMetadata.getType(),
+                        // TODO: this default 'false' can be implicit performance lose
+                        // TODO: if there be a bug that indexedColumns lost somewhere
+                        false),
+                columnMetadata.getOrdinalPosition());
     }
 
     // {type=riak, connectorId=riak, column={name=id,
     //type=bigint, index=false}, ordinalPosition=0}=2 (class java.util.HashMap$Node)
-    public RiakColumnHandle(Map<String, Object> m)
-    {
-        this.connectorId = (String)m.get("type");
-        Map<String, Object> m2 = (Map)m.get("column");
+    public RiakColumnHandle(Map<String, Object> m) {
+        this.connectorId = (String) m.get("type");
+        Map<String, Object> m2 = (Map) m.get("column");
         this.column = new RiakColumn(
-                (String)m2.get("name"),
-                (String)m2.get("type"),
-                (boolean)m2.get("index"));
-        this.ordinalPosition = (int)m.get("ordinalPosition");
+                (String) m2.get("name"),
+                (String) m2.get("type"),
+                (boolean) m2.get("index"));
+        this.ordinalPosition = (int) m.get("ordinalPosition");
     }
 
     @JsonProperty
-    public String getConnectorId()
-    {
+    public String getConnectorId() {
         return connectorId;
     }
 
     @JsonProperty
-    public RiakColumn getColumn()
-    {
+    public RiakColumn getColumn() {
         return column;
     }
 
     @JsonProperty
-    public int getOrdinalPosition()
-    {
+    public int getOrdinalPosition() {
         return ordinalPosition;
     }
 
     @Override
-    public int hashCode()
-    {
+    public int hashCode() {
         return Objects.hashCode(connectorId, column);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
+    public boolean equals(Object obj) {
         if (this == obj) {
             return true;
         }
@@ -112,8 +100,7 @@ public final class RiakColumnHandle
     }
 
     @Override
-    public String toString()
-    {
+    public String toString() {
         return Objects.toStringHelper(this)
                 .add("connectorId", connectorId)
                 .add("column", column)

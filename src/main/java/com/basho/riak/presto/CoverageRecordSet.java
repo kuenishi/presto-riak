@@ -15,7 +15,10 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
-import com.facebook.presto.spi.*;
+import com.facebook.presto.spi.HostAddress;
+import com.facebook.presto.spi.RecordCursor;
+import com.facebook.presto.spi.RecordSet;
+import com.facebook.presto.spi.TupleDomain;
 import com.facebook.presto.spi.type.Type;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
@@ -29,8 +32,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 //import com.google.common.io.Resources;
 
 public class CoverageRecordSet
-        implements RecordSet
-{
+        implements RecordSet {
+    private static final Logger log = Logger.get(CoverageRecordSet.class);
     private final String schemaName;
     private final String tableName;
     private final List<RiakColumnHandle> columnHandles;
@@ -42,16 +45,13 @@ public class CoverageRecordSet
     private final RiakConfig riakConfig;
     private final DirectConnection directConnection;
 
-    private static final Logger log = Logger.get(CoverageRecordSet.class);
-
 
     public CoverageRecordSet(CoverageSplit split,
                              List<RiakColumnHandle> columnHandles,
                              RiakConfig riakConfig,
                              TupleDomain tupleDomain,
                              DirectConnection directConnection)
-            throws OtpErlangDecodeException, DecoderException
-    {
+            throws OtpErlangDecodeException, DecoderException {
         checkNotNull(split, "split is null");
         this.columnHandles = checkNotNull(columnHandles, "column handles is null");
         ImmutableList.Builder<Type> types = ImmutableList.builder();
@@ -72,14 +72,12 @@ public class CoverageRecordSet
     }
 
     @Override
-    public List<Type> getColumnTypes()
-    {
+    public List<Type> getColumnTypes() {
         return types;
     }
 
     @Override
-    public RecordCursor cursor()
-    {
+    public RecordCursor cursor() {
         return new CoverageRecordCursor(schemaName, tableName,
                 columnHandles, addresses, splitTask, tupleDomain,
                 riakConfig, directConnection);
