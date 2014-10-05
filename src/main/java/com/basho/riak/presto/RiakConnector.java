@@ -60,7 +60,9 @@ public class RiakConnector
 
     @Override
     public ConnectorPageSourceProvider getPageSourceProvider() {
-        return null;
+        // TODO: create ConnectorPageSourceProvider and ConnectorPageSource
+        // for paging optimization
+        throw new UnsupportedOperationException();
     }
 
     @Override

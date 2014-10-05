@@ -38,7 +38,9 @@ public class RiakModule
         binder.bind(RiakConnector.class).in(Scopes.SINGLETON);
         binder.bind(RiakConnectorId.class).toInstance(new RiakConnectorId(connectorId));
         binder.bind(RiakMetadata.class).in(Scopes.SINGLETON);
-        binder.bind(RiakClient.class).in(Scopes.SINGLETON);
+        //binder.bind(RiakClient.class).in(Scopes.SINGLETON);
+        binder.bind(RiakClient.class).in(Scopes.NO_SCOPE);
+
         binder.bind(DirectConnection.class).in(Scopes.SINGLETON);
         binder.bind(RiakSplitManager.class).in(Scopes.SINGLETON);
         binder.bind(DirectConnection.class).in(Scopes.SINGLETON);

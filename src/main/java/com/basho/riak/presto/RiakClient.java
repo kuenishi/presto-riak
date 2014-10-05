@@ -22,6 +22,7 @@ import com.basho.riak.client.core.query.Location;
 import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
@@ -29,8 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import com.google.common.net.HostAndPort;
-import com.google.gson.Gson;
-import io.airlift.json.JsonCodec;
 
 import javax.inject.Inject;
 
@@ -92,7 +91,7 @@ public class RiakClient
         //String json = Resources.toString(metadataUri.toURL(), Charsets.UTF_8);
         //Map<String, List<RiakTable>> catalog = catalogCodec.fromJson(json);
         //this.schemas = ImmutableMap.copyOf(transformValues(catalog, resolveAndIndexTables(metadataUri)));
-
+        cluster.start();
         // insert your names;
         // TODO: how do we unregister when presto node shuts down?
         register();
@@ -134,7 +133,7 @@ public class RiakClient
         return new HashSet<String>(this.schemas);
     }
 
-    public Set<String> getTableNames(String schema) throws InterruptedException, ExecutionException
+    public Set<String> getTableNames(String schema) throws InterruptedException, ExecutionException, IOException
     {
         log.info("checking... rawDatabaseaaaaa %s", schema);
 
@@ -155,12 +154,12 @@ public class RiakClient
         }
             List<RiakObject> objects = op.get().getObjectList();
 
+            ObjectMapper om = new ObjectMapper();
             for (RiakObject o : objects) {
                 log.debug(o.toString());
                 log.debug(o.getValue().toStringUtf8());
-                Gson gson = new Gson();
 
-                rawDatabase = gson.fromJson(o.getValue().toStringUtf8(), RawDatabase.class);
+                rawDatabase = om.readValue(o.getValue().toStringUtf8(), RawDatabase.class);
 
                 checkNotNull(rawDatabase, "no schema key exists in Riak");
                 //if(rawDatabase == null) log.debug("rawDatabase is null");
@@ -178,7 +177,8 @@ public class RiakClient
 
 
     public RiakTable getTable(String schema, String tableName)
-            throws InterruptedException, ExecutionException {
+            throws InterruptedException, ExecutionException, IOException
+    {
         checkNotNull(schema, "schema is null");
         checkNotNull(tableName, "tableName is null");
 
@@ -194,11 +194,10 @@ public class RiakClient
         if (!op.isSuccess()) {
             return null;
         }
-        Gson gson = new Gson();
+        ObjectMapper om = new ObjectMapper();
         List<RiakObject> objects = op.get().getObjectList();
         for (RiakObject o : objects) {
-            RiakTable table = gson.fromJson(o.getValue().toStringUtf8(), RiakTable.class);
-
+            RiakTable table = om.readValue(o.getValue().toStringUtf8(), RiakTable.class);
             checkNotNull(table, "table schema (%s) wasn't found.", tableKey);
             log.debug("table %s schema found.", tableName);
 

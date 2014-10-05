@@ -10,7 +10,7 @@ import json
 '''
 
 
-HOST='localhost:10018'
+HOST='localhost:8098'
 SCHEMA_BUCKET='__presto_schema'
 SCHEMA_KEY='__schema'
 

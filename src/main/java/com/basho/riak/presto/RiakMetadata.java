@@ -193,7 +193,7 @@ public class RiakMetadata
         try {
             table = riakClient.getTable(tableName.getSchemaName(), tableName.getTableName());
         }catch (Exception e){
-
+            log.error(e.toString());
         }
         if (table == null) {
             throw new TableNotFoundException(tableName);
