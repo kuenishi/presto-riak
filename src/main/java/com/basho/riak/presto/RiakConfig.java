@@ -17,8 +17,6 @@ import io.airlift.configuration.Config;
 
 import javax.validation.constraints.NotNull;
 
-import java.net.URI;
-
 public class RiakConfig
 {
     private String host = "localhost";

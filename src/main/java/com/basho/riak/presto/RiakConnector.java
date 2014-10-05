@@ -59,6 +59,13 @@ public class RiakConnector
     }
 
     @Override
+    public ConnectorPageSourceProvider getPageSourceProvider() {
+        // TODO: create ConnectorPageSourceProvider and ConnectorPageSource
+        // for paging optimization
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public ConnectorRecordSetProvider getRecordSetProvider()
     {
         return recordSetProvider;
@@ -76,10 +83,4 @@ public class RiakConnector
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public ConnectorOutputHandleResolver getOutputHandleResolver()
-    {
-        // TODO: output handle resolver???
-        throw new UnsupportedOperationException();
-    }
 }

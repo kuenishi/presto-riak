@@ -14,17 +14,13 @@
 
 package com.basho.riak.presto;
 
-import com.basho.riak.client.*;
-import com.basho.riak.client.bucket.Bucket;
-import com.basho.riak.client.query.StreamingOperation;
-import com.basho.riak.client.raw.pbc.PBClientConfig;
-import com.basho.riak.client.raw.pbc.PBClusterConfig;
 import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.protobuf.Internal;
 import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
@@ -55,10 +51,7 @@ public class CoverageRecordCursor
     //private final Iterator<String> lines;
     private long totalBytes;
 
-    private final Bucket bucket;
-    private final StreamingOperation<String> keyCursor;
-
-    private final List<IRiakObject> buffer;
+    private final List<InternalRiakObject> buffer;
     private final String[] fields;
     private final Slice[] slices;
     private final boolean[] has2i;
@@ -83,9 +76,7 @@ public class CoverageRecordCursor
         this.tupleDomain = checkNotNull(tupleDomain);
         this.directConnection = checkNotNull(directConnection);
 
-        bucket = null;
-        keyCursor = null;
-        buffer = new Vector<IRiakObject>();
+        buffer = new Vector<InternalRiakObject>();
         cursor = null;
         fields = new String[columnHandles.size()];
         slices = new Slice[columnHandles.size()];
@@ -142,7 +133,7 @@ public class CoverageRecordCursor
                 }
             }
             for(OtpErlangObject o : objects){
-                buffer.add(new RiakObject(o));
+                buffer.add(new InternalRiakObject(o));
 
             }
             log.info("%d key data fetched.", buffer.size());
@@ -326,7 +317,7 @@ public class CoverageRecordCursor
         }
         //log.debug("buffer length>> %d", buffer.size());
 
-        IRiakObject riakObject = buffer.remove(0);
+        InternalRiakObject riakObject = buffer.remove(0);
         //log.debug("first key: %s", riakObject.getKey());
         //String line = lines.next();
         //fields = LINE_SPLITTER.splitToList(line);

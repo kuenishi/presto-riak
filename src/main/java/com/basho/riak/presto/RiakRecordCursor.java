@@ -13,12 +13,7 @@
  */
 package com.basho.riak.presto;
 
-import com.basho.riak.client.*;
-import com.basho.riak.client.bucket.Bucket;
-import com.basho.riak.client.query.MultiFetchFuture;
-import com.basho.riak.client.query.StreamingOperation;
-import com.basho.riak.client.raw.pbc.PBClientConfig;
-import com.basho.riak.client.raw.pbc.PBClusterConfig;
+import com.basho.riak.client.core.util.BinaryValue;
 import com.facebook.presto.spi.RecordCursor;
 import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,8 +44,8 @@ public class RiakRecordCursor
 
     //private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
 
-    private final String schemaName;
-    private final String tableName;
+    private final BinaryValue schemaName;
+    private final BinaryValue tableName;
     private final List<RiakColumnHandle> columnHandles;
     //private final int[] fieldToColumnIndex;
 
@@ -58,12 +53,6 @@ public class RiakRecordCursor
     private long totalBytes;
 
 
-    private final PBClusterConfig clusterConfig;
-    private IRiakClient riakClient;
-    private Bucket bucket;
-    private StreamingOperation<String> keyCursor;
-
-    private List<IRiakObject> buffer;
     private String[] fields;
     private Map<String, Object> cursor;
 
@@ -79,22 +68,9 @@ public class RiakRecordCursor
         checkState(!addresses.isEmpty());
         checkState(!columnHandles.isEmpty());
 
-        this.schemaName = schemaName;
-        this.tableName = tableName;
+        this.schemaName = BinaryValue.create(schemaName);
+        this.tableName = BinaryValue.create(tableName);
 
-        clusterConfig = new PBClusterConfig(8);
-        for(HostAddress address : addresses)
-        {
-            PBClientConfig node = new PBClientConfig.Builder()
-                    .withHost(address.getHostText())
-                    .withPort(address.getPortOrDefault(8087))
-                    .build();
-            clusterConfig.addClient(node);
-        }
-        riakClient = null;
-        bucket = null;
-        keyCursor = null;
-        buffer = new Vector<IRiakObject>();
         cursor = null;
         fields = new String[columnHandles.size()];
 
@@ -131,7 +107,7 @@ public class RiakRecordCursor
 
     @Override
     public boolean advanceNextPosition()
-    {
+    { /*
         if(riakClient == null){
             try{
                 riakClient = RiakFactory.newClient(clusterConfig);
@@ -214,7 +190,7 @@ public class RiakRecordCursor
         {
             log.debug(e.toString());
         }
-
+*/
         return false;
     }
 

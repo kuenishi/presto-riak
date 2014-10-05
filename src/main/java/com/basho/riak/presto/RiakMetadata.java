@@ -23,6 +23,7 @@ import javax.inject.Inject;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -44,15 +45,20 @@ public class RiakMetadata
     }
 
     @Override
-    public ConnectorTableHandle getTableHandle(ConnectorSession connectorSession, SchemaTableName schemaTableName) {
+    public ConnectorTableHandle getTableHandle(ConnectorSession connectorSession, SchemaTableName schemaTableName)
+    {
         log.info("getTableHandle;");
         if (!listSchemaNames(connectorSession).contains(schemaTableName.getSchemaName())) {
             log.error("no schema %d found", schemaTableName);
             return null;
         }
 
-        RiakTable table = riakClient.getTable(schemaTableName.getSchemaName(),
-                                            schemaTableName.getTableName());
+        RiakTable table = null;
+        try {
+            table = riakClient.getTable(schemaTableName.getSchemaName(),
+                    schemaTableName.getTableName());
+        }catch (Exception e) {
+        }
         if (table == null) {
             log.error("no tables found at %d", schemaTableName);
             return null;
@@ -85,7 +91,8 @@ public class RiakMetadata
 
     // called from `show tables;`
     @Override
-    public List<SchemaTableName> listTables(ConnectorSession connectorSession, String schemaNameOrNull) {
+    public List<SchemaTableName> listTables(ConnectorSession connectorSession, String schemaNameOrNull)
+    {
 
         log.info("listTables for %s;", schemaNameOrNull);
 
@@ -100,13 +107,16 @@ public class RiakMetadata
         }
 
         ImmutableList.Builder<SchemaTableName> builder = ImmutableList.builder();
-        for (String schemaName : schemaNames) {
-            log.info(">>> schemaName=%s", schemaName);
-            for (String tableName : riakClient.getTableNames(schemaName)) {
-                log.info("table %s found.", tableName);
-                builder.add(new SchemaTableName(schemaName, tableName));
+        try {
+            for (String schemaName : schemaNames) {
+                log.info(">>> schemaName=%s", schemaName);
+                for (String tableName : riakClient.getTableNames(schemaName)) {
+                    log.info("table %s found.", tableName);
+                    builder.add(new SchemaTableName(schemaName, tableName));
+                }
             }
-        }
+        }catch(Exception e){}
+
         log.info("listTables for %s: %d tables found", schemaNameOrNull,
                 schemaNames.size());
 
@@ -130,12 +140,13 @@ public class RiakMetadata
         return columns.build();
     }
 
-    @Override
+  /*  @Override
     public ConnectorColumnHandle getColumnHandle(ConnectorTableHandle tableHandle, String columnName)
     {
         log.info("getColumnHandle");
         return getColumnHandles(tableHandle).get(columnName);
     }
+    */
 
     @Override
     public ConnectorColumnHandle getSampleWeightColumnHandle(ConnectorTableHandle tableHandle)
@@ -153,7 +164,11 @@ public class RiakMetadata
         checkArgument(riakTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
 
 //        RiakTable table = RiakClient.getTable(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
-        RiakTable table = riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+        RiakTable table = null;
+        try {
+            table = riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+        }catch (Exception e){}
+
         if (table == null) {
             throw new TableNotFoundException(riakTableHandle.toSchemaTableName());
         }
@@ -174,8 +189,12 @@ public class RiakMetadata
  //           return null;
   //      }
 
-        RiakTable table = //RiakTable.example(tableName.getTableName());
-                riakClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        RiakTable table = null; //RiakTable.example(tableName.getTableName());
+        try {
+            table = riakClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+        }catch (Exception e){
+            log.error(e.toString());
+        }
         if (table == null) {
             throw new TableNotFoundException(tableName);
         }
