@@ -167,7 +167,7 @@ special bucket `__presto_schema` with key
             "index":false
         }
     ],
-    "format":"JSON", | "json" | "msgpack" (?) ...
+    "format":"JSON" | "json" | "msgpack" (?) ...
     "name": "spam"
 }
 ```
@@ -186,6 +186,22 @@ Predicates are passed to `RiakSplitManager` (implements
 information for selection. Normal connector generates splits in
 `ConnectorSplitManager.getPartitions()` , splits are maybe with HDFS
 location associated with predicates or partition keys.
+
+
+## Notes and Future
+
+- Correctness
+ - grep TODO
+ - docker testing with distributed setup, runs presto-verifier
+
+- Performance
+ - remove OTP's JInterface and replace with other fast IPC
+ - columnar backend format other than leveldb
+
+- Usability
+ - currently 'default' schema only - setup
+ - schema manager, or generator? or move to bucket types that force schema
+ - introduce switch between pure-PB API mode
 
 
 ## dev setup
