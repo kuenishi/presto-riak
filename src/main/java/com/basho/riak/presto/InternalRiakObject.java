@@ -17,8 +17,10 @@ package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.*;
 
-import java.util.*;
-import static com.google.common.base.Preconditions.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.google.common.base.Preconditions.checkState;
 
 
 /**
@@ -27,40 +29,29 @@ import static com.google.common.base.Preconditions.*;
 // @doc translated from internal riak_object.
 // direct translation.
 public class InternalRiakObject {
-    public byte[] getKey() {
-        return key;
-    }
-
     private final byte[] key;
-
-    public byte[] getBucket() {
-        return bucket;
-    }
-
     private final byte[] bucket;
     private List<byte[]> values;
 
-    public InternalRiakObject(OtpErlangObject object)
-    {
+    public InternalRiakObject(OtpErlangObject object) {
         checkRecord(object, "r_object");
 
-        OtpErlangTuple rObject = (OtpErlangTuple)object;
+        OtpErlangTuple rObject = (OtpErlangTuple) object;
 //        System.out.println(rObject);
 //        -record(r_object, {
 //                bucket :: bucket(),
-        this.bucket = ((OtpErlangBinary)rObject.elementAt(1)).binaryValue();
+        this.bucket = ((OtpErlangBinary) rObject.elementAt(1)).binaryValue();
 //                key :: key(),
-        this.key = ((OtpErlangBinary)rObject.elementAt(2)).binaryValue();
+        this.key = ((OtpErlangBinary) rObject.elementAt(2)).binaryValue();
 //                contents :: [#r_content{}],
-        OtpErlangList contents = (OtpErlangList)rObject.elementAt(3);
+        OtpErlangList contents = (OtpErlangList) rObject.elementAt(3);
         values = new ArrayList();
-        for(OtpErlangObject content : contents)
-        {
+        for (OtpErlangObject content : contents) {
             checkRecord(content, "r_content");
 //            -record(r_content, {
 //                    metadata :: dict() | list(),
 //                    value :: term()
-            OtpErlangBinary b = (OtpErlangBinary)((OtpErlangTuple)content).elementAt(2);
+            OtpErlangBinary b = (OtpErlangBinary) ((OtpErlangTuple) content).elementAt(2);
             values.add(b.binaryValue());
 //            }).
         }
@@ -70,25 +61,32 @@ public class InternalRiakObject {
 //        }).
     }
 
-    private void checkRecord(OtpErlangObject o, String v)
-    {
-        checkAtom(((OtpErlangTuple)o).elementAt(0), v);
+    public byte[] getKey() {
+        return key;
     }
-    private void checkAtom(OtpErlangObject o, String v)
-    {
-        checkState(((OtpErlangAtom)o).atomValue().equals(v));
+
+    public byte[] getBucket() {
+        return bucket;
+    }
+
+    private void checkRecord(OtpErlangObject o, String v) {
+        checkAtom(((OtpErlangTuple) o).elementAt(0), v);
+    }
+
+    private void checkAtom(OtpErlangObject o, String v) {
+        checkState(((OtpErlangAtom) o).atomValue().equals(v));
     }
 
     public void setValue(byte[] bytes) {
     }
 
-    public void setValue(String s) {
-
-    }
-
     public byte[] getValue() {
 //        if(values.size()==1)
         return values.get(0);
+    }
+
+    public void setValue(String s) {
+
     }
 
     public String getValueAsString() {

@@ -20,16 +20,14 @@ import javax.inject.Inject;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class RiakHandleResolver implements ConnectorHandleResolver
-{
+public class RiakHandleResolver implements ConnectorHandleResolver {
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
 
     private final String connectorId;
 
     @Inject
-    public RiakHandleResolver(RiakConnectorId clientId)
-    {
+    public RiakHandleResolver(RiakConnectorId clientId) {
         this.connectorId = checkNotNull(clientId, "clientId is null").toString();
     }
 
@@ -54,41 +52,35 @@ public class RiakHandleResolver implements ConnectorHandleResolver
     }
 
     @Override
-    public boolean canHandle(ConnectorTableHandle tableHandle)
-    {
+    public boolean canHandle(ConnectorTableHandle tableHandle) {
         return tableHandle instanceof RiakTableHandle && ((RiakTableHandle) tableHandle).getConnectorId().equals(connectorId);
     }
 
     @Override
-    public boolean canHandle(ConnectorColumnHandle columnHandle)
-    {
+    public boolean canHandle(ConnectorColumnHandle columnHandle) {
         return columnHandle instanceof RiakColumnHandle && ((RiakColumnHandle) columnHandle).getConnectorId().equals(connectorId);
     }
 
     @Override
-    public boolean canHandle(ConnectorSplit split)
-    {
-        if(split instanceof CoverageSplit){
+    public boolean canHandle(ConnectorSplit split) {
+        if (split instanceof CoverageSplit) {
             return ((CoverageSplit) split).getConnectorId().equals(connectorId);
         }
         return false;
     }
 
     @Override
-    public Class<? extends ConnectorTableHandle> getTableHandleClass()
-    {
+    public Class<? extends ConnectorTableHandle> getTableHandleClass() {
         return RiakTableHandle.class;
     }
 
     @Override
-    public Class<? extends ConnectorColumnHandle> getColumnHandleClass()
-    {
+    public Class<? extends ConnectorColumnHandle> getColumnHandleClass() {
         return RiakColumnHandle.class;
     }
 
     @Override
-    public Class<? extends ConnectorSplit> getSplitClass()
-    {
+    public Class<? extends ConnectorSplit> getSplitClass() {
         return CoverageSplit.class;
     }
 

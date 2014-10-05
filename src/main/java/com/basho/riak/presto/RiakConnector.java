@@ -20,8 +20,7 @@ import javax.inject.Inject;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakConnector
-    implements Connector
-{
+        implements Connector {
     private final RiakMetadata metadata;
     private final RiakSplitManager splitManager;
     private final RiakRecordSetProvider recordSetProvider;
@@ -32,8 +31,7 @@ public class RiakConnector
             RiakMetadata metadata,
             RiakSplitManager splitManager,
             RiakRecordSetProvider recordSetProvider,
-            RiakHandleResolver handleResolver)
-    {
+            RiakHandleResolver handleResolver) {
         this.metadata = checkNotNull(metadata, "metadata is null");
         this.splitManager = checkNotNull(splitManager, "splitManager is null");
         this.recordSetProvider = checkNotNull(recordSetProvider, "recordSetProvider is null");
@@ -47,14 +45,12 @@ public class RiakConnector
     }
 
     @Override
-    public ConnectorMetadata getMetadata()
-    {
+    public ConnectorMetadata getMetadata() {
         return metadata;
     }
 
     @Override
-    public ConnectorSplitManager getSplitManager()
-    {
+    public ConnectorSplitManager getSplitManager() {
         return splitManager;
     }
 
@@ -66,20 +62,17 @@ public class RiakConnector
     }
 
     @Override
-    public ConnectorRecordSetProvider getRecordSetProvider()
-    {
+    public ConnectorRecordSetProvider getRecordSetProvider() {
         return recordSetProvider;
     }
 
     @Override
-    public ConnectorHandleResolver getHandleResolver()
-    {
+    public ConnectorHandleResolver getHandleResolver() {
         return handleResolver;
     }
 
     @Override
-    public ConnectorRecordSinkProvider getRecordSinkProvider()
-    {
+    public ConnectorRecordSinkProvider getRecordSinkProvider() {
         throw new UnsupportedOperationException();
     }
 

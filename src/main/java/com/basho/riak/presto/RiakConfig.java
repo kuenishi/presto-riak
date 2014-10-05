@@ -17,8 +17,9 @@ import io.airlift.configuration.Config;
 
 import javax.validation.constraints.NotNull;
 
-public class RiakConfig
-{
+public class RiakConfig {
+    public static String ERLANG_NODE_NAME = "presto@127.0.0.1";
+    public static String ERLANG_COOKIE = "riak";
     private String host = "localhost";
     private int port = 8087;
     private int prestoPort = 8080;
@@ -26,76 +27,66 @@ public class RiakConfig
     private String erlangNodeName = null; // name for distributed erlang like 'presto@127.0.0.1'
     private String erlangCookie = null;
 
-    public static String ERLANG_NODE_NAME = "presto@127.0.0.1";
-    public static String ERLANG_COOKIE = "riak";
+    @NotNull
+    public String getHost() {
+        return host;
+    }
 
     @Config("riak.pb.host")
-    public RiakConfig setHost(String host)
-    {
+    public RiakConfig setHost(String host) {
         this.host = host;
         return this;
     }
 
-    @Config("riak.erlang.node") // like 'riak@127.0.0.1'
-    public RiakConfig setLocalNode(String node)
-    {
-        this.localNode = node;
-        return this;
+    public int getPort() {
+        return port;
     }
 
-    @Config("presto.erlang.node") // like 'presto@127.0.0.1'
-    public RiakConfig setErlangNodeName(String erlangNodeName)
-    {
-        this.erlangNodeName = erlangNodeName;
-        return this;
-    }
-
-    @Config("presto.erlang.cookie")
-    public RiakConfig setErlangCookie(String cookie)
-    {
-        this.erlangCookie = cookie;
-        return this;
+    public int getPrestoPort() {
+        return prestoPort;
     }
 
     @Config("http-server.http.port")
-    public RiakConfig setPrestoPort(int port)
-    {
+    public RiakConfig setPrestoPort(int port) {
         this.prestoPort = port;
         return this;
     }
 
-    @NotNull
-    public String getHost()
-    {
-        return host;
+    public String getLocalNode() {
+        return localNode;
     }
 
-    public int getPort(){return port;}
-    public int getPrestoPort(){return prestoPort;}
+    @Config("riak.erlang.node") // like 'riak@127.0.0.1'
+    public RiakConfig setLocalNode(String node) {
+        this.localNode = node;
+        return this;
+    }
 
-    public String getLocalNode() { return localNode; }
-
-    public String getErlangNodeName()
-    {
-        if(erlangNodeName == null)
-        {
+    public String getErlangNodeName() {
+        if (erlangNodeName == null) {
             return ERLANG_NODE_NAME;
-        }
-        else
-        {
+        } else {
             return this.erlangNodeName;
         }
     }
 
-    public String getErlangCookie()
-    {
-        if(erlangCookie == null)
-        {
+    @Config("presto.erlang.node") // like 'presto@127.0.0.1'
+    public RiakConfig setErlangNodeName(String erlangNodeName) {
+        this.erlangNodeName = erlangNodeName;
+        return this;
+    }
+
+    public String getErlangCookie() {
+        if (erlangCookie == null) {
             return ERLANG_COOKIE;
-        }
-        else
-        {
+        } else {
             return erlangCookie;
         }
+    }
+
+    @Config("presto.erlang.cookie")
+    public RiakConfig setErlangCookie(String cookie) {
+        this.erlangCookie = cookie;
+        return this;
     }
 }

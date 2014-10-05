@@ -17,15 +17,18 @@ package com.basho.riak.presto;
 // /usr/local/erlang/R16B03-1/lib/erlang/lib/jinterface-1.5.8/priv/OtpErlang.jar
 
 import com.ericsson.otp.erlang.*;
+import io.airlift.log.Logger;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Coverage {
+    //private final node;
+    private static final Logger log = Logger.get(Coverage.class);
     private final DirectConnection conn;
     private OtpErlangTuple coveragePlan;
-    //private final node;
+
 
     public Coverage(DirectConnection conn) {
         //this.node = riakNode;
@@ -38,6 +41,7 @@ public class Coverage {
         try {
             //conn.ping();
             this.coveragePlan = conn.getCoveragePlan(9979);
+            log.debug("got coverage plan; %s", coveragePlan);
         } catch (java.io.IOException e) {
             //  System.out.println(e);
         } catch (com.ericsson.otp.erlang.OtpAuthException e) {

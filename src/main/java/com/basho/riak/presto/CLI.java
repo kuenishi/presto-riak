@@ -14,11 +14,6 @@
 
 package com.basho.riak.presto;
 
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor;
-
 import com.basho.riak.client.core.RiakCluster;
 import com.basho.riak.client.core.RiakNode;
 import com.basho.riak.client.core.operations.StoreOperation;
@@ -26,6 +21,11 @@ import com.basho.riak.client.core.query.Location;
 import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
+
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * Created by kuenishi on 14/03/21.
@@ -46,25 +46,28 @@ public class CLI {
     private static final int IDLE_CONN_TIMEOUT_MIL = 2000;
     private static final int CONNECTION_TIMEOUT_MIL = 2000;
     private static final int REQUEST_TIMEOUT_MIL = 2000;
+    private static final BinaryValue BUCKET = BinaryValue.create("test");
+    private static final Namespace NAMESPACE = new Namespace(BUCKET); // with default bucket type.
 
-    public static void main(String[] args) throws Exception
-    {
+    public static void main(String[] args) throws Exception {
         System.out.println(args[0]);
         System.out.println(args[1]);
         //System.out.println(args[2]);
 
-        if(args.length == 0) {
+        if (args.length == 0) {
             System.out.println("presto-riak CLI. create table, create schema, drop... >");
             System.out.println("usage: ./presto-riak-cli plan <node> [<cookie>]");
             // or mvn exec:java -q -Dexec.main=com.basho.riak.presto.CLI -Dexec.args="plan riak@127.0.0.1"
             return;
         }
 
-        if(args[0].equals("plan")) {
+        if (args[0].equals("plan")) {
             String node = args[1];
             String cookie = "riak";
-            if(args.length > 2){  cookie = args[2]; }
-            System.out.println("connecting to Riak node "+node+" with cookie="+cookie);
+            if (args.length > 2) {
+                cookie = args[2];
+            }
+            System.out.println("connecting to Riak node " + node + " with cookie=" + cookie);
 
             String self = "client@127.0.0.1";
             try {
@@ -79,21 +82,16 @@ public class CLI {
                 System.out.println("print coverage plan==============");
                 System.out.println(coverage.toString());
 
-                for(SplitTask split : splits)
-                {
-                    System.out.println("============printing split data at "+split.getHost()+"===============");
+                for (SplitTask split : splits) {
+                    System.out.println("============printing split data at " + split.getHost() + "===============");
 
                     split.fetchAllData(conn, "default", "foobartable");
                 }
-            }
-            catch (java.io.IOException e){
+            } catch (java.io.IOException e) {
                 System.err.println(e);
             }
         }
     }
-
-    private static final BinaryValue BUCKET = BinaryValue.create("test");
-    private static final Namespace NAMESPACE = new Namespace(BUCKET); // with default bucket type.
 
     public static void dummy_main(String args[]) throws UnknownHostException, InterruptedException {
         System.out.println("foobar");
@@ -107,13 +105,15 @@ public class CLI {
         RiakCluster cluster = RiakCluster.builder(nodes).build();
 
 
-
         long startTime = System.currentTimeMillis();
 
         //Bucket bucket = client.createBucket("demo_bucket").execute();
         for (int i = 0; i < DATA_COUNT; i++) {
             try {
-                if (i % 1000 == 0) { log("storing key #" + i); };
+                if (i % 1000 == 0) {
+                    log("storing key #" + i);
+                }
+                ;
                 BinaryValue key = BinaryValue.create("demo_key_" + i);
                 RiakObject obj = new RiakObject();
                 obj.setContentType("application/json");
@@ -125,14 +125,16 @@ public class CLI {
                 cluster.execute(op);
 
                 op.await();
-                if (!op.isSuccess()) { throw op.cause(); }
+                if (!op.isSuccess()) {
+                    throw op.cause();
+                }
 
             } catch (Throwable t) {
                 log(t.getMessage());
                 log(t.getStackTrace().toString());
             }
 
-         }
+        }
 
         long duration = System.currentTimeMillis() - startTime;
 
@@ -143,7 +145,9 @@ public class CLI {
     private static void waitForQueueSizeLessThan(ThreadPoolExecutor executor, int size)
             throws InterruptedException {
 
-        while (executor.getQueue().size() > size ) { Thread.sleep(10L); }
+        while (executor.getQueue().size() > size) {
+            Thread.sleep(10L);
+        }
     }
 
     private static void log(String log) {

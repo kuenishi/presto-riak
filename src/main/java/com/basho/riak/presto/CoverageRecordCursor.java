@@ -187,7 +187,7 @@ public class CoverageRecordCursor
                         value = new OtpErlangLong(l.longValue());
                     } else if (columnHandle.getColumn().spiType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
-                        String s = (String) fixedValue.getValue();
+                        Slice s = (Slice) fixedValue.getValue();
                         value = new OtpErlangBinary(s.getBytes());
                     } else {
                         continue;

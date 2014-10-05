@@ -23,18 +23,15 @@ import static io.airlift.json.JsonCodec.listJsonCodec;
 import static io.airlift.json.JsonCodecBinder.jsonCodecBinder;
 
 public class RiakModule
-        implements Module
-{
+        implements Module {
     private final String connectorId;
 
-    public RiakModule(String connectorId)
-    {
+    public RiakModule(String connectorId) {
         this.connectorId = checkNotNull(connectorId, "connector id is null");
     }
 
     @Override
-    public void configure(Binder binder)
-    {
+    public void configure(Binder binder) {
         binder.bind(RiakConnector.class).in(Scopes.SINGLETON);
         binder.bind(RiakConnectorId.class).toInstance(new RiakConnectorId(connectorId));
         binder.bind(RiakMetadata.class).in(Scopes.SINGLETON);
