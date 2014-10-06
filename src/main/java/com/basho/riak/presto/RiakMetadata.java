@@ -108,6 +108,7 @@ public class RiakMetadata
                 }
             }
         } catch (Exception e) {
+            log.error(e.getMessage());
         }
 
         log.info("listTables for %s: %d tables found", schemaNameOrNull,

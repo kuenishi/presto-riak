@@ -129,13 +129,14 @@ public class RiakClient {
     }
 
     public Set<String> getTableNames(String schema) throws InterruptedException, ExecutionException, IOException {
-        log.info("checking... rawDatabaseaaaaa %s", schema);
+        log.info("checking... rawDatabase %s\n", schema);
 
         RawDatabase rawDatabase = null;
         BinaryValue schemaKey = BinaryValue.create(schema);
         if (schema.equals("default")) {
             schemaKey = SCHEMA_KEY_NAME;
         }
+        log.info("querying %s\n", schemaKey);
 
         // null return if not found
         FetchOperation op = new FetchOperation.Builder(new Location(NAMESPACE, schemaKey)).build();
@@ -155,6 +156,7 @@ public class RiakClient {
             log.debug(o.getValue().toStringUtf8());
 
             rawDatabase = om.readValue(o.getValue().toStringUtf8(), RawDatabase.class);
+            log.debug("Got sschema: %s", rawDatabase.tables);
 
             checkNotNull(rawDatabase, "no schema key exists in Riak");
             //if(rawDatabase == null) log.debug("rawDatabase is null");
