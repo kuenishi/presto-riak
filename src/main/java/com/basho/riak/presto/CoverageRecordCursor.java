@@ -62,10 +62,11 @@ public class CoverageRecordCursor
                                 RiakConfig riakConfig,
                                 DirectConnection directConnection) {
         this.schemaName = checkNotNull(schemaName);
-        checkState(schemaName.equals("default"));
         this.tableName = checkNotNull(tableName);
         checkNotNull(addresses);
         checkState(!addresses.isEmpty());
+        // TODO: if (*) selected, columnHandles gets really empty...
+        log.debug(columnHandles.toString());
         checkState(!columnHandles.isEmpty());
         this.splitTask = checkNotNull(splitTask);
         this.tupleDomain = checkNotNull(tupleDomain);

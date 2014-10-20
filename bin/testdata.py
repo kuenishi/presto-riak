@@ -74,7 +74,7 @@ def create_schema():
 
     req = urllib2.Request(url=url,
                           headers= {'Content-type': 'applicaiton/json'},
-                          data = '{"tables":["logs", "users"]}')
+                          data = '{"tables": {"logs":["Access Logs"], "users":["Stars of Star Wars"]}}')
     req.get_method = lambda: 'PUT' #if I remove this line then the POST works fine.
     response = urllib2.urlopen(req)
 

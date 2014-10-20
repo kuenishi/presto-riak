@@ -53,9 +53,12 @@ public class RiakSplitManager
         log.info("==========================tupleDomain=============================");
         log.info(tupleDomain.toString());
 
+        SchemaTableName schemaTableName = new SchemaTableName(
+                riakTableHandle.getSchemaName(), riakTableHandle.getTableName()
+        );
         RiakTable table = null;//RiakTable.example(riakTableHandle.getTableName());
         try {
-            table = riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+            table = riakClient.getTable(schemaTableName);
 
         } catch (Exception e) {
             log.error("interrupted: %s", e.toString());
@@ -90,9 +93,12 @@ public class RiakSplitManager
         RiakPartition riakPartition = (RiakPartition) partition;
 
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
+        SchemaTableName schemaTableName = new SchemaTableName(
+                riakTableHandle.getSchemaName(), riakTableHandle.getTableName()
+        );
         RiakTable table = null; //RiakTable.example(riakTableHandle.getTableName());
         try {
-            table = riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+            table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
         }
         // this can happen if table is removed during a query

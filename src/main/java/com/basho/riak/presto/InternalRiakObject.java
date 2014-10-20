@@ -31,6 +31,7 @@ import static com.google.common.base.Preconditions.checkState;
 public class InternalRiakObject {
     private final byte[] key;
     private final byte[] bucket;
+    private final byte[] bucketType;
     private List<byte[]> values;
 
     public InternalRiakObject(OtpErlangObject object) {
@@ -40,7 +41,10 @@ public class InternalRiakObject {
 //        System.out.println(rObject);
 //        -record(r_object, {
 //                bucket :: bucket(),
-        this.bucket = ((OtpErlangBinary) rObject.elementAt(1)).binaryValue();
+
+        OtpErlangTuple bt = (OtpErlangTuple) rObject.elementAt(1);
+        bucketType = ((OtpErlangBinary)bt.elementAt(0)).binaryValue();
+        bucket = ((OtpErlangBinary)bt.elementAt(1)).binaryValue();
 //                key :: key(),
         this.key = ((OtpErlangBinary) rObject.elementAt(2)).binaryValue();
 //                contents :: [#r_content{}],

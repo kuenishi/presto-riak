@@ -22,29 +22,27 @@ import com.basho.riak.client.core.query.Location;
 import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
+import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.HostAndPort;
+import com.sun.org.apache.xml.internal.utils.NameSpace;
 import io.airlift.log.Logger;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakClient {
 
-    public static final BinaryValue META_BUCKET_NAME = BinaryValue.create("__presto_schema");
-    //private static final BinaryValue BUCKET = BinaryValue.create("test");
-    private static final Namespace NAMESPACE = new Namespace(META_BUCKET_NAME); // with default bucket type.
-    public static final BinaryValue SCHEMA_KEY_NAME = BinaryValue.create("__schema");
+    public static final String META_BUCKET_NAME = "__presto_schema";
+    public static final String SCHEMA_KEY_NAME = "__schema";
+    public static final Namespace NAMESPACE = new Namespace(META_BUCKET_NAME);
     private static final int CONNECTION_TIMEOUT_MIL = 2000;
     private static final Logger log = Logger.get(RiakClient.class);
     /**
@@ -128,18 +126,12 @@ public class RiakClient {
         return new HashSet<String>(this.schemas);
     }
 
-    public Set<String> getTableNames(String schema) throws InterruptedException, ExecutionException, IOException {
-        log.info("checking... rawDatabase %s\n", schema);
+    public Set<String> getTableNames(String schemaName) throws InterruptedException, ExecutionException, IOException {
+        log.info("checking... rawDatabase %s\n", schemaName);
 
-        RawDatabase rawDatabase = null;
-        BinaryValue schemaKey = BinaryValue.create(schema);
-        if (schema.equals("default")) {
-            schemaKey = SCHEMA_KEY_NAME;
-        }
-        log.info("querying %s\n", schemaKey);
 
         // null return if not found
-        FetchOperation op = new FetchOperation.Builder(new Location(NAMESPACE, schemaKey)).build();
+        FetchOperation op = buildFetchOperation(schemaName, META_BUCKET_NAME, SCHEMA_KEY_NAME);
         cluster.execute(op);
 
         op.await();
@@ -148,41 +140,44 @@ public class RiakClient {
         }
 
         List<RiakObject> objects = op.get().getObjectList();
-
+        Map<String, Map<String, Object>> data;
 
         ObjectMapper om = new ObjectMapper();
         for (RiakObject o : objects) {
+
             log.debug(o.toString());
             log.debug(o.getValue().toStringUtf8());
 
-            rawDatabase = om.readValue(o.getValue().toStringUtf8(), RawDatabase.class);
-            log.debug("Got sschema: %s", rawDatabase.tables);
+            data = om.readValue(o.getValue().toStringUtf8(), Map.class);
+            log.debug("Got schema: %s", data.toString());
 
-            checkNotNull(rawDatabase, "no schema key exists in Riak");
+            checkNotNull(data, "no schema key exists in Riak");
             //if(rawDatabase == null) log.debug("rawDatabase is null");
             //else                    log.debug("rawDatabase is not null");
 
-            checkNotNull(rawDatabase.tables, "bad schema that doesn't have no table property");
+            checkNotNull(data.get("tables"), "bad schema that doesn't have no table property");
             //log.debug("%s tables found for schema %s", rawDatabase.tables.size(), schema);
-
-            return new HashSet<String>(rawDatabase.tables);
+            HashSet<String> set = new HashSet<>();
+            return ImmutableSet.copyOf(data.get("tables").keySet());
         }
         Set<String> s = new HashSet<String>();
         return ImmutableSet.copyOf(s);
     }
 
-    public RiakTable getTable(String schema, String tableName)
+    public RiakTable getTable(SchemaTableName schemaTableName)
             throws InterruptedException, ExecutionException, IOException {
-        checkNotNull(schema, "schema is null");
-        checkNotNull(tableName, "tableName is null");
+        checkNotNull(schemaTableName, "tableName is null");
 
-        log.info("RiakClient.getTable(%s, %s)", schema, tableName);
+        log.info("RiakClient.getTable(%s)", schemaTableName);
         //Map<String, RiakTable> tables = schemas.get(schema);
         //if (tables == null) {
         //    return null;
 
-        BinaryValue tableKey = BinaryValue.create(schema + "." + tableName);
-        FetchOperation op = new FetchOperation.Builder(new Location(NAMESPACE, tableKey)).build();
+
+        FetchOperation op = buildFetchOperation(
+                schemaTableName.getSchemaName(),
+                META_BUCKET_NAME, schemaTableName.getTableName());
+
         cluster.execute(op);
         op.await();
         if (!op.isSuccess()) {
@@ -192,8 +187,8 @@ public class RiakClient {
         List<RiakObject> objects = op.get().getObjectList();
         for (RiakObject o : objects) {
             RiakTable table = om.readValue(o.getValue().toStringUtf8(), RiakTable.class);
-            checkNotNull(table, "table schema (%s) wasn't found.", tableKey);
-            log.debug("table %s schema found.", tableName);
+            checkNotNull(table, "table schema (%s) wasn't found.", schemaTableName.getSchemaName());
+            log.debug("table %s schema found.", schemaTableName.getTableName());
 
             return table;
         }
@@ -202,5 +197,11 @@ public class RiakClient {
 
     public String getHosts() {
         return hosts;
+    }
+
+    private FetchOperation buildFetchOperation(String bucketType, String bucket, String key){
+        Namespace namespace = new Namespace(bucketType, bucket);
+        return new FetchOperation.Builder(new Location(namespace, key)).build();
+
     }
 }

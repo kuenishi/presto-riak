@@ -127,13 +127,16 @@ $ mvn exec:java -Dexec.mainClass=com.basho.riak.presto.CLI
 
 Concept correspondence:
 
-- Schema: bucket types - default is default
+- Schema: bucket types - default is default schema
 - Table: buckets
+- Special Bucket: `__presto_schema`
+ - Special Key: `__tables` => list of tables
+ - Keys: `(name of a table)` => list of columns
+
+Each bucket types must have a property named `"presto_enabled":true`.
 
 These metadatas are stored in special bucket `__presto_schema` with
-key `default` for default, and special key `__schema` includes all
-schemas including default schema. Each schema key include table names
-as JSON like this:
+special key `__tables` has a JSON like this:
 
 ```
 {
@@ -145,8 +148,8 @@ as JSON like this:
 ```
 
 Each table corresponds to bucket. Table definitions are stored in
-special bucket `__presto_schema` with key
-`<schema_name>.<table_name>}`. in the key there is a JSON
+special bucket `__presto_schema` with key `<table_name>`. in the key
+there is a JSON like this:
 
 ```
 {

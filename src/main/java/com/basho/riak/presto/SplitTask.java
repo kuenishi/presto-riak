@@ -85,9 +85,8 @@ public class SplitTask {
         OtpErlangTuple vnode = (OtpErlangTuple) t.elementAt(0);
         OtpErlangList filterVnodes = (OtpErlangList) t.elementAt(1);
 
-        String bucket = schemaName + "." + tableName;
         try {
-            OtpErlangList riakObjects = conn.processSplit(bucket.getBytes(), vnode, filterVnodes);
+            OtpErlangList riakObjects = conn.processSplit(schemaName.getBytes(), tableName.getBytes(), vnode, filterVnodes);
             //System.out.println(riakObjects);
             return riakObjects;
         } catch (java.io.IOException e) {
@@ -103,10 +102,8 @@ public class SplitTask {
         OtpErlangTuple vnode = (OtpErlangTuple) t.elementAt(0);
         OtpErlangList filterVnodes = (OtpErlangList) t.elementAt(1);
 
-        String bucket = schemaName + "." + tableName;
-
         try {
-            OtpErlangTuple result = conn.processSplitIndex(bucket.getBytes(), vnode,
+            OtpErlangTuple result = conn.processSplitIndex(schemaName.getBytes(), tableName.getBytes(), vnode,
                     filterVnodes, query);
             OtpErlangList riakObjects = (OtpErlangList) result.elementAt(1);
             //System.out.println(riakObjects);

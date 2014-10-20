@@ -132,25 +132,28 @@ public class DirectConnection {
         return this.call("ldna", "get_coverage_plan", new OtpErlangList(argv));
     }
 
-    public OtpErlangList processSplits(byte[] bucket, OtpErlangTuple nodeSplits)
+    public OtpErlangList processSplits(byte[] bucketType, byte[] bucket, OtpErlangTuple nodeSplits)
             throws java.io.IOException, OtpErlangExit, OtpAuthException {
-        OtpErlangObject[] argv = {new OtpErlangBinary(bucket), nodeSplits};
+        OtpErlangObject[] bt = {new OtpErlangBinary(bucketType), new OtpErlangBinary(bucket)};
+        OtpErlangObject[] argv = {new OtpErlangTuple(bt), nodeSplits};
         return this.call("ldna", "process_splits", new OtpErlangList(argv));
     }
 
-    public OtpErlangList processSplit(byte[] bucket, OtpErlangTuple vnode,
+    public OtpErlangList processSplit(byte[] bucketType, byte[] bucket, OtpErlangTuple vnode,
                                       OtpErlangList filterVnodes)
             throws java.io.IOException, OtpErlangExit, OtpAuthException {
-        OtpErlangObject[] argv = {new OtpErlangBinary(bucket), vnode, filterVnodes};
+        OtpErlangObject[] bt = {new OtpErlangBinary(bucketType), new OtpErlangBinary(bucket)};
+        OtpErlangObject[] argv = {new OtpErlangTuple(bt), vnode, filterVnodes};
         return this.call("ldna", "process_split", new OtpErlangList(argv));
     }
 
     // index : in Riak it's foobar_int, foobar_bin but this is just a column name
-    public OtpErlangTuple processSplitIndex(byte[] bucket, OtpErlangTuple vnode,
+    public OtpErlangTuple processSplitIndex(byte[] bucketType, byte[] bucket, OtpErlangTuple vnode,
                                             OtpErlangList filterVnodes,
                                             OtpErlangTuple query)
             throws java.io.IOException, OtpErlangExit, OtpAuthException {
-        OtpErlangObject[] argv = {new OtpErlangBinary(bucket), vnode, filterVnodes, query};
+        OtpErlangObject[] bt = {new OtpErlangBinary(bucketType), new OtpErlangBinary(bucket)};
+        OtpErlangObject[] argv = {new OtpErlangTuple(bt), vnode, filterVnodes, query};
         return this.call("ldna", "process_split", new OtpErlangList(argv));
     }
 

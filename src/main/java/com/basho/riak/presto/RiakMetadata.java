@@ -1,3 +1,4 @@
+
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,15 +44,18 @@ public class RiakMetadata
     @Override
     public ConnectorTableHandle getTableHandle(ConnectorSession connectorSession, SchemaTableName schemaTableName) {
         log.info("getTableHandle;");
+
+
+        //TODO: add check once bucket types API created
+        /*
         if (!listSchemaNames(connectorSession).contains(schemaTableName.getSchemaName())) {
             log.error("no schema %d found", schemaTableName);
             return null;
-        }
+        }*/
 
         RiakTable table = null;
         try {
-            table = riakClient.getTable(schemaTableName.getSchemaName(),
-                    schemaTableName.getTableName());
+            table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
         }
         if (table == null) {
@@ -67,7 +71,7 @@ public class RiakMetadata
         // TODO: support other schema name than default!!
         log.info("RiakMetadata.listSchemaNames();");
         log.info("%s", connectorSession);
-        List<String> list = Arrays.asList("default");
+        List<String> list = Arrays.asList("default", "md");
         return ImmutableList.copyOf(riakClient.getSchemaNames());
     }
 
@@ -87,34 +91,30 @@ public class RiakMetadata
     @Override
     public List<SchemaTableName> listTables(ConnectorSession connectorSession, String schemaNameOrNull) {
 
-        log.info("listTables for %s;", schemaNameOrNull);
 
-        Set<String> schemaNames;
+        String schemaName;
         if (schemaNameOrNull != null) {
-            schemaNames = ImmutableSet.of(schemaNameOrNull);
+            schemaName = schemaNameOrNull;
         } else {
-            schemaNames = riakClient.getSchemaNames();
-            log.info("%s schemas.", schemaNames);
-            log.info(schemaNames.toString());
+            schemaName = "default";
         }
+        log.info("listTables for %s;", schemaName);
 
         ImmutableList.Builder<SchemaTableName> builder = ImmutableList.builder();
         try {
-            for (String schemaName : schemaNames) {
-                log.info(">>> schemaName=%s", schemaName);
-                for (String tableName : riakClient.getTableNames(schemaName)) {
-                    log.info("table %s found.", tableName);
-                    builder.add(new SchemaTableName(schemaName, tableName));
-                }
+
+            for (String tableName : riakClient.getTableNames(schemaName)) {
+                log.info("table %s found.", tableName);
+                builder.add(new SchemaTableName(schemaName, tableName));
             }
         } catch (Exception e) {
             log.error(e.getMessage());
         }
+        List<SchemaTableName> tables = builder.build();
+        log.info("listTables for %s: %d tables found", schemaName,
+                 tables.size());
 
-        log.info("listTables for %s: %d tables found", schemaNameOrNull,
-                schemaNames.size());
-
-        return builder.build();
+        return tables;
     }
 
     @Override
@@ -156,8 +156,10 @@ public class RiakMetadata
 
 //        RiakTable table = RiakClient.getTable(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
         RiakTable table = null;
+        SchemaTableName schemaTableName = new SchemaTableName(riakTableHandle.getSchemaName(),
+                riakTableHandle.getTableName());
         try {
-            table = riakClient.getTable(riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
+            table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
         }
 
@@ -174,28 +176,28 @@ public class RiakMetadata
     }
 
 
-    private ConnectorTableMetadata getTableMetadata(SchemaTableName tableName) {
-        log.info("getTableMetadata>> %s", tableName.toString());
+    private ConnectorTableMetadata getTableMetadata(SchemaTableName schemaTableName) {
+        log.info("getTableMetadata>> %s", schemaTableName.toString());
 //        if (!listSchemaNames().contains(tableName.getSchemaName())) {
         //           return null;
         //      }
 
         RiakTable table = null; //RiakTable.example(tableName.getTableName());
         try {
-            table = riakClient.getTable(tableName.getSchemaName(), tableName.getTableName());
+            table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
             log.error(e.toString());
         }
         if (table == null) {
-            throw new TableNotFoundException(tableName);
+            throw new TableNotFoundException(schemaTableName);
         }
-        log.debug("table %s found.", tableName.getTableName());
+        log.debug("table %s found.", schemaTableName.getTableName());
         log.debug("%s", table.toString());
 
         List<ColumnMetadata> l = table.getColumnsMetadata();
-        log.debug("table %s with %d columns.", tableName.getTableName(), l.size());
+        log.debug("table %s with %d columns.", schemaTableName.getTableName(), l.size());
 
-        return new ConnectorTableMetadata(tableName, l);
+        return new ConnectorTableMetadata(schemaTableName, l);
     }
 
     /*  private List<SchemaTableName> listTables(SchemaTablePrefix prefix)
