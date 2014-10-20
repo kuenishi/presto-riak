@@ -202,7 +202,7 @@ location associated with predicates or partition keys.
  - columnar backend format other than leveldb
 
 - Usability
- - currently 'default' schema only - setup
+ - currently 'default' schema only - it's not working in default schema
  - schema manager, or generator? or move to bucket types that force schema
  - introduce switch between pure-PB API mode
 

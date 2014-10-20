@@ -43,12 +43,12 @@ logs:
 '''
 
 def get(bucket, key):
-    url = 'http://%s/buckets/%s/keys/%s' % (HOST, bucket, key)
+    url = 'http://%s/types/t/buckets/%s/keys/%s' % (HOST, bucket, key)
     c = urllib2.urlopen(url)
     return c.read()
 
 def insert(bucket, key, data):
-    url = 'http://%s/buckets/%s/keys/%s' % (HOST, bucket, key)
+    url = 'http://%s/types/t/buckets/%s/keys/%s' % (HOST, bucket, key)
     req = urllib2.Request(url=url,
                           headers= {'Content-type': 'applicaiton/json'},
                           data =data)
@@ -56,7 +56,7 @@ def insert(bucket, key, data):
     response = urllib2.urlopen(req)
 
 def insert_with_index(bucket, key, data):
-    url = 'http://%s/buckets/%s/keys/%s' % (HOST, bucket, key)
+    url = 'http://%s/types/t/buckets/%s/keys/%s' % (HOST, bucket, key)
     j = json.loads(data)
     headers = {'Content-type': 'applicaiton/json'}
     for prop in j:
@@ -70,7 +70,7 @@ def insert_with_index(bucket, key, data):
     response = urllib2.urlopen(req)
 
 def create_schema():
-    url = 'http://%s/buckets/%s/keys/%s' % (HOST, SCHEMA_BUCKET, SCHEMA_KEY)
+    url = 'http://%s/types/t/buckets/%s/keys/%s' % (HOST, SCHEMA_BUCKET, SCHEMA_KEY)
 
     req = urllib2.Request(url=url,
                           headers= {'Content-type': 'applicaiton/json'},
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     create_schema()
     print(get(SCHEMA_BUCKET, SCHEMA_KEY))
     # create table 1
-    insert(SCHEMA_BUCKET, 'default.logs',
+    insert(SCHEMA_BUCKET, 'logs',
            '''
 {"name":"logs",
  "columns":[
@@ -95,12 +95,12 @@ if __name__ == '__main__':
   {"name":"status", "type":"LONG", "index":true},
   {"name":"accessor", "type":"LONG", "index":true}]}
 ''')
-    print(get(SCHEMA_BUCKET,  'default.logs'))
+    print(get(SCHEMA_BUCKET,  'logs'))
 
     # host, user, method, path, code, size, referer, agent, time, tag
 
     # create table 2
-    insert(SCHEMA_BUCKET, 'default.users',
+    insert(SCHEMA_BUCKET, 'users',
            '''
 {"name":"users",
  "columns":[
@@ -108,22 +108,22 @@ if __name__ == '__main__':
   {"name":"name", "type":"STRING", "index":true},
   {"name":"army", "type":"STRING", "index":true}]}
 ''')
-    print(get(SCHEMA_BUCKET, 'default.users'))
+    print(get(SCHEMA_BUCKET, 'users'))
 
     # insert_with_index data to table 1
-    insert_with_index('default.logs',  '2014-04-12-00:00:00',
+    insert_with_index('logs',  '2014-04-12-00:00:00',
            '{"timestamp":"2014-04-12-00:00:00", "method":"GET", "status":200, "accessor": 2}')
-    insert_with_index('default.logs', '2014-04-12-00:00:01',
+    insert_with_index('logs', '2014-04-12-00:00:01',
            '{"timestamp":"2014-04-12-00:00:01", "method":"GET", "status":404, "accessor": 2}')
-    insert_with_index('default.logs', '2014-04-12-00:00:02',
+    insert_with_index('logs', '2014-04-12-00:00:02',
            '{"timestamp":"2014-04-12-00:00:02", "method":"GET", "status":503, "accessor": 4}')
-    insert_with_index('default.logs', '2014-04-12-00:00:03',
+    insert_with_index('logs', '2014-04-12-00:00:03',
            '{"timestamp":"2014-04-12-00:00:03", "method":"PUT", "status":204, "accessor": 5}')
-    insert_with_index('default.logs', '2014-04-12-00:01:00',
+    insert_with_index('logs', '2014-04-12-00:01:00',
            '{"timestamp":"2014-04-12-00:01:00", "method":"GET", "status":200, "accessor": 5}')
-    insert_with_index('default.logs', '2014-04-12-00:03:00',
+    insert_with_index('logs', '2014-04-12-00:03:00',
            '{"timestamp":"2014-04-12-00:03:00", "method":"GET", "status":200, "accessor": 0}')
-    insert_with_index('default.logs', '2014-04-12-00:04:00',
+    insert_with_index('logs', '2014-04-12-00:04:00',
            '{"timestamp":"2014-04-15-00:04:00", "method":"GET", "status":301, "accessor": 1}')
     for k in ['2014-04-12-00:00:00',
               '2014-04-12-00:00:01',
@@ -132,14 +132,14 @@ if __name__ == '__main__':
               '2014-04-12-00:01:00',
               '2014-04-12-00:03:00',
               '2014-04-12-00:04:00']:
-        print(get('default.logs', k))
+        print(get('logs', k))
 
     # insert_with_index data to table 2
-    insert_with_index('default.users', '0', '{"id":0, "name":"Luke", "army":"Rebellion"}')
-    insert_with_index('default.users', '1', '{"id":1, "name":"Anakin", "army":"Imperial"}')
-    insert_with_index('default.users', '2', '{"id":2, "name":"Leia", "army":"Rebellion"}')
-    insert_with_index('default.users', '3', '{"id":3, "name":"Sith", "army":"Imperial"}')
-    insert_with_index('default.users', '4', '{"id":4, "name":"Fett", "army":"Freelance"}')
-    insert_with_index('default.users', '5', '{"id":5, "name":"Solo", "army":"Freelance"}')
+    insert_with_index('users', '0', '{"id":0, "name":"Luke", "army":"Rebellion"}')
+    insert_with_index('users', '1', '{"id":1, "name":"Anakin", "army":"Imperial"}')
+    insert_with_index('users', '2', '{"id":2, "name":"Leia", "army":"Rebellion"}')
+    insert_with_index('users', '3', '{"id":3, "name":"Sith", "army":"Imperial"}')
+    insert_with_index('users', '4', '{"id":4, "name":"Fett", "army":"Freelance"}')
+    insert_with_index('users', '5', '{"id":5, "name":"Solo", "army":"Freelance"}')
     for i in xrange(0, 6):
-        print(get('default.users', str(i)))
+        print(get('users', str(i)))
