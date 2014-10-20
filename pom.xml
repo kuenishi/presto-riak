@@ -6,7 +6,7 @@
 
     <groupId>com.basho.riak.presto</groupId>
     <artifactId>presto-riak</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <version>0.0.4</version>
 
     <packaging>jar</packaging>
 
@@ -33,7 +33,7 @@
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
-            <version>0.77</version>
+            <version>0.79</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
