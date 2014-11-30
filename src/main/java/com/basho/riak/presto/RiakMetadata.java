@@ -219,6 +219,6 @@ public class RiakMetadata
         checkArgument(columnHandle instanceof RiakColumnHandle, "columnHandle is not an instance of RiakColumnHandle");
         RiakColumnHandle h = (RiakColumnHandle) columnHandle;
         //return ((RiakColumnHandle) columnHandle).getColumnMetadata();
-        return new ColumnMetadata(h.getColumn().getName(), h.getColumn().spiType(), h.getOrdinalPosition(), false);
+        return new ColumnMetadata(h.getColumn().getName(), h.getColumn().getType(), h.getOrdinalPosition(), false);
     }
 }

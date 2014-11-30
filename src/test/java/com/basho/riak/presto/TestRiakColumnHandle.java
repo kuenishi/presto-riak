@@ -1,6 +1,7 @@
 package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
+import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.TupleDomain;
 import com.facebook.presto.spi.type.BooleanType;
 import com.facebook.presto.spi.type.Type;
@@ -9,6 +10,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Test;
+
+import static com.basho.riak.presto.MetadataUtil.COLUMN_CODEC;
 
 import javax.management.remote.rmi._RMIConnection_Stub;
 import java.io.IOException;
@@ -26,18 +29,16 @@ public class TestRiakColumnHandle {
         String connectorId = "fooo gooo";
         ColumnMetadata metadata = new ColumnMetadata("p", BooleanType.BOOLEAN, 42, false);
         RiakColumnHandle c = new RiakColumnHandle(connectorId, metadata);
-        assert(c.getColumn().spiType() == BooleanType.BOOLEAN);
+        assert(c.getColumn().getType() == BooleanType.BOOLEAN);
 
-        ObjectMapper om = new ObjectMapper();
-        byte[] b = om.writeValueAsBytes(c);
+        String s = COLUMN_CODEC.toJson(c);
+        System.out.println(s);
 
-        System.out.println(om.writeValueAsString(c));
-
-        RiakColumnHandle c2 = om.readValue(b, RiakColumnHandle.class);
+        RiakColumnHandle c2 = COLUMN_CODEC.fromJson(s);
 
         assert(c.equals(c2));
-        assert(c.getColumn().spiType() == BooleanType.BOOLEAN);
-        assert(c2.getColumn().spiType() == BooleanType.BOOLEAN);
+        assert(c.getColumn().getType() == BooleanType.BOOLEAN);
+        assert(c2.getColumn().getType() == BooleanType.BOOLEAN);
         System.out.println(c);
         System.out.println(c2);
 
@@ -56,14 +57,13 @@ public class TestRiakColumnHandle {
 
         ObjectMapper om = new ObjectMapper();
         byte[] b = om.writeValueAsBytes(c);
+        String s = COLUMN_CODEC.toJson(c);
 
-        System.out.println(om.writeValueAsString(c));
-
-        RiakColumnHandle c2 = om.readValue(b, RiakColumnHandle.class);
+        RiakColumnHandle c2 = COLUMN_CODEC.fromJson(s);
 
         assert(c.equals(c2));
-        assert(c.getColumn().spiType() == VarcharType.VARCHAR);
-        assert(c2.getColumn().spiType() == VarcharType.VARCHAR);
+        assert(c.getColumn().getType() == VarcharType.VARCHAR);
+        assert(c2.getColumn().getType() == VarcharType.VARCHAR);
         System.out.println(c);
         System.out.println(c2);
     }

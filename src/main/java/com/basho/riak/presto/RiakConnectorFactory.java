@@ -15,6 +15,7 @@ package com.basho.riak.presto;
 
 import com.facebook.presto.spi.Connector;
 import com.facebook.presto.spi.ConnectorFactory;
+import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Injector;
@@ -27,9 +28,12 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakConnectorFactory
         implements ConnectorFactory {
+
+    private final TypeManager typeManager;
     private final Map<String, String> optionalConfig;
 
-    public RiakConnectorFactory(Map<String, String> optionalConfig) {
+    public RiakConnectorFactory(TypeManager typeManager, Map<String, String> optionalConfig) {
+        this.typeManager = checkNotNull(typeManager, "typeManager is given as null");
         this.optionalConfig = ImmutableMap.copyOf(checkNotNull(optionalConfig, "optionalConfig is null"));
     }
 

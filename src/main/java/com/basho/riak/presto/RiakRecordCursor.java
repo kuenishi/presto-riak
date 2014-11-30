@@ -89,7 +89,7 @@ public class RiakRecordCursor
     @Override
     public Type getType(int field) {
         checkArgument(field < columnHandles.size(), "Invalid field index");
-        return columnHandles.get(field).getColumn().spiType();
+        return columnHandles.get(field).getColumn().getType();
     }
 
     @Override

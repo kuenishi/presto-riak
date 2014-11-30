@@ -14,6 +14,8 @@
     <url>http://basho.com</url>
 
     <properties>
+        <dep.slice.version>0.7</dep.slice.version>
+        <dep.airlift.version>0.97</dep.airlift.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -33,7 +35,7 @@
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
-            <version>0.79</version>
+            <version>0.85</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -45,7 +47,7 @@
             <groupId>io.airlift</groupId>
             <artifactId>bootstrap</artifactId>
             <scope>provided</scope>
-            <version>0.95</version>
+            <version>${dep.airlift.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>ch.qos.logback</groupId>
@@ -73,14 +75,14 @@
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>json</artifactId>
-            <version>0.95</version>
+            <version>${dep.airlift.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>configuration</artifactId>
-            <version>0.95</version>
+            <version>${dep.airlift.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -144,6 +146,7 @@
                     <source>1.7</source>
                     <target>1.7</target>
                 </configuration>
+                <version>3.2</version>
             </plugin>
 
             <plugin>
@@ -151,6 +154,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                 </configuration>
+                <version>2.18</version>
             </plugin>
         </plugins>
     </build>
