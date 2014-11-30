@@ -26,56 +26,18 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 public final class RiakColumn {
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
     private final String name;
-    private final String type;
-    private final Type spiType;
+    private final Type type;
     private boolean index;
-
-    public RiakColumn(String name, Type type, boolean index) {
-        this.name = name;
-        this.spiType = type;
-        this.type = this.spiType.getName();
-        this.index = index;
-    }
 
     @JsonCreator
     public RiakColumn(
-            @JsonProperty("name") String name,
-            @JsonProperty("type") String type,
+            @JsonProperty(value = "name", required = true) String name,
+            @JsonProperty(value = "type", required = true) Type type,
             @JsonProperty("index") boolean index) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = checkNotNull(type, "type is null");
         this.index = index;
-        this.spiType = toSpiType(type);
-    }
-
-    Type toSpiType(String t) {
-
-        if (t.equals("LONG")) {
-            return BigintType.BIGINT;
-        } else if (t.equals("STRING")) {
-            return VarcharType.VARCHAR;
-        } else if (t.equals("varchar")) {
-            return VarcharType.VARCHAR;
-        } else if (t.equals(BigintType.BIGINT.getName())) {
-            return BigintType.BIGINT;
-        } else if (t.equals(BooleanType.BOOLEAN.getName())) {
-            return BooleanType.BOOLEAN;
-        } else if (t.equals(DateType.DATE.getName())) {
-            return DateType.DATE;
-        } else if (t.equals(DoubleType.DOUBLE.getName())) {
-            return DoubleType.DOUBLE;
-        } else if (t.equals(HyperLogLogType.HYPER_LOG_LOG.getName())) {
-            return HyperLogLogType.HYPER_LOG_LOG;
-        } else if (t.equals(IntervalDayTimeType.INTERVAL_DAY_TIME.getName())) {
-            return IntervalDayTimeType.INTERVAL_DAY_TIME;
-        } else if (t.equals(IntervalYearMonthType.INTERVAL_YEAR_MONTH.getName())) {
-            return IntervalYearMonthType.INTERVAL_YEAR_MONTH;
-        } else if (t.equals(TimestampType.TIMESTAMP.getName())) {
-            return TimestampType.TIMESTAMP;
-        }
-        log.error("unknown type in table schema: %s", t);
-        return null;
     }
 
     @JsonProperty
@@ -84,12 +46,8 @@ public final class RiakColumn {
     }
 
     @JsonProperty
-    public String getType() {
+    public Type getType() {
         return type;
-    }
-
-    public Type spiType() {
-        return spiType;
     }
 
     @JsonProperty

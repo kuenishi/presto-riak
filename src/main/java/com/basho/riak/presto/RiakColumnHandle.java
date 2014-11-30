@@ -34,8 +34,8 @@ public final class RiakColumnHandle
 
     @JsonCreator
     public RiakColumnHandle(
-            @JsonProperty("connectorId") String connectorId,
-            @JsonProperty("column") RiakColumn column,
+            @JsonProperty(value = "connectorId", required = true) String connectorId,
+            @JsonProperty(value = "column", required = true) RiakColumn column,
             @JsonProperty("ordinalPosition") int ordinalPosition) {
         this.connectorId = checkNotNull(connectorId, "connectorId is null");
         this.column = checkNotNull(column, "column is null");
@@ -59,7 +59,7 @@ public final class RiakColumnHandle
         Map<String, Object> m2 = (Map) m.get("column");
         this.column = new RiakColumn(
                 (String) m2.get("name"),
-                (String) m2.get("type"),
+                null, //m2.get("type"),
                 (boolean) m2.get("index"));
         this.ordinalPosition = (int) m.get("ordinalPosition");
     }
