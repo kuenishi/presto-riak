@@ -56,8 +56,8 @@ public class TestRiakColumnHandle {
         RiakColumnHandle c = new RiakColumnHandle(connectorId, metadata);
 
         ObjectMapper om = new ObjectMapper();
-        byte[] b = om.writeValueAsBytes(c);
         String s = COLUMN_CODEC.toJson(c);
+        System.out.println(s);
 
         RiakColumnHandle c2 = COLUMN_CODEC.fromJson(s);
 

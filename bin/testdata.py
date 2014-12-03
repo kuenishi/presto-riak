@@ -90,10 +90,10 @@ if __name__ == '__main__':
            '''
 {"name":"logs",
  "columns":[
-  {"name":"timestamp", "type":"STRING", "index":false},
-  {"name":"method", "type":"STRING", "index":true},
-  {"name":"status", "type":"LONG", "index":true},
-  {"name":"accessor", "type":"LONG", "index":true}]}
+  {"name":"timestamp", "type":"varchar", "index":false},
+  {"name":"method", "type":"varchar", "index":true},
+  {"name":"status", "type":"bigint", "index":true},
+  {"name":"accessor", "type":"bigint", "index":true}]}
 ''')
     print(get(SCHEMA_BUCKET,  'logs'))
 
@@ -104,9 +104,9 @@ if __name__ == '__main__':
            '''
 {"name":"users",
  "columns":[
-  {"name":"id", "type":"LONG", "index":true},
-  {"name":"name", "type":"STRING", "index":true},
-  {"name":"army", "type":"STRING", "index":true}]}
+  {"name":"id", "type":"bigint", "index":true},
+  {"name":"name", "type":"varchar", "index":true},
+  {"name":"army", "type":"varchar", "index":true}]}
 ''')
     print(get(SCHEMA_BUCKET, 'users'))
 

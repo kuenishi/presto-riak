@@ -51,7 +51,7 @@ public class RiakConnectorFactory
             // A plugin is not required to use Guice; it is just very convenient
             Bootstrap app = new Bootstrap(
                     new JsonModule(),
-                    new RiakModule(connectorId));
+                    new RiakModule(connectorId, typeManager));
 
             Injector injector = app
                     .strictConfig()

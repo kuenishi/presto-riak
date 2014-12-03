@@ -14,6 +14,7 @@
 package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
+import com.facebook.presto.spi.type.BigintType;
 import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -21,6 +22,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -37,7 +39,8 @@ public class RiakTable {
     @JsonCreator
     public RiakTable(
             @JsonProperty("name") String name,
-            @JsonProperty("columns") List<RiakColumn> columns) {
+            @JsonProperty("columns") List<RiakColumn> columns,
+            @JsonProperty(value = "comments", required = false) String comments) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = checkNotNull(name, "name is null");
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
@@ -61,9 +64,11 @@ public class RiakTable {
     }
 
     public static RiakTable example(String tableName) {
-        List<RiakColumn> cols = Arrays.asList(new RiakColumn("col1", VarcharType.VARCHAR, false),
-                new RiakColumn("col2", VarcharType.VARCHAR, false));
-        return new RiakTable(tableName, cols);
+        List<RiakColumn> cols = Arrays.asList(
+                new RiakColumn("col1", VarcharType.VARCHAR, false),
+                new RiakColumn("col2", VarcharType.VARCHAR, true),
+                new RiakColumn("poopie", BigintType.BIGINT, true));
+        return new RiakTable(tableName, cols, "");
 
     }
 

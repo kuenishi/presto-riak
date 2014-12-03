@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.basho.riak.presto;
+package com.basho.riak.presto.cli;
 
 import com.basho.riak.client.core.RiakCluster;
 import com.basho.riak.client.core.RiakNode;
@@ -21,16 +21,28 @@ import com.basho.riak.client.core.query.Location;
 import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
+import com.basho.riak.presto.Coverage;
+import com.basho.riak.presto.DirectConnection;
+import com.basho.riak.presto.SplitTask;
+import com.facebook.presto.spi.type.Type;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.*;
+import io.airlift.json.JsonCodecFactory;
+import io.airlift.json.ObjectMapperProvider;
+import io.airlift.log.Logger;
 
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import static io.airlift.json.JsonBinder.jsonBinder;
+
 /**
  * Created by kuenishi on 14/03/21.
  */
 public class CLI {
+    private static final Logger log = Logger.get(CLI.class);
 
     private static final int DATA_COUNT = 4 * 10000;
 
@@ -49,19 +61,53 @@ public class CLI {
     private static final BinaryValue BUCKET = BinaryValue.create("test");
     private static final Namespace NAMESPACE = new Namespace(BUCKET); // with default bucket type.
 
+    public static void usage() {
+        System.out.println("presto-riak CLI. create table, create schema, drop... >");
+        System.out.println("usage: (./presto-riak-cli plan <node> [<cookie>])");
+        System.out.println("   show-schema <schema name> [<table name>]");
+        System.out.println("   create-schema is not currently supported");
+        System.out.println("   create-tabledef <schema name> <table definition json file>");
+        System.out.println("   clear-tabledef <schema name> <table name>");
+        System.out.println("   check-tabledef <schema name> <table definition json file>");
+
+        // or mvn exec:java -q -Dexec.main=com.basho.riak.presto.CLI -Dexec.args="plan riak@127.0.0.1"
+    }
+
     public static void main(String[] args) throws Exception {
-        System.out.println(args[0]);
-        System.out.println(args[1]);
-        //System.out.println(args[2]);
+
+        Injector i = Guice.createInjector(Stage.PRODUCTION, //new JsonModule());
+                new Module() {
+                    @Override
+                    public void configure(Binder binder) {
+                        jsonBinder(binder).addDeserializerBinding(Type.class).to(Deserializer.CLITypeDeserializer.class);
+                        binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
+                        binder.bind(JsonCodecFactory.class).in(Scopes.SINGLETON);
+                    }
+                });
+        log.debug("%s", i.getTypeConverterBindings());
 
         if (args.length == 0) {
-            System.out.println("presto-riak CLI. create table, create schema, drop... >");
-            System.out.println("usage: ./presto-riak-cli plan <node> [<cookie>]");
-            // or mvn exec:java -q -Dexec.main=com.basho.riak.presto.CLI -Dexec.args="plan riak@127.0.0.1"
+            usage();
             return;
         }
 
-        if (args[0].equals("plan")) {
+        // Actual command implementations
+        if (args[0].equals("show-schema")) {
+            new SchemaDef(i).run(args);
+        } else if (args.length == 2) {
+            if (args[0].equals("create-schema")) {
+                CLI.log("This option is not currently supported.");
+            } else if (args[0].equals("create-tabledef")) {
+                new TableDef(i, args[1]).create(args[2]);
+            } else if (args[0].equals("clear-tabledef")) {
+                new TableDef(i, args[1]).clear(args[2]);
+            } else if (args[0].equals("check-tabledef")) {
+                new TableDef(i, args[1]).check(args[2]);
+            }
+            return;
+        } else if (args[0].equals("plan")) {
+            System.out.println(args[1]);
+
             String node = args[1];
             String cookie = "riak";
             if (args.length > 2) {
@@ -92,6 +138,7 @@ public class CLI {
             }
         }
     }
+
 
     public static void dummy_main(String args[]) throws UnknownHostException, InterruptedException {
         System.out.println("foobar");
@@ -150,7 +197,7 @@ public class CLI {
         }
     }
 
-    private static void log(String log) {
+    public static void log(String log) {
         System.out.println(log);
     }
 

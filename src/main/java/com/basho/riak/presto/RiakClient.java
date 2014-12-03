@@ -27,9 +27,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.HostAndPort;
+import com.google.inject.Inject;
 import io.airlift.log.Logger;
 
-import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
@@ -52,10 +52,13 @@ public class RiakClient {
     private final String hosts;
     private final RiakConfig config;
 
+    private ObjectMapper objectMapper = null;
+
     @Inject
-    public RiakClient(RiakConfig config) //}, JsonCodec<Map<String, List<RiakTable>>> catalogCodec)
+    public RiakClient(RiakConfig config, ObjectMapper objectMapper) //}, JsonCodec<Map<String, List<RiakTable>>> catalogCodec)
             throws IOException, InterruptedException {
         this.config = checkNotNull(config, "config is null");
+        this.objectMapper = checkNotNull(objectMapper, "om is null");
 
         this.hosts = checkNotNull(config.getHost());
         log.info("Riak Config: %s", hosts);
@@ -72,7 +75,7 @@ public class RiakClient {
         cluster = RiakCluster.builder(Arrays.asList(node)).build();
 
         //final String hosts = config.getHosts();
-        this.schemas = Arrays.asList("default");
+        this.schemas = Arrays.asList("md", "t");
         //String json = Resources.toString(metadataUri.toURL(), Charsets.UTF_8);
         //Map<String, List<RiakTable>> catalog = catalogCodec.fromJson(json);
         //this.schemas = ImmutableMap.copyOf(transformValues(catalog, resolveAndIndexTables(metadataUri)));
@@ -104,6 +107,7 @@ public class RiakClient {
         obj.setValue(BinaryValue.create(pairNode.toString()));
         log.debug("Registering membership: %s", pairNode.toString());
 
+        log.info("localnode: %s", config.getLocalNode());
         BinaryValue localNode = BinaryValue.create(config.getLocalNode());
         StoreOperation op = new StoreOperation.Builder(new Location(NAMESPACE, localNode))
                 .withContent(obj).build();
@@ -182,10 +186,12 @@ public class RiakClient {
         if (!op.isSuccess()) {
             return null;
         }
-        ObjectMapper om = new ObjectMapper();
+
+        //ObjectMapper om = new ObjectMapper();
         List<RiakObject> objects = op.get().getObjectList();
         for (RiakObject o : objects) {
-            RiakTable table = om.readValue(o.getValue().toStringUtf8(), RiakTable.class);
+            log.debug("ro: %s", o.getValue().toStringUtf8());
+            RiakTable table = objectMapper.readValue(o.getValue().toStringUtf8(), RiakTable.class);
             checkNotNull(table, "table schema (%s) wasn't found.", schemaTableName.getSchemaName());
             log.debug("table %s schema found.", schemaTableName.getTableName());
 
@@ -202,5 +208,10 @@ public class RiakClient {
         Namespace namespace = new Namespace(bucketType, bucket);
         return new FetchOperation.Builder(new Location(namespace, key)).build();
 
+    }
+
+    public void shutdown()
+    {
+        cluster.shutdown();
     }
 }

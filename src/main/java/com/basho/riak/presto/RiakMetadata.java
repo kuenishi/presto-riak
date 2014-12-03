@@ -57,9 +57,10 @@ public class RiakMetadata
         try {
             table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
+            log.debug("cannot find table: %s", e.toString());
         }
         if (table == null) {
-            log.error("no tables found at %d", schemaTableName);
+            log.error("no tables found at %s", schemaTableName);
             return null;
         }
         return new RiakTableHandle(connectorId, schemaTableName.getSchemaName(), schemaTableName.getTableName());
@@ -68,10 +69,7 @@ public class RiakMetadata
     // called from `show schemas`;
     @Override
     public List<String> listSchemaNames(ConnectorSession connectorSession) {
-        // TODO: support other schema name than default!!
-        log.info("RiakMetadata.listSchemaNames();");
-        log.info("%s", connectorSession);
-        List<String> list = Arrays.asList("default", "md");
+        // TODO: get this from Riak, by listing bucket types
         return ImmutableList.copyOf(riakClient.getSchemaNames());
     }
 
@@ -132,14 +130,6 @@ public class RiakMetadata
         }
         return columns.build();
     }
-
-  /*  @Override
-    public ConnectorColumnHandle getColumnHandle(ConnectorTableHandle tableHandle, String columnName)
-    {
-        log.info("getColumnHandle");
-        return getColumnHandles(tableHandle).get(columnName);
-    }
-    */
 
     @Override
     public ConnectorColumnHandle getSampleWeightColumnHandle(ConnectorTableHandle tableHandle) {

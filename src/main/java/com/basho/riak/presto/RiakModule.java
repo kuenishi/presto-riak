@@ -16,10 +16,12 @@ package com.basho.riak.presto;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.TypeManager;
 import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.google.inject.Binder;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
+import io.airlift.json.ObjectMapperProvider;
 
 import javax.inject.Inject;
 
@@ -34,13 +36,19 @@ import static io.airlift.json.JsonCodecBinder.jsonCodecBinder;
 public class RiakModule
         implements Module {
     private final String connectorId;
+    private final TypeManager typeManager;
 
-    public RiakModule(String connectorId) {
+    @Inject
+    public RiakModule(String connectorId, TypeManager typeManager) {
         this.connectorId = checkNotNull(connectorId, "connector id is null");
+        this.typeManager = checkNotNull(typeManager, "type manager is null");
     }
 
     @Override
     public void configure(Binder binder) {
+
+        binder.bind(TypeManager.class).toInstance(typeManager);
+
         binder.bind(RiakConnector.class).in(Scopes.SINGLETON);
         binder.bind(RiakConnectorId.class).toInstance(new RiakConnectorId(connectorId));
         binder.bind(RiakMetadata.class).in(Scopes.SINGLETON);
@@ -54,6 +62,7 @@ public class RiakModule
         binder.bind(RiakHandleResolver.class).in(Scopes.SINGLETON);
         bindConfig(binder).to(RiakConfig.class);
 
+        binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
         jsonBinder(binder).addDeserializerBinding(Type.class).to(TypeDeserializer.class);
         jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(RiakTable.class));
     }
