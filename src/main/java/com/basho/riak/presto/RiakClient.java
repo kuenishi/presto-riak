@@ -23,6 +23,7 @@ import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
 import com.facebook.presto.spi.SchemaTableName;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
@@ -82,7 +83,7 @@ public class RiakClient {
         cluster.start();
         // insert your names;
         // TODO: how do we unregister when presto node shuts down?
-        register();
+        // register();
     }
 
     private static Function<URI, URI> uriResolver(final URI baseUri) {
@@ -96,7 +97,7 @@ public class RiakClient {
 
     // @doc register presto node's hostname and port to Riak,
     // so as to Riak can return correct presto node corresponding to a vnode.
-    private void register() throws InterruptedException {
+    public void register() throws InterruptedException {
 
         String host = HostAndPort.fromString(config.getHost()).getHostText();
         log.debug("presto port ===> %s:%s", host, config.getPrestoPort());
@@ -198,6 +199,33 @@ public class RiakClient {
             return table;
         }
         return null;
+    }
+
+    // @doc this fun does not read before write
+    public boolean storeTable(SchemaTableName schemaTableName, RiakTable table)
+        throws JsonProcessingException, InterruptedException
+    {
+        checkNotNull(schemaTableName, "schemaTableName is null");
+        checkNotNull(table, "table is null");
+        // don't get from Riak with vclock
+        // if notfound, just create a new RiakObject and store it
+        RiakObject obj = new RiakObject();
+        obj.setContentType("application/json");
+        obj.setValue(BinaryValue.create(objectMapper.writeValueAsBytes(table)));
+
+        Namespace namespace = new Namespace(schemaTableName.getSchemaName(), META_BUCKET_NAME);
+        Location location = new Location(namespace, schemaTableName.getTableName());
+        StoreOperation op = new StoreOperation.Builder(location).withContent(obj).build();
+
+        cluster.execute(op);
+
+        op.await();
+        return op.isSuccess();
+    }
+    public boolean deleteTable(SchemaTableName schemaTableName)
+    {
+        checkNotNull(schemaTableName);
+        return false;
     }
 
     public String getHosts() {

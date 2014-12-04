@@ -20,7 +20,11 @@ public class SchemaDef {
         objectMapper = i.getInstance(ObjectMapper.class);
     }
 
-    public void run(String[] args)
+    public void setupSchema(String schemaName)
+    {
+        // void
+    }
+    public void listTables(String schemaName)
             throws IOException, InterruptedException, ExecutionException {
 
         RiakConfig config = new RiakConfig();
@@ -28,37 +32,16 @@ public class SchemaDef {
         RiakConnectorId cid = new RiakConnectorId("presto-riak-cui");
 
         try {
-            if (args.length < 2) {
-                for (String schemaName : client.getSchemaNames()) {
-                    CLI.log(schemaName);
-                }
-                return;
-            }
-
-            String schemaName = args[1];
 
             Set<String> tableNames = client.getTableNames(schemaName);
 
-            if (args.length < 3) {
-                CLI.log("tables in " + schemaName);
+            CLI.log("tables in " + schemaName);
 
-                for (String tableName : tableNames) {
-                    System.out.println(tableName);
-                }
-                return;
+            for (String tableName : tableNames) {
+                System.out.println(tableName);
             }
-
-            SchemaTableName schemaTableName = new SchemaTableName(schemaName, args[2]);
-            RiakTable table = client.getTable(schemaTableName);
-            CLI.log("table> " + table.getName());
-            for (RiakColumn column : table.getColumns()) {
-                String hasIndex = (column.getIndex()) ? "'" : "";
-                CLI.log(column.getName() + hasIndex + ": \t" + column.getType());
-            }
-            //System.out.println(table);
-            objectMapper.writeValue(System.out, table);
-            return;
-        } finally {
+        } finally
+        {
             client.shutdown();
         }
     }

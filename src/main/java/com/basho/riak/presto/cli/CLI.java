@@ -64,9 +64,10 @@ public class CLI {
     public static void usage() {
         System.out.println("presto-riak CLI. create table, create schema, drop... >");
         System.out.println("usage: (./presto-riak-cli plan <node> [<cookie>])");
-        System.out.println("   show-schema <schema name> [<table name>]");
+        System.out.println("   list-tables <schema name>");
         System.out.println("   create-schema is not currently supported");
         System.out.println("   create-tabledef <schema name> <table definition json file>");
+        System.out.println("   show-tabledef <schema name> <table name>");
         System.out.println("   clear-tabledef <schema name> <table name>");
         System.out.println("   check-tabledef <schema name> <table definition json file>");
 
@@ -86,23 +87,25 @@ public class CLI {
                 });
         log.debug("%s", i.getTypeConverterBindings());
 
-        if (args.length == 0) {
+        if (args.length < 2) {
             usage();
             return;
         }
 
         // Actual command implementations
-        if (args[0].equals("show-schema")) {
-            new SchemaDef(i).run(args);
-        } else if (args.length == 2) {
+        if (args[0].equals("list-tables") && args.length == 2) {
+            new SchemaDef(i).listTables(args[1]);
+        } else if (args.length == 3) {
             if (args[0].equals("create-schema")) {
                 CLI.log("This option is not currently supported.");
             } else if (args[0].equals("create-tabledef")) {
-                new TableDef(i, args[1]).create(args[2]);
+                new TableDef(i, args[1], true).create(args[2]);
+            } else if (args[0].equals("show-tabledef")) {
+                new TableDef(i, args[1], true).show(args[2]);
             } else if (args[0].equals("clear-tabledef")) {
-                new TableDef(i, args[1]).clear(args[2]);
+                new TableDef(i, args[1], true).clear(args[2]);
             } else if (args[0].equals("check-tabledef")) {
-                new TableDef(i, args[1]).check(args[2]);
+                new TableDef(i, args[1], false).check(args[2]);
             }
             return;
         } else if (args[0].equals("plan")) {
@@ -136,6 +139,9 @@ public class CLI {
             } catch (java.io.IOException e) {
                 System.err.println(e);
             }
+        }
+        else{
+            usage();
         }
     }
 
