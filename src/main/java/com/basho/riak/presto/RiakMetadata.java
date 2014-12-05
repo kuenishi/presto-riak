@@ -17,14 +17,11 @@ package com.basho.riak.presto;
 import com.facebook.presto.spi.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import io.airlift.log.Logger;
 
 import javax.inject.Inject;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -53,13 +50,14 @@ public class RiakMetadata
             return null;
         }*/
 
-        RiakTable table = null;
+        PRTable table = null;
         try {
             table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
+            log.debug("cannot find table: %s", e.toString());
         }
         if (table == null) {
-            log.error("no tables found at %d", schemaTableName);
+            log.error("no tables found at %s", schemaTableName);
             return null;
         }
         return new RiakTableHandle(connectorId, schemaTableName.getSchemaName(), schemaTableName.getTableName());
@@ -68,10 +66,7 @@ public class RiakMetadata
     // called from `show schemas`;
     @Override
     public List<String> listSchemaNames(ConnectorSession connectorSession) {
-        // TODO: support other schema name than default!!
-        log.info("RiakMetadata.listSchemaNames();");
-        log.info("%s", connectorSession);
-        List<String> list = Arrays.asList("default", "md");
+        // TODO: get this from Riak, by listing bucket types
         return ImmutableList.copyOf(riakClient.getSchemaNames());
     }
 
@@ -133,14 +128,6 @@ public class RiakMetadata
         return columns.build();
     }
 
-  /*  @Override
-    public ConnectorColumnHandle getColumnHandle(ConnectorTableHandle tableHandle, String columnName)
-    {
-        log.info("getColumnHandle");
-        return getColumnHandles(tableHandle).get(columnName);
-    }
-    */
-
     @Override
     public ConnectorColumnHandle getSampleWeightColumnHandle(ConnectorTableHandle tableHandle) {
         log.debug("getSampleWeightColumnHandle;");
@@ -154,8 +141,8 @@ public class RiakMetadata
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
         checkArgument(riakTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
 
-//        RiakTable table = RiakClient.getTable(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
-        RiakTable table = null;
+//        PRTable table = RiakClient.getTable(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
+        PRTable table = null;
         SchemaTableName schemaTableName = new SchemaTableName(riakTableHandle.getSchemaName(),
                 riakTableHandle.getTableName());
         try {
@@ -182,7 +169,7 @@ public class RiakMetadata
         //           return null;
         //      }
 
-        RiakTable table = null; //RiakTable.example(tableName.getTableName());
+        PRTable table = null; //PRTable.example(tableName.getTableName());
         try {
             table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
@@ -219,6 +206,6 @@ public class RiakMetadata
         checkArgument(columnHandle instanceof RiakColumnHandle, "columnHandle is not an instance of RiakColumnHandle");
         RiakColumnHandle h = (RiakColumnHandle) columnHandle;
         //return ((RiakColumnHandle) columnHandle).getColumnMetadata();
-        return new ColumnMetadata(h.getColumn().getName(), h.getColumn().spiType(), h.getOrdinalPosition(), false);
+        return new ColumnMetadata(h.getColumn().getName(), h.getColumn().getType(), h.getOrdinalPosition(), false);
     }
 }

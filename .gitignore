@@ -3,5 +3,6 @@
 .project
 .settings
 .idea
-*.beam
 *~
+presto-riak.iml
+

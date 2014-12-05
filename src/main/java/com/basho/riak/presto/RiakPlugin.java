@@ -15,9 +15,11 @@ package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ConnectorFactory;
 import com.facebook.presto.spi.Plugin;
+import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import javax.inject.Inject;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakPlugin
         implements Plugin {
+
+    private TypeManager typeManager;
     private Map<String, String> optionalConfig = ImmutableMap.of();
 
     public synchronized Map<String, String> getOptionalConfig() {
@@ -39,8 +43,14 @@ public class RiakPlugin
     @Override
     public <T> List<T> getServices(Class<T> type) {
         if (type == ConnectorFactory.class) {
-            return ImmutableList.of(type.cast(new RiakConnectorFactory(getOptionalConfig())));
+            return ImmutableList.of(type.cast(new RiakConnectorFactory(typeManager, getOptionalConfig())));
         }
         return ImmutableList.of();
+    }
+
+    @Inject
+    public synchronized void setTypeManager(TypeManager typeManager)
+    {
+        this.typeManager = typeManager;
     }
 }

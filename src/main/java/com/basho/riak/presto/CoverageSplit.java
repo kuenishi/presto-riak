@@ -36,7 +36,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
  */
 public class CoverageSplit implements ConnectorSplit {
 
-
     private static final Logger log = Logger.get(CoverageSplit.class);
     private final String connectorId;
     private final String schemaName;
@@ -45,7 +44,6 @@ public class CoverageSplit implements ConnectorSplit {
     private final String splitData;
     private final TupleDomain tupleDomain;
     private final List<String> indexedColumns;
-    private final ImmutableList<HostAddress> addresses;
 
     @JsonCreator
     public CoverageSplit(
@@ -65,29 +63,8 @@ public class CoverageSplit implements ConnectorSplit {
         this.indexedColumns = checkNotNull(indexedColumns);
 
         //log.debug("%s.%s to %s: %s", schemaName, tableName, host, splitData);
-        this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromString(host)));
         //this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromParts(host, 8080)));
 
-    }
-
-    public CoverageSplit(
-            @JsonProperty("connectorId") String connectorId,
-            @JsonProperty("schemaName") String schemaName,
-            @JsonProperty("tableName") String tableName,
-            @JsonProperty("host") String host,
-            @JsonProperty("tupleDomain") TupleDomain tupleDomain,
-            @JsonProperty("indexedColumns") List<String> indexedColumns) {
-        this.schemaName = checkNotNull(schemaName, "schema name is null");
-        this.connectorId = checkNotNull(connectorId, "connector id is null");
-        this.tableName = checkNotNull(tableName, "table name is null");
-        this.host = checkNotNull(host);
-        this.splitData = "";
-        this.tupleDomain = checkNotNull(tupleDomain);
-        this.indexedColumns = checkNotNull(indexedColumns);
-
-        //log.debug("%s.%s to %s: %s", schemaName, tableName, host, splitData);
-        this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromString(host)));
-        //this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromParts(host, 8080)));
     }
 
     @JsonProperty
@@ -149,7 +126,7 @@ public class CoverageSplit implements ConnectorSplit {
     public List<HostAddress> getAddresses() {
         //log.debug("getAddress: %s", addresses);
         //log.debug(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(this));
-        return addresses;
+        return ImmutableList.copyOf(Arrays.asList(HostAddress.fromString(host)));
     }
 
     @NotNull
