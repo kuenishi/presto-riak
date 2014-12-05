@@ -32,10 +32,6 @@ public class SchemaDef {
         objectMapper = i.getInstance(ObjectMapper.class);
     }
 
-    public static boolean addTable(RiakClient client, SchemaTableName schemaTableName) {
-        return false;
-    }
-
     public static boolean delTable(RiakClient client, SchemaTableName schemaTableName) {
         return false;
     }

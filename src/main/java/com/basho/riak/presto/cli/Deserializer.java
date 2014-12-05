@@ -13,6 +13,7 @@
  */
 package com.basho.riak.presto.cli;
 
+import com.basho.riak.presto.PRSchema;
 import com.basho.riak.presto.PRTable;
 import com.basho.riak.presto.RiakColumnHandle;
 import com.facebook.presto.spi.type.StandardTypes;
@@ -45,6 +46,7 @@ public final class Deserializer
     public static final JsonCodec<Map<String, List<PRTable>>> CATALOG_CODEC;
     public static final JsonCodec<PRTable> TABLE_CODEC;
     public static final JsonCodec<RiakColumnHandle> COLUMN_CODEC;
+    public static final JsonCodec<PRSchema> SCHEMA_CODEC;
 
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
@@ -52,6 +54,7 @@ public final class Deserializer
         JsonCodecFactory codecFactory = new JsonCodecFactory(objectMapperProvider);
         CATALOG_CODEC = codecFactory.mapJsonCodec(String.class, listJsonCodec(PRTable.class));
         TABLE_CODEC = codecFactory.jsonCodec(PRTable.class);
+        SCHEMA_CODEC = codecFactory.jsonCodec(PRSchema.class);
         COLUMN_CODEC = codecFactory.jsonCodec(RiakColumnHandle.class);
     }
 

@@ -1,5 +1,7 @@
 package com.basho.riak.presto.cli;
 
+import com.basho.riak.client.core.query.RiakObject;
+import com.basho.riak.client.core.util.BinaryValue;
 import com.basho.riak.presto.*;
 import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +10,7 @@ import com.google.inject.Injector;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -18,81 +21,83 @@ public class TableDef {
     private final ObjectMapper objectMapper;
     private final String schemaName;
     private final RiakConfig config;
-    private final RiakClient client;
     private final RiakConnectorId cid;
+    private RiakClient client = null;
 
     TableDef(Injector i, String schemaName, boolean doConnect)
-            throws IOException, InterruptedException
-    {
+            throws IOException, InterruptedException {
         this.objectMapper = i.getInstance(ObjectMapper.class);
         this.schemaName = schemaName;
 
         config = new RiakConfig();
-        if(doConnect) {
+        if (doConnect) {
             client = new RiakClient(config, objectMapper);
-        }else{
+        } else {
             client = null;
         }
         cid = new RiakConnectorId("presto-riak-cui");
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        if (client != null)
+            client.shutdown();
+    }
+
     public boolean check(String filename)
-            throws FileNotFoundException, IOException
-    {
+            throws FileNotFoundException, IOException {
         PRTable table = readTable(filename);
         // because there were no exceptions thrown, that's ok
-        CLI.log("successfully loaded: "+ table.toString());
+        CLI.log("successfully loaded: " + table.toString());
         return true;
     }
 
+
     // @doc this does not do any read before write
     public boolean create(String filename)
-        throws FileNotFoundException, IOException, InterruptedException
-    {
-        try {
-            PRTable table = readTable(filename);
-            if (table != null)
-            {
-                CLI.log("There are existing table. Delete it before putting new table definition.");
+            throws FileNotFoundException, IOException, InterruptedException, ExecutionException {
+
+        PRTable table = readTable(filename);
+        SchemaTableName schemaTableName = new SchemaTableName(schemaName, table.getName());
+
+        List<RiakObject> objects = client.getSchemaRiakObjects(schemaTableName.getSchemaName());
+        for (RiakObject o : objects) {
+            CLI.log(o.getValue().toStringUtf8());
+            PRSchema schema = objectMapper.readValue(o.getValue().toStringUtf8(), PRSchema.class);
+
+            schema.addTable(table, "added today");
+            o.setValue(BinaryValue.create(objectMapper.writeValueAsBytes(schema)));
+
+            if (client.storeSchema(schemaName, o)) {
+                return client.storeTable(schemaTableName, table);
             }
-            SchemaTableName schemaTableName = new SchemaTableName(schemaName, table.getName());
-            return client.storeTable(schemaTableName, table);
-        }finally
-        {
-            client.shutdown();
         }
+        return false;
     }
 
     public boolean show(String tableName)
-            throws InterruptedException, ExecutionException, IOException
-    {
-        try {
-            SchemaTableName schemaTableName = new SchemaTableName(schemaName, tableName);
-            PRTable table = client.getTable(schemaTableName);
-            CLI.log("table> " + table.getName());
-            for (RiakColumn column : table.getColumns()) {
-                String hasIndex = (column.getIndex()) ? "'" : "";
-                CLI.log(column.getName() + hasIndex + ": \t" + column.getType());
-            }
-            //System.out.println(table);
-            objectMapper.writeValue(System.out, table);
-            return true;
-        }finally
-        {
-            client.shutdown();
+            throws InterruptedException, ExecutionException, IOException {
+        SchemaTableName schemaTableName = new SchemaTableName(schemaName, tableName);
+        PRTable table = client.getTable(schemaTableName);
+        CLI.log("table> " + table.getName());
+        for (RiakColumn column : table.getColumns()) {
+            String hasIndex = (column.getIndex()) ? "'" : "";
+            CLI.log(column.getName() + hasIndex + ": \t" + column.getType());
         }
+        //System.out.println(table);
+        objectMapper.writeValue(System.out, table);
+        return true;
+
     }
 
-    public boolean clear(String tableName)
-    {
+    public boolean clear(String tableName) {
         SchemaTableName schemaTableName = new SchemaTableName(schemaName, tableName);
         return client.deleteTable(schemaTableName);
     }
 
     // only JSON files accepted
     private PRTable readTable(String filename)
-        throws FileNotFoundException, IOException
-    {
+            throws FileNotFoundException, IOException {
         FileReader reader = new FileReader(filename);
         return objectMapper.readValue(reader, PRTable.class);
     }

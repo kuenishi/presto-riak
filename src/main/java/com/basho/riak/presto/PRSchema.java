@@ -54,6 +54,14 @@ public class PRSchema {
         return comments;
     }
 
+    public void addTable(PRTable table, String comment)
+    {
+        Table t = new Table();
+        t.name = table.getName();
+        t.comments.add(comment);
+        tables.add(t);
+    }
+
     public class Table
     {
         public String name;

@@ -249,7 +249,12 @@ public class RiakClient {
         obj.setContentType("application/json");
         obj.setValue(BinaryValue.create(objectMapper.writeValueAsBytes(schema)));
 
-        Namespace namespace = new Namespace(schemaName, META_BUCKET_NAME);
+        return storeSchema(schemaName, obj);
+    }
+    public boolean storeSchema(String schemaName, RiakObject obj)
+            throws JsonProcessingException, InterruptedException
+    {
+    Namespace namespace = new Namespace(schemaName, META_BUCKET_NAME);
         Location location = new Location(namespace, SCHEMA_KEY_NAME);
         StoreOperation op = new StoreOperation.Builder(location).withContent(obj).build();
 
@@ -257,7 +262,6 @@ public class RiakClient {
 
         op.await();
         return op.isSuccess();
-
     }
 
     public boolean deleteTable(SchemaTableName schemaTableName) {
