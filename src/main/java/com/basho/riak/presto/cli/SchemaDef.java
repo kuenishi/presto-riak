@@ -1,10 +1,6 @@
 package com.basho.riak.presto.cli;
 
-import com.basho.riak.client.core.operations.StoreOperation;
-import com.basho.riak.client.core.query.Location;
-import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
-import com.basho.riak.client.core.util.BinaryValue;
 import com.basho.riak.presto.PRSchema;
 import com.basho.riak.presto.RiakClient;
 import com.basho.riak.presto.RiakConfig;
@@ -14,7 +10,7 @@ import com.google.inject.Injector;
 import io.airlift.log.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -46,7 +42,7 @@ public class SchemaDef {
         try {
             setupClient();
             List<RiakObject> objects = client.getSchemaRiakObjects(schemaName);
-            if(objects.size() > 0){
+            if (objects.size() > 0) {
                 CLI.log("Schema is already up: " + schemaName);
                 return;
             }
@@ -55,8 +51,9 @@ public class SchemaDef {
             // and as a consequence, there are multiple siblings. At any
             // moment, presto-riak does not handle siblings in metadata.
             // Just picks up the first sibling.
-            PRSchema schema = new PRSchema(new ArrayList<PRSchema.Table>(), new ArrayList<String>());
-            if(! client.storeSchema(schemaName, schema)){
+            PRSchema schema = new PRSchema(new HashSet<String>(), new HashSet<String>());
+
+            if (!client.storeSchema(schemaName, schema)) {
                 CLI.log("failed creating schema");
             }
             CLI.log("success: " + schemaName);

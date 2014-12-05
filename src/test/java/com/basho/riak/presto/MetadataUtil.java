@@ -42,6 +42,7 @@ public final class MetadataUtil
     public static final JsonCodec<Map<String, List<PRTable>>> CATALOG_CODEC;
     public static final JsonCodec<PRTable> TABLE_CODEC;
     public static final JsonCodec<RiakColumnHandle> COLUMN_CODEC;
+    public static final JsonCodec<PRSchema> SCHEMA_CODEC;
 
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
@@ -50,6 +51,7 @@ public final class MetadataUtil
         CATALOG_CODEC = codecFactory.mapJsonCodec(String.class, listJsonCodec(PRTable.class));
         TABLE_CODEC = codecFactory.jsonCodec(PRTable.class);
         COLUMN_CODEC = codecFactory.jsonCodec(RiakColumnHandle.class);
+        SCHEMA_CODEC = codecFactory.jsonCodec(PRSchema.class);
     }
 
     public static final class TestingTypeDeserializer

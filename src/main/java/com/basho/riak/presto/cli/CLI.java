@@ -110,7 +110,7 @@ public class CLI {
             } else if (args[0].equals("check-tabledef")) {
                 new TableDef(i, args[1], false).check(args[2]);
             }
-            return;
+
         } else if (args[0].equals("plan")) {
             System.out.println(args[1]);
 
@@ -146,6 +146,8 @@ public class CLI {
         else{
             usage();
         }
+        // Mock a Wock and don't leave any trash!
+        System.gc();
     }
 
 

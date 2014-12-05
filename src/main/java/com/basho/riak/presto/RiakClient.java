@@ -147,9 +147,9 @@ public class RiakClient {
             checkNotNull(schema, "no schema key exists in Riak");
             HashSet<String> set = new HashSet<>();
 
-            for(PRSchema.Table t : schema.getTables())
+            for(String t : schema.getTables())
             {
-                set.add(t.name);
+                set.add(t);
             }
             return ImmutableSet.copyOf(set);
         }

@@ -7,7 +7,7 @@ import static com.basho.riak.presto.MetadataUtil.TABLE_CODEC;
 /**
  * Created by kuenishi on 14/12/03.
  */
-public class TestRiakTable {
+public class TestPRTable {
 
     @Test
     public void testSerialization()

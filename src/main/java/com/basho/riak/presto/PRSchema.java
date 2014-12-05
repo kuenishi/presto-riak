@@ -20,10 +20,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import io.airlift.log.Logger;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,39 +34,41 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 // Presto-Riak style table, stored in Riak and also exchanged between presto nodes
 public class PRSchema {
     private static final Logger log = Logger.get(PRSchema.class);
-    private final List<Table> tables;
-    private final List<String> comments;
+    private final Set<String> tables;
+    private final Set<String> comments;
 
     @JsonCreator
     public PRSchema(
-            @JsonProperty("tables") List<Table> tables,
-            @JsonProperty(value = "comments", required = false) List<String> comments) {
+            @JsonProperty("tables") Set<String> tables,
+            @JsonProperty(value = "comments", required = false) Set<String> comments) {
 
         this.tables = checkNotNull(tables, "tables is null");
-        this.comments = ImmutableList.copyOf(checkNotNull(comments, "columns is null"));
+        this.comments = checkNotNull(comments, "columns is null");
     }
 
     @JsonProperty
-    public List<Table> getTables() {
+    public Set<String> getTables() {
         return tables;
     }
 
     @JsonProperty
-    public List<String> getComments() {
+    public Set<String> getComments() {
         return comments;
     }
 
-    public void addTable(PRTable table, String comment)
-    {
-        Table t = new Table();
-        t.name = table.getName();
-        t.comments.add(comment);
-        tables.add(t);
+    public void addTable(PRTable table, String comment) {
+        addTable(table.getName());
     }
 
-    public class Table
-    {
-        public String name;
-        public List<String> comments;
+    private void addTable(String tableName) {
+        tables.add(tableName);
+    }
+
+    public static PRSchema example() {
+        Set<String> ts = Sets.newHashSet();
+        Set<String> s = Sets.newHashSet("tse;lkajsdf");
+        PRSchema prs = new PRSchema(ts, s);
+        prs.addTable("foobartable");
+        return prs;
     }
 }

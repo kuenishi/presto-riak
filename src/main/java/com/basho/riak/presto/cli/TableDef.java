@@ -69,7 +69,9 @@ public class TableDef {
             o.setValue(BinaryValue.create(objectMapper.writeValueAsBytes(schema)));
 
             if (client.storeSchema(schemaName, o)) {
-                return client.storeTable(schemaTableName, table);
+                if( client.storeTable(schemaTableName, table)){
+                    CLI.log("Table " + schemaTableName + " successfully created.");
+                }
             }
         }
         return false;
