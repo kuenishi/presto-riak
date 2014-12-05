@@ -1,0 +1,6 @@
+{"name":"logs",
+ "columns":[
+  {"name":"timestamp", "type":"varchar", "index":false},
+  {"name":"method", "type":"varchar", "index":true},
+  {"name":"status", "type":"bigint", "index":true},
+  {"name":"accessor", "type":"bigint", "index":true}]}

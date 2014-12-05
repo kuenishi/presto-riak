@@ -17,6 +17,7 @@ package com.basho.riak.presto;
 import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.*;
+import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -25,6 +26,7 @@ import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 
 import java.io.IOException;
+import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,15 +180,15 @@ public class CoverageRecordCursor
 
             for (RiakColumnHandle columnHandle : columnHandles) {
                 if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
-                        && c.getColumn().spiType().equals(columnHandle.getColumn().spiType())
+                        && c.getColumn().getType().equals(columnHandle.getColumn().getType())
                         && columnHandle.getColumn().getIndex()) {
                     String field = null;
                     OtpErlangObject value;
-                    if (columnHandle.getColumn().spiType() == BigintType.BIGINT) {
+                    if (columnHandle.getColumn().getType() == BigintType.BIGINT) {
                         field = columnHandle.getColumn().getName() + "_int";
                         Long l = (Long) fixedValue.getValue();
                         value = new OtpErlangLong(l.longValue());
-                    } else if (columnHandle.getColumn().spiType() == VarcharType.VARCHAR) {
+                    } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
                         Slice s = (Slice) fixedValue.getValue();
                         value = new OtpErlangBinary(s.getBytes());
@@ -213,7 +215,7 @@ public class CoverageRecordCursor
             RiakColumnHandle c = new RiakColumnHandle(entry.getKey());
             for (RiakColumnHandle columnHandle : columnHandles) {
                 if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
-                        && c.getColumn().spiType().equals(columnHandle.getColumn().spiType())
+                        && c.getColumn().getType().equals(columnHandle.getColumn().getType())
                         && columnHandle.getColumn().getIndex()) {
                     String field = null;
                     OtpErlangObject lhs, rhs;
@@ -221,7 +223,7 @@ public class CoverageRecordCursor
                     //log.debug("value:%s, range:%s, span:%s",
                     //        entry.getValue(), entry.getValue().getRanges(),span);
                     //log.debug("min: %s max:%s", span.getLow(), span.getHigh());
-                    if (columnHandle.getColumn().spiType() == BigintType.BIGINT) {
+                    if (columnHandle.getColumn().getType() == BigintType.BIGINT) {
                         field = columnHandle.getColumn().getName() + "_int";
                         // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
                         Long l = Long.MIN_VALUE;
@@ -236,7 +238,7 @@ public class CoverageRecordCursor
 
                         lhs = new OtpErlangLong(l.longValue());
                         rhs = new OtpErlangLong(r.longValue());
-                    } else if (columnHandle.getColumn().spiType() == VarcharType.VARCHAR) {
+                    } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
                         //Byte m = Byte.MIN_VALUE;
                         byte[] l = {0};
@@ -278,7 +280,7 @@ public class CoverageRecordCursor
     @Override
     public Type getType(int field) {
         checkArgument(field < columnHandles.size(), "Invalid field index");
-        return columnHandles.get(field).getColumn().spiType();
+        return columnHandles.get(field).getColumn().getType();
     }
 
     @Override

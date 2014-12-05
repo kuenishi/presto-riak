@@ -20,6 +20,7 @@ import com.facebook.presto.spi.RecordCursor;
 import com.facebook.presto.spi.RecordSet;
 import com.facebook.presto.spi.TupleDomain;
 import com.facebook.presto.spi.type.Type;
+import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
 import org.apache.commons.codec.DecoderException;
@@ -43,6 +44,7 @@ public class CoverageRecordSet
     private final SplitTask splitTask;
     private final TupleDomain tupleDomain;
     private final RiakConfig riakConfig;
+    private final TypeManager typeManager;
     private final DirectConnection directConnection;
 
 
@@ -50,13 +52,14 @@ public class CoverageRecordSet
                              List<RiakColumnHandle> columnHandles,
                              RiakConfig riakConfig,
                              TupleDomain tupleDomain,
+                             TypeManager typeManager,
                              DirectConnection directConnection)
             throws OtpErlangDecodeException, DecoderException {
         checkNotNull(split, "split is null");
         this.columnHandles = checkNotNull(columnHandles, "column handles is null");
         ImmutableList.Builder<Type> types = ImmutableList.builder();
         for (RiakColumnHandle column : columnHandles) {
-            types.add(column.getColumn().spiType());
+            types.add(column.getColumn().getType());
         }
 
         //log.debug("new CoverageRecordSet: %s", split.getSplitData());
@@ -68,6 +71,7 @@ public class CoverageRecordSet
         this.splitTask = checkNotNull(split.getSplitTask());
         this.tupleDomain = checkNotNull(tupleDomain);
         this.riakConfig = checkNotNull(riakConfig);
+        this.typeManager = checkNotNull(typeManager);
         this.directConnection = checkNotNull(directConnection);
     }
 

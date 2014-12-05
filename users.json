@@ -1,0 +1,5 @@
+{"name":"users",
+ "columns":[
+  {"name":"id", "type":"bigint", "index":true},
+  {"name":"name", "type":"varchar", "index":true},
+  {"name":"army", "type":"varchar", "index":true}]}

@@ -23,7 +23,7 @@ public class RiakConfig {
     private String host = "localhost";
     private int port = 8087;
     private int prestoPort = 8080;
-    private String localNode;
+    private String localNode = "127.0.0.1";
     private String erlangNodeName = null; // name for distributed erlang like 'presto@127.0.0.1'
     private String erlangCookie = null;
 
