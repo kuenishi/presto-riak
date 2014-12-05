@@ -80,6 +80,7 @@ public class TableDef {
     public boolean show(String tableName)
             throws InterruptedException, ExecutionException, IOException {
         SchemaTableName schemaTableName = new SchemaTableName(schemaName, tableName);
+        // TODO: check siblings and do warn!
         PRTable table = client.getTable(schemaTableName);
         CLI.log("table> " + table.getName());
         for (RiakColumn column : table.getColumns()) {

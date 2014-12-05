@@ -69,45 +69,13 @@ def insert_with_index(bucket, key, data):
     req.get_method = lambda: 'PUT'
     response = urllib2.urlopen(req)
 
-def create_schema():
-    url = 'http://%s/types/t/buckets/%s/keys/%s' % (HOST, SCHEMA_BUCKET, SCHEMA_KEY)
-
-    req = urllib2.Request(url=url,
-                          headers= {'Content-type': 'applicaiton/json'},
-                          data = '{"tables": {"logs":["Access Logs"], "users":["Stars of Star Wars"]}}')
-    req.get_method = lambda: 'PUT' #if I remove this line then the POST works fine.
-    response = urllib2.urlopen(req)
-
-    print response.read()
-
-
 if __name__ == '__main__':
     # add table to schema if not exists
-    create_schema()
     print(get(SCHEMA_BUCKET, SCHEMA_KEY))
-    # create table 1
-    insert(SCHEMA_BUCKET, 'logs',
-           '''
-{"name":"logs",
- "columns":[
-  {"name":"timestamp", "type":"varchar", "index":false},
-  {"name":"method", "type":"varchar", "index":true},
-  {"name":"status", "type":"bigint", "index":true},
-  {"name":"accessor", "type":"bigint", "index":true}]}
-''')
+    # check table 1 exists
     print(get(SCHEMA_BUCKET,  'logs'))
 
-    # host, user, method, path, code, size, referer, agent, time, tag
-
-    # create table 2
-    insert(SCHEMA_BUCKET, 'users',
-           '''
-{"name":"users",
- "columns":[
-  {"name":"id", "type":"bigint", "index":true},
-  {"name":"name", "type":"varchar", "index":true},
-  {"name":"army", "type":"varchar", "index":true}]}
-''')
+    # check table 2 exists
     print(get(SCHEMA_BUCKET, 'users'))
 
     # insert_with_index data to table 1

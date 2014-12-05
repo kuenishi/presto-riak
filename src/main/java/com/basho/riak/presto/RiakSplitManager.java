@@ -152,11 +152,12 @@ public class RiakSplitManager
 //            }
         } else {
             // TODO: in Riak connector, you only need single access point for each presto worker???
+            log.error("localNode must be set and working");
             log.debug(hosts);
-            splits.add(new CoverageSplit(connectorId, riakTableHandle.getSchemaName(),
-                    riakTableHandle.getTableName(), hosts,
-                    partition.getTupleDomain(),
-                    ((RiakPartition) partition).getIndexedColumns()));
+            //splits.add(new CoverageSplit(connectorId, riakTableHandle.getSchemaName(),
+            //        riakTableHandle.getTableName(), hosts,
+            //        partition.getTupleDomain(),
+            //        ((RiakPartition) partition).getIndexedColumns()));
 
         }
         log.debug("table %s.%s has %d splits.",
