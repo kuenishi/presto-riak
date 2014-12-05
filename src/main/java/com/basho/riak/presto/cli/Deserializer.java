@@ -13,11 +13,10 @@
  */
 package com.basho.riak.presto.cli;
 
+import com.basho.riak.presto.PRTable;
 import com.basho.riak.presto.RiakColumnHandle;
-import com.basho.riak.presto.RiakTable;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.spi.type.Type;
-import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
@@ -43,16 +42,16 @@ public final class Deserializer
     {
     }
 
-    public static final JsonCodec<Map<String, List<RiakTable>>> CATALOG_CODEC;
-    public static final JsonCodec<RiakTable> TABLE_CODEC;
+    public static final JsonCodec<Map<String, List<PRTable>>> CATALOG_CODEC;
+    public static final JsonCodec<PRTable> TABLE_CODEC;
     public static final JsonCodec<RiakColumnHandle> COLUMN_CODEC;
 
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
         objectMapperProvider.setJsonDeserializers(ImmutableMap.<Class<?>, JsonDeserializer<?>>of(Type.class, new CLITypeDeserializer()));
         JsonCodecFactory codecFactory = new JsonCodecFactory(objectMapperProvider);
-        CATALOG_CODEC = codecFactory.mapJsonCodec(String.class, listJsonCodec(RiakTable.class));
-        TABLE_CODEC = codecFactory.jsonCodec(RiakTable.class);
+        CATALOG_CODEC = codecFactory.mapJsonCodec(String.class, listJsonCodec(PRTable.class));
+        TABLE_CODEC = codecFactory.jsonCodec(PRTable.class);
         COLUMN_CODEC = codecFactory.jsonCodec(RiakColumnHandle.class);
     }
 

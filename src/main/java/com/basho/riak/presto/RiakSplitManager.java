@@ -56,7 +56,7 @@ public class RiakSplitManager
         SchemaTableName schemaTableName = new SchemaTableName(
                 riakTableHandle.getSchemaName(), riakTableHandle.getTableName()
         );
-        RiakTable table = null;//RiakTable.example(riakTableHandle.getTableName());
+        PRTable table = null;//PRTable.example(riakTableHandle.getTableName());
         try {
             table = riakClient.getTable(schemaTableName);
 
@@ -96,7 +96,7 @@ public class RiakSplitManager
         SchemaTableName schemaTableName = new SchemaTableName(
                 riakTableHandle.getSchemaName(), riakTableHandle.getTableName()
         );
-        RiakTable table = null; //RiakTable.example(riakTableHandle.getTableName());
+        PRTable table = null; //PRTable.example(riakTableHandle.getTableName());
         try {
             table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {

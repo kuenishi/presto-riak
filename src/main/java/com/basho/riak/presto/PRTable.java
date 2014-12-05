@@ -22,7 +22,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,14 +29,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-public class RiakTable {
-    private static final Logger log = Logger.get(RiakTable.class);
+// Presto-Riak style table, stored in Riak and also exchanged between presto nodes
+public class PRTable {
+    private static final Logger log = Logger.get(PRTable.class);
     private final String name;
     private final List<RiakColumn> columns;
     private final List<ColumnMetadata> columnsMetadata;
 
     @JsonCreator
-    public RiakTable(
+    public PRTable(
             @JsonProperty("name") String name,
             @JsonProperty("columns") List<RiakColumn> columns,
             @JsonProperty(value = "comments", required = false) String comments) {
@@ -54,21 +54,21 @@ public class RiakTable {
         this.columnsMetadata = columnsMetadata.build();
     }
 
-    public static Function<com.basho.riak.presto.RiakTable, String> nameGetter() {
-        return new Function<com.basho.riak.presto.RiakTable, String>() {
+    public static Function<PRTable, String> nameGetter() {
+        return new Function<PRTable, String>() {
             @Override
-            public String apply(com.basho.riak.presto.RiakTable table) {
+            public String apply(PRTable table) {
                 return table.getName();
             }
         };
     }
 
-    public static RiakTable example(String tableName) {
+    public static PRTable example(String tableName) {
         List<RiakColumn> cols = Arrays.asList(
                 new RiakColumn("col1", VarcharType.VARCHAR, false),
                 new RiakColumn("col2", VarcharType.VARCHAR, true),
                 new RiakColumn("poopie", BigintType.BIGINT, true));
-        return new RiakTable(tableName, cols, "");
+        return new PRTable(tableName, cols, "");
 
     }
 

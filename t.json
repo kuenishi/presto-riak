@@ -1,1 +1,7 @@
-{"tables": {"logs":["Access Logs"], "users":["Stars of Star Wars"]}}
+{"tables":
+ {"name":"logs",
+  "comments":["Access Logs"]},
+ {"name":"users",
+  "comments":["Stars of Star Wars"]},
+ "comments":[]
+}

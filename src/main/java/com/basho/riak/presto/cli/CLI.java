@@ -65,7 +65,7 @@ public class CLI {
         System.out.println("presto-riak CLI. create table, create schema, drop... >");
         System.out.println("usage: (./presto-riak-cli plan <node> [<cookie>])");
         System.out.println("   list-tables <schema name>");
-        System.out.println("   create-schema is not currently supported");
+        System.out.println("   setup-schema <schema name>");
         System.out.println("   create-tabledef <schema name> <table definition json file>");
         System.out.println("   show-tabledef <schema name> <table name>");
         System.out.println("   clear-tabledef <schema name> <table name>");
@@ -95,6 +95,9 @@ public class CLI {
         // Actual command implementations
         if (args[0].equals("list-tables") && args.length == 2) {
             new SchemaDef(i).listTables(args[1]);
+        } else if (args[0].equals("setup-schema") && args.length == 2){
+            new SchemaDef(i).setupSchema(args[1]);
+
         } else if (args.length == 3) {
             if (args[0].equals("create-schema")) {
                 CLI.log("This option is not currently supported.");

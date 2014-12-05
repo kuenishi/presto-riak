@@ -1,7 +1,5 @@
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.type.BooleanType;
 import org.junit.Test;
 
 import static com.basho.riak.presto.MetadataUtil.TABLE_CODEC;
@@ -15,13 +13,13 @@ public class TestRiakTable {
     public void testSerialization()
     {
 
-        RiakTable t = RiakTable.example("foobar_table");
+        PRTable t = PRTable.example("foobar_table");
         System.out.println(t.toString());
 
         String s = TABLE_CODEC.toJson(t);
         System.out.println(s);
 
-        RiakTable t2 = TABLE_CODEC.fromJson(s);
+        PRTable t2 = TABLE_CODEC.fromJson(s);
         System.out.println(t2.toString());
         System.out.println(t2.getName());
         assert(t.getName().equals(t2.getName()));

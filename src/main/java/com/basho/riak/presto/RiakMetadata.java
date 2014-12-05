@@ -17,14 +17,11 @@ package com.basho.riak.presto;
 import com.facebook.presto.spi.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import io.airlift.log.Logger;
 
 import javax.inject.Inject;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -53,7 +50,7 @@ public class RiakMetadata
             return null;
         }*/
 
-        RiakTable table = null;
+        PRTable table = null;
         try {
             table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {
@@ -144,8 +141,8 @@ public class RiakMetadata
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
         checkArgument(riakTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
 
-//        RiakTable table = RiakClient.getTable(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
-        RiakTable table = null;
+//        PRTable table = RiakClient.getTable(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
+        PRTable table = null;
         SchemaTableName schemaTableName = new SchemaTableName(riakTableHandle.getSchemaName(),
                 riakTableHandle.getTableName());
         try {
@@ -172,7 +169,7 @@ public class RiakMetadata
         //           return null;
         //      }
 
-        RiakTable table = null; //RiakTable.example(tableName.getTableName());
+        PRTable table = null; //PRTable.example(tableName.getTableName());
         try {
             table = riakClient.getTable(schemaTableName);
         } catch (Exception e) {

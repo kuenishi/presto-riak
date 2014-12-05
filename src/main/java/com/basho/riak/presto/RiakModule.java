@@ -64,7 +64,7 @@ public class RiakModule
 
         binder.bind(ObjectMapper.class).toProvider(ObjectMapperProvider.class);
         jsonBinder(binder).addDeserializerBinding(Type.class).to(TypeDeserializer.class);
-        jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(RiakTable.class));
+        jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(PRTable.class));
     }
 
     public static final class TypeDeserializer
