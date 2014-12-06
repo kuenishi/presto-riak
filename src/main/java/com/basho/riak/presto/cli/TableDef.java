@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Created by kuenishi on 14/12/04.
@@ -24,12 +25,13 @@ public class TableDef {
     private final RiakConnectorId cid;
     private RiakClient client = null;
 
-    TableDef(Injector i, String schemaName, boolean doConnect)
+    TableDef(Injector i, RiakConfig config,
+             String schemaName, boolean doConnect)
             throws IOException, InterruptedException {
         this.objectMapper = i.getInstance(ObjectMapper.class);
         this.schemaName = schemaName;
 
-        config = new RiakConfig();
+        this.config = checkNotNull(config);
         if (doConnect) {
             client = new RiakClient(config, objectMapper);
         } else {

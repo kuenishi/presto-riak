@@ -23,6 +23,7 @@ import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
 import com.basho.riak.presto.Coverage;
 import com.basho.riak.presto.DirectConnection;
+import com.basho.riak.presto.RiakConfig;
 import com.basho.riak.presto.SplitTask;
 import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -63,7 +64,7 @@ public class CLI {
 
     public static void usage() {
         System.out.println("presto-riak CLI. create table, create schema, drop... >");
-        System.out.println("usage: (./presto-riak-cli plan <node> [<cookie>])");
+        System.out.println("usage: ./presto-riak-cli <hostname> <port> [<commands>... ]"); //plan <node> [<cookie>])");
         System.out.println("   list-tables <schema name>");
         System.out.println("   setup-schema <schema name>");
         System.out.println("   create-tabledef <schema name> <table definition json file>");
@@ -87,28 +88,35 @@ public class CLI {
                 });
         log.debug("%s", i.getTypeConverterBindings());
 
-        if (args.length < 2) {
+        if (args.length < 5) {
             usage();
             return;
         }
 
-        // Actual command implementations
-        if (args[0].equals("list-tables") && args.length == 2) {
-            new SchemaDef(i).listTables(args[1]);
-        } else if (args[0].equals("setup-schema") && args.length == 2){
-            new SchemaDef(i).setupSchema(args[1]);
+        String hostname = args[0];
+        String port = args[1];
+        String command = args[2];
+        String schemaName = args[3];
+        RiakConfig config = new RiakConfig(hostname, port);
 
-        } else if (args.length == 3) {
-            if (args[0].equals("create-schema")) {
+        // Actual command implementations
+        if (command.equals("list-tables") && args.length == 4) {
+            new SchemaDef(i, config).listTables(schemaName);
+        } else if (args[0].equals("setup-schema") && args.length == 4){
+            new SchemaDef(i, config).setupSchema(schemaName);
+
+        } else if (args.length == 5) {
+            String tableArg = args[4];
+            if (command.equals("create-schema")) {
                 CLI.log("This option is not currently supported.");
-            } else if (args[0].equals("create-tabledef")) {
-                new TableDef(i, args[1], true).create(args[2]);
-            } else if (args[0].equals("show-tabledef")) {
-                new TableDef(i, args[1], true).show(args[2]);
-            } else if (args[0].equals("clear-tabledef")) {
-                new TableDef(i, args[1], true).clear(args[2]);
-            } else if (args[0].equals("check-tabledef")) {
-                new TableDef(i, args[1], false).check(args[2]);
+            } else if (command.equals("create-tabledef")) {
+                new TableDef(i, config, schemaName, true).create(tableArg);
+            } else if (command.equals("show-tabledef")) {
+                new TableDef(i, config, schemaName, true).show(tableArg);
+            } else if (command.equals("clear-tabledef")) {
+                new TableDef(i, config, schemaName, true).clear(tableArg);
+            } else if (command.equals("check-tabledef")) {
+                new TableDef(i, config, schemaName, false).check(tableArg);
             }
 
         } else if (args[0].equals("plan")) {

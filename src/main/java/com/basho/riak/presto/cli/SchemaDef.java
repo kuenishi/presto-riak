@@ -14,33 +14,35 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 
 /**
  * Created by kuenishi on 14/12/04.
  */
 public class SchemaDef {
     private static final Logger log = Logger.get(SchemaDef.class);
-
+    private final RiakConfig config;
     private ObjectMapper objectMapper;
     private RiakClient client;
 
-    public SchemaDef(Injector i) {
+    public SchemaDef(Injector i, RiakConfig config) {
         objectMapper = i.getInstance(ObjectMapper.class);
+        this.config = checkNotNull(config);
     }
 
     public static boolean delTable(RiakClient client, SchemaTableName schemaTableName) {
         return false;
     }
 
-    private void setupClient()
+    private void setupClient(RiakConfig config)
             throws IOException, InterruptedException, ExecutionException {
-        RiakConfig config = new RiakConfig();
         client = new RiakClient(config, objectMapper);
     }
 
     public void setupSchema(String schemaName) {
         try {
-            setupClient();
+            setupClient(config);
             List<RiakObject> objects = client.getSchemaRiakObjects(schemaName);
             if (objects.size() > 0) {
                 CLI.log("Schema is already up: " + schemaName);
@@ -67,7 +69,7 @@ public class SchemaDef {
 
     public void listTables(String schemaName) {
         try {
-            setupClient();
+            setupClient(config);
             Set<String> tableNames = client.getTableNames(schemaName);
             CLI.log("tables in " + schemaName);
 
