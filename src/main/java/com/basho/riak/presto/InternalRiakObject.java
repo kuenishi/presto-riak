@@ -43,8 +43,8 @@ public class InternalRiakObject {
 //                bucket :: bucket(),
 
         OtpErlangTuple bt = (OtpErlangTuple) rObject.elementAt(1);
-        bucketType = ((OtpErlangBinary)bt.elementAt(0)).binaryValue();
-        bucket = ((OtpErlangBinary)bt.elementAt(1)).binaryValue();
+        bucketType = ((OtpErlangBinary) bt.elementAt(0)).binaryValue();
+        bucket = ((OtpErlangBinary) bt.elementAt(1)).binaryValue();
 //                key :: key(),
         this.key = ((OtpErlangBinary) rObject.elementAt(2)).binaryValue();
 //                contents :: [#r_content{}],

@@ -18,8 +18,8 @@ import com.facebook.presto.spi.Plugin;
 import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+
 import javax.inject.Inject;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
@@ -49,8 +49,7 @@ public class RiakPlugin
     }
 
     @Inject
-    public synchronized void setTypeManager(TypeManager typeManager)
-    {
+    public synchronized void setTypeManager(TypeManager typeManager) {
         this.typeManager = typeManager;
     }
 }

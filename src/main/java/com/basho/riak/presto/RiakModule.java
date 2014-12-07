@@ -68,20 +68,17 @@ public class RiakModule
     }
 
     public static final class TypeDeserializer
-            extends FromStringDeserializer<Type>
-    {
+            extends FromStringDeserializer<Type> {
         private final TypeManager typeManager;
 
         @Inject
-        public TypeDeserializer(TypeManager typeManager)
-        {
+        public TypeDeserializer(TypeManager typeManager) {
             super(Type.class);
             this.typeManager = checkNotNull(typeManager, "typeManager is null");
         }
 
         @Override
-        protected Type _deserialize(String value, DeserializationContext context)
-        {
+        protected Type _deserialize(String value, DeserializationContext context) {
             Type type = typeManager.getType(parseTypeSignature(value));
             checkArgument(type != null, "Unknown type %s", value);
             return type;

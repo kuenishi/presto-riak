@@ -74,9 +74,9 @@ public class RiakSplitManager
         // Riak connector has only one partition
         List<ConnectorPartition> partitions = ImmutableList.<ConnectorPartition>of(
                 new RiakPartition(riakTableHandle.getSchemaName(),
-                riakTableHandle.getTableName(),
-                tupleDomain,
-                indexedColumns));
+                        riakTableHandle.getTableName(),
+                        tupleDomain,
+                        indexedColumns));
 
         // Riak connector does not do any additional processing/filtering with the TupleDomain, so just return the whole TupleDomain
         return new ConnectorPartitionResult(partitions, tupleDomain);

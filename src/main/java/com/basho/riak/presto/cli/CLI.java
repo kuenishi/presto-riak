@@ -102,7 +102,7 @@ public class CLI {
         // Actual command implementations
         if (command.equals("list-tables") && args.length == 4) {
             new SchemaDef(i, config).listTables(schemaName);
-        } else if (command.equals("setup-schema") && args.length == 4){
+        } else if (command.equals("setup-schema") && args.length == 4) {
             new SchemaDef(i, config).setupSchema(schemaName);
 
         } else if (args.length == 5) {
@@ -150,8 +150,7 @@ public class CLI {
             } catch (java.io.IOException e) {
                 System.err.println(e);
             }
-        }
-        else{
+        } else {
             usage();
         }
         // Mock a Wock and don't leave any trash!

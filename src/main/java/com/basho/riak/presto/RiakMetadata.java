@@ -1,4 +1,3 @@
-
 /*
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +106,7 @@ public class RiakMetadata
         }
         List<SchemaTableName> tables = builder.build();
         log.info("listTables for %s: %d tables found", schemaName,
-                 tables.size());
+                tables.size());
 
         return tables;
     }

@@ -37,17 +37,11 @@ import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
 import static io.airlift.json.JsonCodec.listJsonCodec;
 import static java.util.Locale.ENGLISH;
 
-public final class Deserializer
-{
-    private Deserializer()
-    {
-    }
-
+public final class Deserializer {
     public static final JsonCodec<Map<String, List<PRTable>>> CATALOG_CODEC;
     public static final JsonCodec<PRTable> TABLE_CODEC;
     public static final JsonCodec<RiakColumnHandle> COLUMN_CODEC;
     public static final JsonCodec<PRSchema> SCHEMA_CODEC;
-
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
         objectMapperProvider.setJsonDeserializers(ImmutableMap.<Class<?>, JsonDeserializer<?>>of(Type.class, new CLITypeDeserializer()));
@@ -58,9 +52,11 @@ public final class Deserializer
         COLUMN_CODEC = codecFactory.jsonCodec(RiakColumnHandle.class);
     }
 
+    private Deserializer() {
+    }
+
     public static final class CLITypeDeserializer
-            extends FromStringDeserializer<Type>
-    {
+            extends FromStringDeserializer<Type> {
         private final Map<String, Type> types = ImmutableMap.<String, Type>of(
                 StandardTypes.BOOLEAN, BOOLEAN,
                 StandardTypes.BIGINT, BIGINT,
@@ -68,14 +64,12 @@ public final class Deserializer
                 StandardTypes.VARCHAR, VARCHAR);
 
         @Inject
-        public CLITypeDeserializer()
-        {
+        public CLITypeDeserializer() {
             super(Type.class);
         }
 
         @Override
-        protected Type _deserialize(String value, DeserializationContext context)
-        {
+        protected Type _deserialize(String value, DeserializationContext context) {
             Type type = types.get(value.toLowerCase(ENGLISH));
             if (type == null) {
                 throw new IllegalArgumentException(String.valueOf("Unknown type " + value));

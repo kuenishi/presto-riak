@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
@@ -71,7 +72,7 @@ public class TableDef {
             o.setValue(BinaryValue.create(objectMapper.writeValueAsBytes(schema)));
 
             if (client.storeSchema(schemaName, o)) {
-                if( client.storeTable(schemaTableName, table)){
+                if (client.storeTable(schemaTableName, table)) {
                     CLI.log("Table " + schemaTableName + " successfully created.");
                 }
             }

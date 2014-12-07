@@ -35,7 +35,10 @@ import io.airlift.log.Logger;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -146,8 +149,7 @@ public class RiakClient {
             checkNotNull(schema, "no schema key exists in Riak");
             HashSet<String> set = new HashSet<>();
 
-            for(String t : schema.getTables())
-            {
+            for (String t : schema.getTables()) {
                 set.add(t);
             }
             return ImmutableSet.copyOf(set);
@@ -242,18 +244,17 @@ public class RiakClient {
     }
 
     public boolean storeSchema(String schemaName, PRSchema schema)
-            throws JsonProcessingException, InterruptedException
-    {
+            throws JsonProcessingException, InterruptedException {
         RiakObject obj = new RiakObject();
         obj.setContentType("application/json");
         obj.setValue(BinaryValue.create(objectMapper.writeValueAsBytes(schema)));
 
         return storeSchema(schemaName, obj);
     }
+
     public boolean storeSchema(String schemaName, RiakObject obj)
-            throws JsonProcessingException, InterruptedException
-    {
-    Namespace namespace = new Namespace(schemaName, META_BUCKET_NAME);
+            throws JsonProcessingException, InterruptedException {
+        Namespace namespace = new Namespace(schemaName, META_BUCKET_NAME);
         Location location = new Location(namespace, SCHEMA_KEY_NAME);
         StoreOperation op = new StoreOperation.Builder(location).withContent(obj).build();
 
