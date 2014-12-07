@@ -18,7 +18,6 @@ import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
@@ -281,10 +280,12 @@ public class CoverageRecordCursor
         //fields = LINE_SPLITTER.splitToList(line);
         ObjectMapper mapper = new ObjectMapper();
         try {
-            //log.debug(riakObject.getKey());
-            //log.debug(riakObject.getValueAsString());
+            //log.debug("riakObject.getKey() => %s", new String(riakObject.getKey(), "UTF-8"));
+            //log.debug("riakObject.getValue() => %s", riakObject.getValueAsString());
             cursor = mapper.readValue(riakObject.getValueAsString(), HashMap.class);
-            cursor.put("__pkey", riakObject.getKey());
+
+            //TODO: utilize hidden column with vtags
+            cursor.put("__pkey", new String(riakObject.getKey(), "UTF-8"));
             totalBytes += riakObject.getValueAsString().length();
             return true;
         } catch (IOException e) {
@@ -295,11 +296,11 @@ public class CoverageRecordCursor
     }
 
     private String getFieldValue(int field) {
-        checkState(fields != null, "Cursor has not been advanced yes");
+        checkState(fields != null, "Cursor has not been advanced yet");
 
         //int columnIndex = fieldToColumnIndex[field];
         //return fields[columnIndex];
-
+        //log.debug("field #%d, %s => %s, %s", field, fields[field], cursor.get(fields[field]), cursor);
         Object o = cursor.get(fields[field]);
         if (o == null) {
             return null;
@@ -326,16 +327,14 @@ public class CoverageRecordCursor
         return Double.parseDouble(getFieldValue(field));
     }
 
-    public byte[] getString(int field) {
-        checkFieldType(field, VarcharType.VARCHAR);
-        return getFieldValue(field).getBytes(Charsets.UTF_8);
-    }
-
     @Override
     public Slice getSlice(int field) {
         //return slices[i];
-        if (slices[field] == null)
+        if (slices[field] == null) {
             slices[field] = Slices.utf8Slice(getFieldValue(field));
+        } else {
+            slices[field].setBytes(0, getFieldValue(field).getBytes());
+        }
         //log.debug("getSlice called: %s", slices[field]);
 
         return slices[field];

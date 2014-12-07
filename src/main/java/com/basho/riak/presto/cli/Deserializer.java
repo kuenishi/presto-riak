@@ -42,6 +42,7 @@ public final class Deserializer {
     public static final JsonCodec<PRTable> TABLE_CODEC;
     public static final JsonCodec<RiakColumnHandle> COLUMN_CODEC;
     public static final JsonCodec<PRSchema> SCHEMA_CODEC;
+
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
         objectMapperProvider.setJsonDeserializers(ImmutableMap.<Class<?>, JsonDeserializer<?>>of(Type.class, new CLITypeDeserializer()));
