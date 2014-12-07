@@ -52,7 +52,7 @@ public class Coverage {
     }
 
     public List<SplitTask> getSplits() {
-        log.debug("%d", this.coveragePlan.toString());
+        log.debug("%s", this.coveragePlan.toString());
         OtpErlangList vnodes = (OtpErlangList) this.coveragePlan.elementAt(0);
         OtpErlangObject filterVnodes = this.coveragePlan.elementAt(1);
 
