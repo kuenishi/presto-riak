@@ -15,10 +15,7 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
-import com.facebook.presto.spi.HostAddress;
-import com.facebook.presto.spi.RecordCursor;
-import com.facebook.presto.spi.RecordSet;
-import com.facebook.presto.spi.TupleDomain;
+import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
@@ -42,7 +39,7 @@ public class CoverageRecordSet
     private final List<HostAddress> addresses;
     //private final InputSupplier<InputStream> inputStreamSupplier;
     private final SplitTask splitTask;
-    private final TupleDomain tupleDomain;
+    private final TupleDomain<ConnectorColumnHandle> tupleDomain;
     private final RiakConfig riakConfig;
     private final TypeManager typeManager;
     private final DirectConnection directConnection;
@@ -51,7 +48,7 @@ public class CoverageRecordSet
     public CoverageRecordSet(CoverageSplit split,
                              List<RiakColumnHandle> columnHandles,
                              RiakConfig riakConfig,
-                             TupleDomain tupleDomain,
+                             TupleDomain<ConnectorColumnHandle> tupleDomain,
                              TypeManager typeManager,
                              DirectConnection directConnection)
             throws OtpErlangDecodeException, DecoderException {

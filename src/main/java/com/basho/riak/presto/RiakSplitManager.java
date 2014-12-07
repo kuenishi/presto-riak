@@ -46,7 +46,7 @@ public class RiakSplitManager
 
     // TODO: get the right partitions right here
     @Override
-    public ConnectorPartitionResult getPartitions(ConnectorTableHandle tableHandle, TupleDomain tupleDomain) {
+    public ConnectorPartitionResult getPartitions(ConnectorTableHandle tableHandle, TupleDomain<ConnectorColumnHandle> tupleDomain) {
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
 
@@ -72,7 +72,8 @@ public class RiakSplitManager
         }
 
         // Riak connector has only one partition
-        List<ConnectorPartition> partitions = ImmutableList.<ConnectorPartition>of(new RiakPartition(riakTableHandle.getSchemaName(),
+        List<ConnectorPartition> partitions = ImmutableList.<ConnectorPartition>of(
+                new RiakPartition(riakTableHandle.getSchemaName(),
                 riakTableHandle.getTableName(),
                 tupleDomain,
                 indexedColumns));

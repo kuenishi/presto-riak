@@ -13,6 +13,7 @@
  */
 package com.basho.riak.presto;
 
+import com.facebook.presto.spi.ConnectorColumnHandle;
 import com.facebook.presto.spi.ConnectorPartition;
 import com.facebook.presto.spi.TupleDomain;
 import com.google.common.base.Objects;
@@ -27,12 +28,12 @@ public class RiakPartition
     private static final Logger log = Logger.get(RiakPartition.class);
     private final String schemaName;
     private final String tableName;
-    private final TupleDomain tupleDomain;
+    private final TupleDomain<ConnectorColumnHandle> tupleDomain;
     private final List<String> indexedColumns;
 
     public RiakPartition(String schemaName,
                          String tableName,
-                         TupleDomain tupleDomain,
+                         TupleDomain<ConnectorColumnHandle> tupleDomain,
                          List<String> indexedColumns
     ) {
         this.schemaName = checkNotNull(schemaName, "schema name is null");
@@ -59,7 +60,7 @@ public class RiakPartition
     }
 
     @Override
-    public TupleDomain getTupleDomain() {
+    public TupleDomain<ConnectorColumnHandle> getTupleDomain() {
         return tupleDomain;
     }
 

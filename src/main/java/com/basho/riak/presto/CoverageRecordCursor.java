@@ -17,7 +17,6 @@ package com.basho.riak.presto;
 import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.*;
-import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
@@ -26,7 +25,6 @@ import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 
 import java.io.IOException;
-import java.lang.reflect.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,26 +155,16 @@ public class CoverageRecordCursor
     {
 
         // case where a='b'
-        Map<Map<String, Object>, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
-        for (Map.Entry<Map<String, Object>, Comparable<?>> fixedValue : fixedValues.entrySet()) {
-            //log.debug("> %s (%s)", fixedValue, fixedValue.getClass());
-            //log.debug(">> %s", fixedValue.getKey());
+        Map<ConnectorColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
+        for (Map.Entry<ConnectorColumnHandle, Comparable<?>> fixedValue : fixedValues.entrySet()) {
+            log.debug("> %s (%s)", fixedValue, fixedValue.getClass());
+            log.debug(">> %s", fixedValue.getKey());
 
-            // TODO: this fails if,
-            //   Map<ConnectorColumnHandle, Domain> map = ...
-            //RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
-            // TODO: very strange behaviour below
-
-            /*
             checkNotNull(fixedValue.getKey());
             checkArgument(fixedValue.getKey() instanceof ConnectorColumnHandle);
             checkArgument(fixedValue.getKey() instanceof RiakColumnHandle);
-*/
 
-            RiakColumnHandle c = new RiakColumnHandle(fixedValue.getKey());
-            // This SHOULD work;
-            //RiakColumnHandle c = (RiakColumnHandle)(fixedValue.getKey());
-            //RiakColumnHandle c = fixedValue.getKey();
+            RiakColumnHandle c = (RiakColumnHandle) fixedValue.getKey();
 
             for (RiakColumnHandle columnHandle : columnHandles) {
                 if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
@@ -206,13 +194,9 @@ public class CoverageRecordCursor
         }
 
         //case where a < b and ... blah
-        Map<Map<String, Object>, Domain> map = tupleDomain.getDomains();
-        for (Map.Entry<Map<String, Object>, Domain> entry : map.entrySet()) {
-            // TODO: this fails if,
-            //   Map<ConnectorColumnHandle, Domain> map = ...
-            //RiakColumnHandle c = (RiakColumnHandle)entry.getKey();
-            // TODO: very strange behaviour below
-            RiakColumnHandle c = new RiakColumnHandle(entry.getKey());
+        Map<RiakColumnHandle, Domain> map = tupleDomain.getDomains();
+        for (Map.Entry<RiakColumnHandle, Domain> entry : map.entrySet()) {
+            RiakColumnHandle c = entry.getKey();
             for (RiakColumnHandle columnHandle : columnHandles) {
                 if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
                         && c.getColumn().getType().equals(columnHandle.getColumn().getType())

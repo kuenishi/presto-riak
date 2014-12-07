@@ -15,6 +15,7 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
+import com.facebook.presto.spi.ConnectorColumnHandle;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.HostAddress;
 import com.facebook.presto.spi.TupleDomain;
@@ -42,7 +43,7 @@ public class CoverageSplit implements ConnectorSplit {
     private final String tableName;
     private final String host;
     private final String splitData;
-    private final TupleDomain tupleDomain;
+    private final TupleDomain<ConnectorColumnHandle> tupleDomain;
     private final List<String> indexedColumns;
 
     @JsonCreator
@@ -52,7 +53,7 @@ public class CoverageSplit implements ConnectorSplit {
             @JsonProperty("tableName") String tableName,
             @JsonProperty("host") String host,
             @JsonProperty("splitData") String splitData,
-            @JsonProperty("tupleDomain") TupleDomain tupleDomain,
+            @JsonProperty("tupleDomain") TupleDomain<ConnectorColumnHandle> tupleDomain,
             @JsonProperty("indexedColumns") List<String> indexedColumns) {
         this.schemaName = checkNotNull(schemaName, "schema name is null");
         this.connectorId = checkNotNull(connectorId, "connector id is null");
@@ -93,7 +94,7 @@ public class CoverageSplit implements ConnectorSplit {
     }
 
     @JsonProperty
-    public TupleDomain getTupleDomain() {
+    public TupleDomain<ConnectorColumnHandle> getTupleDomain() {
         return tupleDomain;
     }
 
