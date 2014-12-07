@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 
@@ -29,6 +30,7 @@ public class SchemaDef {
     public SchemaDef(Injector i, RiakConfig config) {
         objectMapper = i.getInstance(ObjectMapper.class);
         this.config = checkNotNull(config);
+        log.debug("%s : %d", config.getHost(), config.getPort());
     }
 
     public static boolean delTable(RiakClient client, SchemaTableName schemaTableName) {

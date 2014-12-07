@@ -88,7 +88,7 @@ public class CLI {
                 });
         log.debug("%s", i.getTypeConverterBindings());
 
-        if (args.length < 5) {
+        if (args.length < 4) {
             usage();
             return;
         }
@@ -102,7 +102,7 @@ public class CLI {
         // Actual command implementations
         if (command.equals("list-tables") && args.length == 4) {
             new SchemaDef(i, config).listTables(schemaName);
-        } else if (args[0].equals("setup-schema") && args.length == 4){
+        } else if (command.equals("setup-schema") && args.length == 4){
             new SchemaDef(i, config).setupSchema(schemaName);
 
         } else if (args.length == 5) {

@@ -16,6 +16,7 @@ package com.basho.riak.presto;
 import io.airlift.configuration.Config;
 
 import javax.validation.constraints.NotNull;
+
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakConfig {
@@ -28,34 +29,29 @@ public class RiakConfig {
     private String erlangNodeName = null; // name for distributed erlang like 'presto@127.0.0.1'
     private String erlangCookie = null;
 
+    public RiakConfig() {
+    }
 
-    public RiakConfig(String host, String port)
-    {
+    public RiakConfig(String host, String port) {
         this.host = checkNotNull(host);
         this.port = parsePort(port);
     }
-    private int parsePort(String port)
-    {
+
+    private int parsePort(String port) {
         checkNotNull(port);
-        if("rel".equals(port))
-        {
+        if ("rel".equals(port)) {
             return 8087;
-        }else if ("dev1".equals(port))
-        {
+        } else if ("dev1".equals(port)) {
             return 10017;
-        }else if("dev2".equals(port))
-        {
+        } else if ("dev2".equals(port)) {
             return 10027;
-        }else if("dev3".equals(port))
-        {
+        } else if ("dev3".equals(port)) {
             return 10037;
-        }else if("dev4".equals(port))
-        {
+        } else if ("dev4".equals(port)) {
             return 10047;
-        }else if("dev5".equals(port)) {
+        } else if ("dev5".equals(port)) {
             return 10057;
-        }else if("dev6".equals(port))
-        {
+        } else if ("dev6".equals(port)) {
             return 10067;
         }
         return Integer.valueOf(port).intValue();

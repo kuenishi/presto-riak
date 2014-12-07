@@ -67,11 +67,10 @@ public class RiakClient {
         log.info("Riak Config: %s", hosts);
 
         HostAndPort hp = HostAndPort.fromString(hosts);
-//		PBClientConfig node1 = PBClientConfig.defaults();
 
         RiakNode node = new RiakNode.Builder()
                 .withRemoteAddress(hp.getHostText())
-                .withRemotePort(hp.getPortOrDefault(8087))
+                .withRemotePort(hp.getPortOrDefault(config.getPort()))
                 .withMaxConnections(10)
                 .withConnectionTimeout(CONNECTION_TIMEOUT_MIL)
                 .build();
