@@ -48,16 +48,6 @@ public class DirectConnection {
         //this.self = new OtpSelf(peer, cookie);
     }
 
-    public void pid() {
-        byte[] b = {'f', 'k'};
-        OtpErlangBinary bin = new OtpErlangBinary(b);
-        System.out.println(bin);
-        System.out.println(bin.binaryValue().toString());
-        System.out.println(new String(b));
-        System.out.println(new String(bin.binaryValue()));
-        System.exit(0);
-    }
-
     // there are no disconnect.
     public void connect(String other) throws java.io.IOException, OtpAuthException, OtpErlangExit {
         this.peer = other;
@@ -76,10 +66,6 @@ public class DirectConnection {
         this.local_client = ok_or_error.elementAt(1);
         System.out.println(this.local_client);
 
-    }
-
-    public OtpConnection getConn() {
-        return conn;
     }
 
     private synchronized <T> T call(String module, String function, OtpErlangList argv)
