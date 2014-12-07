@@ -45,12 +45,12 @@ public class PRTable {
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
 
         ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
-        columnsMetadata.add(new ColumnMetadata("__key", VarbinaryType.VARBINARY, 0, true));
-        columnsMetadata.add(new ColumnMetadata("__vtag", VarcharType.VARCHAR, 1, true));
+        columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.KEY_COLUMN_NAME, VarbinaryType.VARBINARY, 0, true, "primary key", true));
+        columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.VTAG_COLUMN_NAME, VarcharType.VARCHAR, 1, false, "vtag", true));
         int index = 2;
 
         for (RiakColumn column : this.columns) {
-            columnsMetadata.add(new ColumnMetadata(column.getName(), column.getType(), index, false));
+            columnsMetadata.add(new ColumnMetadata(column.getName(), column.getType(), index, column.getIndex(), column.getComment(), false));
             index++;
         }
         this.columnsMetadata = columnsMetadata.build();
@@ -67,9 +67,9 @@ public class PRTable {
 
     public static PRTable example(String tableName) {
         List<RiakColumn> cols = Arrays.asList(
-                new RiakColumn("col1", VarcharType.VARCHAR, false),
-                new RiakColumn("col2", VarcharType.VARCHAR, true),
-                new RiakColumn("poopie", BigintType.BIGINT, true));
+                new RiakColumn("col1", VarcharType.VARCHAR, "d1vv", false),
+                new RiakColumn("col2", VarcharType.VARCHAR, "d2", true),
+                new RiakColumn("poopie", BigintType.BIGINT, "d3", true));
         return new PRTable(tableName, cols, "");
 
     }

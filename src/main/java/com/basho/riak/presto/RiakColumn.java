@@ -27,16 +27,19 @@ public final class RiakColumn {
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
     private final String name;
     private final Type type;
+    private final String comment;
     private boolean index;
 
     @JsonCreator
     public RiakColumn(
             @JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "type", required = true) Type type,
+            @JsonProperty(value = "comment") String comment,
             @JsonProperty("index") boolean index) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = checkNotNull(type, "type is null");
+        this.comment = comment;
         this.index = index;
     }
 
@@ -50,6 +53,8 @@ public final class RiakColumn {
         return type;
     }
 
+    @JsonProperty
+    public String getComment() { return comment; }
     @JsonProperty
     public boolean getIndex() {
         return index;

@@ -26,7 +26,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakColumnHandle
         implements ConnectorColumnHandle {
-    public static final String PKEY_COLUMN_NAME = "__pkey";
+    public static final String KEY_COLUMN_NAME = "__key";
+    public static final String VTAG_COLUMN_NAME = "__vtag";
+
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
     private final String connectorId;
     private final RiakColumn column;
@@ -46,22 +48,11 @@ public final class RiakColumnHandle
         this(connectorId,
                 new RiakColumn(columnMetadata.getName(),
                         columnMetadata.getType(),
+                        "phew",
                         // TODO: this default 'false' can be implicit performance lose
                         // TODO: if there be a bug that indexedColumns lost somewhere
                         false),
                 columnMetadata.getOrdinalPosition());
-    }
-
-    // {type=riak, connectorId=riak, column={name=id,
-    //type=bigint, index=false}, ordinalPosition=0}=2 (class java.util.HashMap$Node)
-    public RiakColumnHandle(Map<String, Object> m) {
-        this.connectorId = (String) m.get("type");
-        Map<String, Object> m2 = (Map) m.get("column");
-        this.column = new RiakColumn(
-                (String) m2.get("name"),
-                null, //m2.get("type"),
-                (boolean) m2.get("index"));
-        this.ordinalPosition = (int) m.get("ordinalPosition");
     }
 
     @JsonProperty
