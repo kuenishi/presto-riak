@@ -32,6 +32,7 @@ public class InternalRiakObject {
     private final byte[] key;
     private final byte[] bucket;
     private final byte[] bucketType;
+    private final String vtag = "this will be vtag";
     private List<byte[]> values;
 
     public InternalRiakObject(OtpErlangObject object) {
@@ -72,6 +73,8 @@ public class InternalRiakObject {
     public byte[] getBucket() {
         return bucket;
     }
+
+    public String getVTag() { return vtag; }
 
     private void checkRecord(OtpErlangObject o, String v) {
         checkAtom(((OtpErlangTuple) o).elementAt(0), v);

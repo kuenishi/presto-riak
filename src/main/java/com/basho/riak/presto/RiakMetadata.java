@@ -186,15 +186,6 @@ public class RiakMetadata
         return new ConnectorTableMetadata(schemaTableName, l);
     }
 
-    /*  private List<SchemaTableName> listTables(SchemaTablePrefix prefix)
-      {
-          log.debug("listTalbles for %s", prefix.getSchemaName());
-          if (prefix.getSchemaName() == null) {
-            //  return listTables(prefix.getSchemaName());
-          }
-          return ImmutableList.of(new SchemaTableName(prefix.getSchemaName(), prefix.getTableName()));
-      }
-  */
     @Override
     public ColumnMetadata getColumnMetadata(ConnectorTableHandle tableHandle, ConnectorColumnHandle columnHandle) {
         log.info("getColumnMetadata");

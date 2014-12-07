@@ -285,7 +285,8 @@ public class CoverageRecordCursor
             cursor = mapper.readValue(riakObject.getValueAsString(), HashMap.class);
 
             //TODO: utilize hidden column with vtags
-            cursor.put("__pkey", new String(riakObject.getKey(), "UTF-8"));
+            cursor.put("__key", new String(riakObject.getKey(), "UTF-8"));
+            cursor.put("__vtag", riakObject.getVTag());
             totalBytes += riakObject.getValueAsString().length();
             return true;
         } catch (IOException e) {

@@ -14,8 +14,7 @@
 package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.type.BigintType;
-import com.facebook.presto.spi.type.VarcharType;
+import com.facebook.presto.spi.type.*;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
@@ -45,8 +44,11 @@ public class PRTable {
         this.name = checkNotNull(name, "name is null");
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
 
-        int index = 0;
         ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
+        columnsMetadata.add(new ColumnMetadata("__key", VarbinaryType.VARBINARY, 0, true));
+        columnsMetadata.add(new ColumnMetadata("__vtag", VarcharType.VARCHAR, 1, true));
+        int index = 2;
+
         for (RiakColumn column : this.columns) {
             columnsMetadata.add(new ColumnMetadata(column.getName(), column.getType(), index, false));
             index++;
