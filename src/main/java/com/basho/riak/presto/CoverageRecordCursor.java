@@ -66,9 +66,9 @@ public class CoverageRecordCursor
         checkState(!addresses.isEmpty());
         // TODO: if (*) selected, columnHandles gets really empty...
         log.debug(columnHandles.toString());
-        checkState(!columnHandles.isEmpty());
-        this.splitTask = checkNotNull(splitTask);
-        this.tupleDomain = checkNotNull(tupleDomain);
+        checkState(!columnHandles.isEmpty(), "Queries just with (*) cannot run anywhere");
+        this.splitTask = checkNotNull(splitTask, "splitTask is null");
+        this.tupleDomain = checkNotNull(tupleDomain, "tupleDomain is null");
         this.directConnection = checkNotNull(directConnection);
 
         buffer = new Vector<InternalRiakObject>();

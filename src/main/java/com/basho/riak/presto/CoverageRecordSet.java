@@ -54,16 +54,16 @@ public class CoverageRecordSet
             throws OtpErlangDecodeException, DecoderException {
         checkNotNull(split, "split is null");
         this.columnHandles = checkNotNull(columnHandles, "column handles is null");
+
+        this.schemaName = checkNotNull(split.getSchemaName());
+        this.tableName = checkNotNull(split.getTableName());
+
         ImmutableList.Builder<Type> types = ImmutableList.builder();
         for (RiakColumnHandle column : columnHandles) {
             types.add(column.getColumn().getType());
         }
-
-        //log.debug("new CoverageRecordSet: %s", split.getSplitData());
-
-        this.schemaName = checkNotNull(split.getSchemaName());
-        this.tableName = checkNotNull(split.getTableName());
         this.types = types.build();
+
         this.addresses = ImmutableList.copyOf(split.getAddresses());
         this.splitTask = checkNotNull(split.getSplitTask());
         this.tupleDomain = checkNotNull(tupleDomain);
