@@ -24,7 +24,11 @@
 -export([get_coverage_plan/1,
          process_split/3,
          process_split/4,
-         fetch_vnode/2]).
+         fetch_vnode/2,
+         version/0]).
+
+-spec version() -> tuple(non_neg_integer()).
+version() -> {0,0,5}.
 
 % lists:flatten([riak_kv_vnode:fold({I,node()}, fun({B,K},V,Acc) -> [riak_object:from_binary(B,K,V)|Acc]end, [])||I<-riak_core_ring:my_indices(element(2, riak_core_ring_manager:get_my_ring()))]).
 
@@ -166,29 +170,29 @@ make_req_id() ->
 
 %% riak_core_vnode_master:
 %% Make a request record - exported for use by legacy modules
--spec make_coverage_request(vnode_req(), keyspaces(), sender(), partition()) -> #riak_coverage_req_v1{}.
-make_coverage_request(Request, KeySpaces, Sender, Index) ->
-    #riak_coverage_req_v1{index=Index,
-                          keyspaces=KeySpaces,
-                          sender=Sender,
-                          request=Request}.
+%% -spec make_coverage_request(vnode_req(), keyspaces(), sender(), partition()) -> #riak_coverage_req_v1{}.
+%% make_coverage_request(Request, KeySpaces, Sender, Index) ->
+%%     #riak_coverage_req_v1{index=Index,
+%%                           keyspaces=KeySpaces,
+%%                           sender=Sender,
+%%                           request=Request}.
 
-cast({VMaster, Node}, Req=?COVERAGE_REQ{index=Idx}) ->
-    Mod = vmaster_to_vmod(VMaster),
-    Proxy = reg_name(Mod, Idx, Node),
-    gen_fsm:send_event(Proxy, Req).
+%% cast({VMaster, Node}, Req=?COVERAGE_REQ{index=Idx}) ->
+%%     Mod = vmaster_to_vmod(VMaster),
+%%     Proxy = reg_name(Mod, Idx, Node),
+%%     gen_fsm:send_event(Proxy, Req).
 
-%% Given atom 'riak_kv_vnode_master', return 'riak_kv_vnode'.
-vmaster_to_vmod(VMaster) ->
-    L = atom_to_list(VMaster),
-    list_to_atom(lists:sublist(L,length(L)-7)).
+%% %% Given atom 'riak_kv_vnode_master', return 'riak_kv_vnode'.
+%% vmaster_to_vmod(VMaster) ->
+%%     L = atom_to_list(VMaster),
+%%     list_to_atom(lists:sublist(L,length(L)-7)).
 
-%% riak_core_vnode_proxy
-reg_name(Mod, Index) ->
-    ModBin = atom_to_binary(Mod, latin1),
-    IdxBin = list_to_binary(integer_to_list(Index)),
-    AllBin = <<$p,$r,$o,$x,$y,$_, ModBin/binary, $_, IdxBin/binary>>,
-    binary_to_atom(AllBin, latin1).
+%% %% riak_core_vnode_proxy
+%% reg_name(Mod, Index) ->
+%%     ModBin = atom_to_binary(Mod, latin1),
+%%     IdxBin = list_to_binary(integer_to_list(Index)),
+%%     AllBin = <<$p,$r,$o,$x,$y,$_, ModBin/binary, $_, IdxBin/binary>>,
+%%     binary_to_atom(AllBin, latin1).
 
-reg_name(Mod, Index, Node) ->
-    {reg_name(Mod, Index), Node}.
+%% reg_name(Mod, Index, Node) ->
+%%     {reg_name(Mod, Index), Node}.
