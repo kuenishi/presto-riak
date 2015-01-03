@@ -1,6 +1,6 @@
 # presto-riak
 
-Riak connector for [prestodb](http://prestodb.io). [RP](https://github.com/kuenishi/rp) is for development environment.
+Riak connector for [prestodb](http://prestodb.io). [RP](https://github.com/kuenishi/rp) is for development environment. The latest information and examples are in RP repository.
 
 ## build and installation
 
@@ -10,8 +10,7 @@ hive-hadoop1 and so on.
 ```
 $ mvn package assembly:assembly
 $ cd target
-$ unzip presto-riak-*.zip
-$ mv *.jar path/to/presto/plugin/riak
+$ mv *.jar path/to/presto/plugin/presto-riak
 ```
 
 
@@ -27,22 +26,24 @@ riak.pb.host=localhost:8087
 riak.erlang.node=riak@127.0.0.1
 
 presto.erlang.node=presto@127.0.0.1
-presto.erlang.cookie=riak
+## uses default 'riak'
+## presto.erlang.cookie=riak
 $ cp riak.properties path/to/presto/etc/catalog
-$ ./presto-cli --server localhost:8008 --catalog riak
+$ ./presto-cli --server localhost:8008 --catalog riak --schema t
 ```
 
-test
+test - the schema in Riak doesn't appear but it works (it's just because Riak does not have PB api related to bucket types).
+That's why bucket type creation before inserting all data is required.
 
 ```
-presto:default> show catalogs;
+presto:t> show catalogs;
  Catalog
 ---------
  jmx
  riak
 (2 rows)
-presto:default> use catalog riak;
-presto:default> show schemas;
+presto:t> use catalog riak;
+presto:t> show schemas;
        Schema
 --------------------
  default
@@ -53,15 +54,15 @@ presto:default> show schemas;
 
 Now Riak connector working.
 
-run
+run (this is a bit stale result)
 
 ```
-presto:default> show tables;
+presto:t> show tables;
     Table
 -------------
  foobartable
 (1 row)
-presto:default> explain select * from foobartable;
+presto:t> explain select * from foobartable;
                                                   Query Plan
 ---------------------------------------------------------------------------------------------------------------
  - Output[col1, col2, __pkey]
@@ -132,8 +133,6 @@ Concept correspondence:
 - Special Bucket: `__presto_schema`
  - Special Key: `__tables` => list of tables
  - Keys: `(name of a table)` => list of columns
-
-Each bucket types must have a property named `"presto_enabled":true`.
 
 These metadatas are stored in special bucket `__presto_schema` with
 special key `__tables` has a JSON like this:
