@@ -14,15 +14,31 @@
     <url>http://basho.com</url>
 
     <properties>
-        <dep.slice.version>0.7</dep.slice.version>
-        <dep.airlift.version>0.98</dep.airlift.version>
+    <!--    <dep.slice.version>0.7</dep.slice.version> -->
+        <dep.airlift.version>0.99</dep.airlift.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
-        <dependency>
-          <groupId>com.basho.riak</groupId>
-          <artifactId>riak-client</artifactId>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-core</artifactId>
+        <version>2.4.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.4.3</version>
+      </dependency>
+      <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-joda</artifactId>
+        <version>2.4.3</version>
+      </dependency>
+      
+      <dependency>
+        <groupId>com.basho.riak</groupId>
+        <artifactId>riak-client</artifactId>
           <version>2.0.0</version>
         </dependency>
 
@@ -35,7 +51,7 @@
         <dependency>
             <groupId>com.facebook.presto</groupId>
             <artifactId>presto-spi</artifactId>
-            <version>0.88</version>
+            <version>0.92</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -90,31 +106,13 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>17.0</version>
-        </dependency>
-
-     <!--   <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>3.0</version>
-        </dependency> -->
-
-        <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>4.11</version>
         <scope>test</scope>
         </dependency>
 
-        <!--
-        <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-    --></dependencies>
+    </dependencies>
 
     <build>
         <plugins>
