@@ -41,7 +41,6 @@ public class CoverageRecordSet
     private final SplitTask splitTask;
     private final TupleDomain<ConnectorColumnHandle> tupleDomain;
     private final RiakConfig riakConfig;
-    private final TypeManager typeManager;
     private final DirectConnection directConnection;
 
 
@@ -49,7 +48,6 @@ public class CoverageRecordSet
                              List<RiakColumnHandle> columnHandles,
                              RiakConfig riakConfig,
                              TupleDomain<ConnectorColumnHandle> tupleDomain,
-                             TypeManager typeManager,
                              DirectConnection directConnection)
             throws OtpErlangDecodeException, DecoderException {
         checkNotNull(split, "split is null");
@@ -68,7 +66,6 @@ public class CoverageRecordSet
         this.splitTask = checkNotNull(split.getSplitTask());
         this.tupleDomain = checkNotNull(tupleDomain);
         this.riakConfig = checkNotNull(riakConfig);
-        this.typeManager = checkNotNull(typeManager);
         this.directConnection = checkNotNull(directConnection);
     }
 

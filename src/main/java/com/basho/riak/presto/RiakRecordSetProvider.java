@@ -35,15 +35,12 @@ public class RiakRecordSetProvider
     private final String connectorId;
     private final RiakConfig riakConfig;
     private final DirectConnection directConnection;
-    private final TypeManager typeManager;
 
     @Inject
     public RiakRecordSetProvider(RiakConnectorId connectorId,
-                                 TypeManager typeManager,
                                  RiakConfig riakConfig,
                                  DirectConnection directConnection) {
         this.connectorId = checkNotNull(connectorId, "connectorId is null").toString();
-        this.typeManager = checkNotNull(typeManager, "typeManager is not given");
         this.riakConfig = checkNotNull(riakConfig);
         this.directConnection = checkNotNull(directConnection);
 
@@ -77,7 +74,6 @@ public class RiakRecordSetProvider
             return new CoverageRecordSet(coverageSplit,
                     handles.build(),
                     riakConfig, coverageSplit.getTupleDomain(),
-                    typeManager,
                     directConnection);
         } catch (OtpErlangDecodeException e) {
             log.error(e);

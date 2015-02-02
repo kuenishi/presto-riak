@@ -174,7 +174,7 @@ public class CoverageRecordCursor
                     if (columnHandle.getColumn().getType() == BigintType.BIGINT) {
                         field = columnHandle.getColumn().getName() + "_int";
                         Long l = (Long) fixedValue.getValue();
-                        value = new OtpErlangLong(l.longValue());
+                        value = new OtpErlangLong(l);
                     } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
                         Slice s = (Slice) fixedValue.getValue();
@@ -219,8 +219,8 @@ public class CoverageRecordCursor
                             r = (Long) span.getHigh().getValue();
                         }
 
-                        lhs = new OtpErlangLong(l.longValue());
-                        rhs = new OtpErlangLong(r.longValue());
+                        lhs = new OtpErlangLong(l);
+                        rhs = new OtpErlangLong(r);
                     } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
                         //Byte m = Byte.MIN_VALUE;
@@ -229,7 +229,7 @@ public class CoverageRecordCursor
                             l = ((String) span.getLow().getValue()).getBytes();
                         }
                         Byte m2 = Byte.MAX_VALUE;
-                        byte[] r = {m2.byteValue()};
+                        byte[] r = {m2};
                         if (!span.getHigh().isUpperUnbounded()) {
                             r = ((String) span.getHigh().getValue()).getBytes();
                         }
