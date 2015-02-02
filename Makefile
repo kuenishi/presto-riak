@@ -1,8 +1,11 @@
-RIAK_HOME=../prc/riak/rel/riak
-PRESTO_HOME=../prc
+RIAK_HOME=../rp/riak/rel/riak
+PRESTO_HOME=../rp
 PRESTO_PLUGIN_DIR=$(PRESTO_HOME)/plugin/presto-riak/
 
 all: deploy
+
+list-deps:
+	@mvn dependency:tree -Dverbose
 
 deploy: package ldna.beam
 	@cp ldna.beam $(RIAK_HOME)/lib/basho-patches
