@@ -8,9 +8,8 @@ You need `riak` directory in Presto plugin directory, with
 hive-hadoop1 and so on.
 
 ```
-$ mvn package assembly:assembly
-$ cd target
-$ mv *.jar path/to/presto/plugin/presto-riak
+$ mvn package
+$ mv target/presto-riak-<version>.jar path/to/presto/plugin/presto-riak
 ```
 
 
@@ -29,7 +28,7 @@ presto.erlang.node=presto@127.0.0.1
 ## uses default 'riak'
 ## presto.erlang.cookie=riak
 $ cp riak.properties path/to/presto/etc/catalog
-$ ./presto-cli --server localhost:8008 --catalog riak --schema t
+$ ./presto-cli --server localhost:8080 --catalog riak --schema t
 ```
 
 test - the schema in Riak doesn't appear but it works (it's just because Riak does not have PB api related to bucket types).
@@ -42,13 +41,14 @@ presto:t> show catalogs;
  jmx
  riak
 (2 rows)
-presto:t> use catalog riak;
+presto:t> use riak.t;
 presto:t> show schemas;
        Schema
 --------------------
  default
  information_schema
  sys
+ t
 (3 rows)
 ```
 
@@ -81,7 +81,7 @@ presto:default> select * from foobartable;
  yey  |   34 | k2
 (3 rows)
 
-presto:default> select * from logs cross join users where logs.accessor = users.id;
+presto:default> select * from logs l, users u where l.accessor = u.id;
       timestamp      | method | status | accessor | id | name |   army
 ---------------------+--------+--------+----------+----+------+-----------
  2014-04-12-00:03:00 | GET    |    200 |        0 |  0 | Solo | Freelance
@@ -97,7 +97,7 @@ Query 20140517_073059_00004_hk6si, FINISHED, 1 node
 Splits: 8 total, 8 done (100.00%)
 0:00 [6 rows, 258B] [12 rows/s, 522B/s]
 
-presto:default> explain select * from logs cross join users where logs.accessor = users.id;
+presto:default> explain select * from logs l, users u where l.accessor = u.id;
                                                                      Query Plan
 ----------------------------------------------------------------------------------------------------------------------------------------------------
  - Output[timestamp, method, status, accessor, id, name, army]
@@ -121,8 +121,28 @@ presto:default> explain select * from logs cross join users where logs.accessor 
 Presto doesn't create tables, schemas etc.
 
 ```
-$ mvn exec:java -Dexec.mainClass=com.basho.riak.presto.CLI
+$ bin/presto-riak-ctl
+presto-riak CLI. create table, create schema, drop... >
+usage: ./presto-riak-cli <hostname> <port> [<commands>... ]
+   list-tables <schema name>
+   setup-schema <schema name>
+   create-tabledef <schema name> <table definition json file>
+   show-tabledef <schema name> <table name>
+   clear-tabledef <schema name> <table name>
+   check-tabledef <schema name> <table definition json file>
 ```
+
+Where a table definition json file looks like this (users.json):
+
+```
+{"name":"users",
+ "columns":[
+  {"name":"id", "type":"bigint", "index":true},
+  {"name":"name", "type":"varchar", "index":true},
+  {"name":"army", "type":"varchar", "index":true}]}
+```
+
+See also logs.json and bin/testdata.py for test data and schema.
 
 # Design
 
@@ -155,18 +175,13 @@ there is a JSON like this:
     "columns": [
         {
             "name": "col1",
-            "type": "STRING",
+            "type": "varchar",
             "index": false
         },
         {
             "name": "col2",
-            "type": "LONG",
+            "type": "bigint",
             "index": true
-        },
-        {
-            "name": "__pkey",
-            "type": "STRING",
-            "index":false
         }
     ],
     "format":"JSON" | "json" | "msgpack" (?) ...
@@ -211,10 +226,7 @@ location associated with predicates or partition keys.
  - columnar backend format other than leveldb
 
 - Usability
- - currently 'default' schema only - it's not working in default schema
- - schema manager, or generator? or move to bucket types that force schema
  - introduce switch between pure-PB API mode
-
 
 ## dev setup
 
@@ -229,6 +241,8 @@ $ sed -e 's/## ring_size = 64/ring_size = 8/' -i.back rel/riak/etc/riak.conf
 $ cp ldna.beam rel/riak/lib/basho-patches
 $ ulimit -n 4096
 $ rel/riak/bin/riak start
+$ rel/riak/bin/riak-admin bucket-type create <schemaname>
+$ rel/riak/bin/riak-admin bucket-type activate <schemaname>
 ```
 
 
