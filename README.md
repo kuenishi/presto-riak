@@ -246,6 +246,14 @@ $ rel/riak/bin/riak-admin bucket-type activate <schemaname>
 ```
 
 
+# Version compatibility
+
+| Prestodb | presto-riak | Riak  |
+|:---------|:------------|:------|
+| 0.88     | 0.0.5       | 2.0.2 |
+| 0.92     | 0.0.6-SNAPS | 2.0.5 |
+
+
 # rights
 
 Distributed under Apached 2.0 license, (C) Kota UENISHI.
