@@ -18,7 +18,7 @@ package com.basho.riak.presto;
 // or 1.5.6 on maven repo.
 
 import com.ericsson.otp.erlang.*;
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 import java.io.IOException;
 
