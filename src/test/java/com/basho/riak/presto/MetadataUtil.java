@@ -30,6 +30,8 @@ import static com.facebook.presto.spi.type.BigintType.BIGINT;
 import static com.facebook.presto.spi.type.BooleanType.BOOLEAN;
 import static com.facebook.presto.spi.type.DoubleType.DOUBLE;
 import static com.facebook.presto.spi.type.VarcharType.VARCHAR;
+import static com.facebook.presto.spi.type.TimestampType.TIMESTAMP;
+
 import static io.airlift.json.JsonCodec.listJsonCodec;
 import static java.util.Locale.ENGLISH;
 
@@ -61,7 +63,8 @@ public final class MetadataUtil
                 StandardTypes.BOOLEAN, BOOLEAN,
                 StandardTypes.BIGINT, BIGINT,
                 StandardTypes.DOUBLE, DOUBLE,
-                StandardTypes.VARCHAR, VARCHAR);
+                StandardTypes.VARCHAR, VARCHAR,
+                StandardTypes.TIMESTAMP, TIMESTAMP);
 
         public TestingTypeDeserializer()
         {

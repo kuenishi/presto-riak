@@ -17,6 +17,7 @@ import com.basho.riak.presto.PRSchema;
 import com.basho.riak.presto.PRTable;
 import com.basho.riak.presto.RiakColumnHandle;
 import com.facebook.presto.spi.type.StandardTypes;
+import com.facebook.presto.spi.type.TimestampType;
 import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -58,11 +59,17 @@ public final class Deserializer {
 
     public static final class CLITypeDeserializer
             extends FromStringDeserializer<Type> {
+
+        // @doc see com.facebook.presto.spi.types.StandardTypes
+        // https://github.com/facebook/presto/blob/master/presto-spi/src/main/java/com/facebook/presto/spi/type/StandardTypes.java
+        // for standard types
         private final Map<String, Type> types = ImmutableMap.<String, Type>of(
                 StandardTypes.BOOLEAN, BOOLEAN,
                 StandardTypes.BIGINT, BIGINT,
                 StandardTypes.DOUBLE, DOUBLE,
-                StandardTypes.VARCHAR, VARCHAR);
+                StandardTypes.VARCHAR, VARCHAR,
+                StandardTypes.TIMESTAMP, TimestampType.TIMESTAMP
+        );
 
         @Inject
         public CLITypeDeserializer() {
