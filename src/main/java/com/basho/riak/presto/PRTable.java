@@ -45,7 +45,9 @@ public class PRTable {
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
 
         ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
-        columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.KEY_COLUMN_NAME, VarbinaryType.VARBINARY, 0, true, "primary key", true));
+        //TODO: For now we assume keys are all in UTF-8
+        columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.KEY_COLUMN_NAME, VarcharType.VARCHAR, 0, true, "primary key", true));
+        //columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.KEY_COLUMN_NAME, VarbinaryType.VARBINARY, 0, true, "primary key", true));
         columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.VTAG_COLUMN_NAME, VarcharType.VARCHAR, 1, false, "vtag", true));
         int index = 2;
 
