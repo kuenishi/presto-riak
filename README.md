@@ -176,6 +176,16 @@ there is a JSON like this:
 
 Any tool to create this style of schema?
 
+## Types supported
+
+Correspondence from JSON to SQL types,
+
+- String as VARCHAR,
+- Numeric (Integer) as BIGINT,
+- Numeric (Double) as DOUBLE
+
+and no support for timestamps, maps, arrays for now.
+
 ## Optimization
 
 There can be several levels of optimization.
