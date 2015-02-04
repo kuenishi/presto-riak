@@ -59,6 +59,7 @@ public class RiakModule
         binder.bind(RiakSplitManager.class).in(Scopes.SINGLETON);
         binder.bind(DirectConnection.class).in(Scopes.SINGLETON);
         binder.bind(RiakRecordSetProvider.class).in(Scopes.SINGLETON);
+        binder.bind(RiakRecordSinkProvider.class).in(Scopes.SINGLETON);
         binder.bind(RiakHandleResolver.class).in(Scopes.SINGLETON);
         bindConfig(binder).to(RiakConfig.class);
 

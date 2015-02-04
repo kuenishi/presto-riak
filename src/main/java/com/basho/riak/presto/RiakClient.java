@@ -31,14 +31,12 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.HostAndPort;
 import javax.inject.Inject;
+
 import io.airlift.log.Logger;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -269,6 +267,17 @@ public class RiakClient {
         return false;
     }
 
+    public boolean insert(SchemaTableName schemaTableName,
+                          String key,
+                          RiakObject obj)
+    {
+        Namespace namespace = new Namespace(schemaTableName.getSchemaName(), schemaTableName.getTableName());
+        Location location = new Location(namespace, key);
+
+        StoreOperation storeOp = new StoreOperation.Builder(location).withContent(obj).build();
+        return cluster.execute(storeOp).isSuccess();
+    }
+
     public String getHosts() {
         return hosts;
     }
@@ -276,7 +285,6 @@ public class RiakClient {
     private FetchOperation buildFetchOperation(String bucketType, String bucket, String key) {
         Namespace namespace = new Namespace(bucketType, bucket);
         return new FetchOperation.Builder(new Location(namespace, key)).build();
-
     }
 
     public void shutdown() {

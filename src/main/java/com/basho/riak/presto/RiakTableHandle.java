@@ -13,6 +13,7 @@
  */
 package com.basho.riak.presto;
 
+import com.facebook.presto.spi.ConnectorOutputTableHandle;
 import com.facebook.presto.spi.ConnectorTableHandle;
 import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -24,7 +25,8 @@ import io.airlift.log.Logger;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakTableHandle
-        implements ConnectorTableHandle {
+        implements ConnectorTableHandle
+{
     private static final Logger log = Logger.get(RiakTableHandle.class);
     private final String connectorId;
     private final String schemaName;

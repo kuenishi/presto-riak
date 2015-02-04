@@ -24,6 +24,7 @@ public class RiakConnector
     private final RiakMetadata metadata;
     private final RiakSplitManager splitManager;
     private final RiakRecordSetProvider recordSetProvider;
+    private final RiakRecordSinkProvider recordSinkProvider;
     private final RiakHandleResolver handleResolver;
 
     @Inject
@@ -31,10 +32,12 @@ public class RiakConnector
             RiakMetadata metadata,
             RiakSplitManager splitManager,
             RiakRecordSetProvider recordSetProvider,
+            RiakRecordSinkProvider recordSinkProvider,
             RiakHandleResolver handleResolver) {
         this.metadata = checkNotNull(metadata, "metadata is null");
         this.splitManager = checkNotNull(splitManager, "splitManager is null");
         this.recordSetProvider = checkNotNull(recordSetProvider, "recordSetProvider is null");
+        this.recordSinkProvider = checkNotNull(recordSinkProvider, "recordSinkProvider is null");
         this.handleResolver = checkNotNull(handleResolver, "handleResolver is null");
     }
 
@@ -67,13 +70,11 @@ public class RiakConnector
     }
 
     @Override
-    public ConnectorHandleResolver getHandleResolver() {
-        return handleResolver;
-    }
+    public ConnectorRecordSinkProvider getRecordSinkProvider() { return recordSinkProvider; }
 
     @Override
-    public ConnectorRecordSinkProvider getRecordSinkProvider() {
-        throw new UnsupportedOperationException();
+    public ConnectorHandleResolver getHandleResolver() {
+        return handleResolver;
     }
 
 }

@@ -23,7 +23,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class RiakHandleResolver implements ConnectorHandleResolver {
     private static final Logger log = Logger.get(RiakRecordSetProvider.class);
 
-
     private final String connectorId;
 
     @Inject
@@ -38,12 +37,14 @@ public class RiakHandleResolver implements ConnectorHandleResolver {
 
     @Override
     public boolean canHandle(ConnectorOutputTableHandle connectorOutputTableHandle) {
-        return false;
+        RiakOutputTableHandle handle = (RiakOutputTableHandle)connectorOutputTableHandle;
+        return connectorId.equals(handle.getConnectorId());
     }
 
     @Override
     public boolean canHandle(ConnectorInsertTableHandle connectorInsertTableHandle) {
-        return false;
+        RiakOutputTableHandle handle = (RiakOutputTableHandle)connectorInsertTableHandle;
+        return connectorId.equals(handle.getConnectorId());
     }
 
     @Override
@@ -86,11 +87,11 @@ public class RiakHandleResolver implements ConnectorHandleResolver {
 
     @Override
     public Class<? extends ConnectorOutputTableHandle> getOutputTableHandleClass() {
-        return null;
+        return RiakOutputTableHandle.class;
     }
 
     @Override
     public Class<? extends ConnectorInsertTableHandle> getInsertTableHandleClass() {
-        return null;
+        return RiakOutputTableHandle.class;
     }
 }
