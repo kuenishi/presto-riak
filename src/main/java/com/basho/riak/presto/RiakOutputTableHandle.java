@@ -16,21 +16,20 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Created by kuenishi on 2015/2/4.
  */
 public class RiakOutputTableHandle
-        implements ConnectorOutputTableHandle, ConnectorInsertTableHandle
-{
+        implements ConnectorOutputTableHandle, ConnectorInsertTableHandle {
 
     private final String connectorId;
     private final String schemaName;
     private final String tableName;
     private final List<String> columnNames;
     private final List<Type> columnTypes;
+
     @JsonCreator
     public RiakOutputTableHandle(@JsonProperty("connectorId") String connectorId,
                                  @JsonProperty("schemaName") String schemaName,
                                  @JsonProperty("tableName") String tableName,
                                  @JsonProperty("columnNames") List<String> columnNames,
-                                 @JsonProperty("columnTypes") List<Type> columnTypes)
-    {
+                                 @JsonProperty("columnTypes") List<Type> columnTypes) {
         this.connectorId = checkNotNull(connectorId, "clientId is null");
         this.schemaName = checkNotNull(schemaName, "schemaName is null");
         this.tableName = checkNotNull(tableName, "tableName is null");
@@ -43,19 +42,27 @@ public class RiakOutputTableHandle
     }
 
     @JsonProperty
-    public List<String> getColumnNames()
-    {
+    public List<String> getColumnNames() {
         return columnNames;
     }
+
     @JsonProperty
-    public List<Type> getColumnTypes()
-    {
+    public List<Type> getColumnTypes() {
         return columnTypes;
     }
+
     @JsonProperty
-    public String getSchemaName(){ return schemaName; }
+    public String getSchemaName() {
+        return schemaName;
+    }
+
     @JsonProperty
-    public String getTableName() { return tableName; }
+    public String getTableName() {
+        return tableName;
+    }
+
     @JsonProperty
-    public String getConnectorId() { return connectorId; }
+    public String getConnectorId() {
+        return connectorId;
+    }
 }

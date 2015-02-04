@@ -17,7 +17,6 @@ package com.basho.riak.presto;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.Type;
-import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
 import org.apache.commons.codec.DecoderException;

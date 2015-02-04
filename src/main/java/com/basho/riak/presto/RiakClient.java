@@ -30,13 +30,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.HostAndPort;
-import javax.inject.Inject;
-
 import io.airlift.log.Logger;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -269,8 +271,7 @@ public class RiakClient {
 
     public boolean insert(SchemaTableName schemaTableName,
                           String key,
-                          RiakObject obj)
-    {
+                          RiakObject obj) {
         Namespace namespace = new Namespace(schemaTableName.getSchemaName(), schemaTableName.getTableName());
         Location location = new Location(namespace, key);
 

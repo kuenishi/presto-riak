@@ -17,9 +17,9 @@ public class RiakRecordSinkProvider
         implements ConnectorRecordSinkProvider {
 
     private final RiakClient client;
+
     @Inject
-    public RiakRecordSinkProvider(RiakClient client)
-    {
+    public RiakRecordSinkProvider(RiakClient client) {
         this.client = checkNotNull(client);
     }
 
@@ -33,8 +33,7 @@ public class RiakRecordSinkProvider
     }
 
     @Override
-    public RecordSink getRecordSink(ConnectorInsertTableHandle tableHandle)
-    {
+    public RecordSink getRecordSink(ConnectorInsertTableHandle tableHandle) {
         checkNotNull(tableHandle, "tableHandle is null");
         checkArgument(tableHandle instanceof RiakOutputTableHandle, "tableHandle is not an instance of CassandraOutputTableHandle");
         RiakOutputTableHandle handle = (RiakOutputTableHandle) tableHandle;

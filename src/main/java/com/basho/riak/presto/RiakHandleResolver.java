@@ -37,13 +37,13 @@ public class RiakHandleResolver implements ConnectorHandleResolver {
 
     @Override
     public boolean canHandle(ConnectorOutputTableHandle connectorOutputTableHandle) {
-        RiakOutputTableHandle handle = (RiakOutputTableHandle)connectorOutputTableHandle;
+        RiakOutputTableHandle handle = (RiakOutputTableHandle) connectorOutputTableHandle;
         return connectorId.equals(handle.getConnectorId());
     }
 
     @Override
     public boolean canHandle(ConnectorInsertTableHandle connectorInsertTableHandle) {
-        RiakOutputTableHandle handle = (RiakOutputTableHandle)connectorInsertTableHandle;
+        RiakOutputTableHandle handle = (RiakOutputTableHandle) connectorInsertTableHandle;
         return connectorId.equals(handle.getConnectorId());
     }
 

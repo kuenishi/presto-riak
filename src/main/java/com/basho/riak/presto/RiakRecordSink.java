@@ -15,7 +15,6 @@ import javax.inject.Inject;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -46,12 +45,12 @@ public class RiakRecordSink implements RecordSink {
     private void append(Object o) {
         String property = handle.getColumnNames().get(i);
         //Type t = handle.getColumnTypes().get(i);
-        if(property.equals(RiakColumnHandle.KEY_COLUMN_NAME)) {
+        if (property.equals(RiakColumnHandle.KEY_COLUMN_NAME)) {
             key = (String) o;
-        }else{
-            if(property.equals(RiakColumnHandle.VTAG_COLUMN_NAME)) {
+        } else {
+            if (property.equals(RiakColumnHandle.VTAG_COLUMN_NAME)) {
                 vtag = (String) o;
-            }else {
+            } else {
                 data.put(property, o);
             }
         }

@@ -15,7 +15,6 @@ package com.basho.riak.presto;
 
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.Type;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.airlift.log.Logger;
@@ -213,20 +212,23 @@ public class RiakMetadata
         log.warn("Table Creation is not suppported for now.");
         throw new UnsupportedOperationException();
     }
+
     @Override
     public ConnectorTableHandle createTable(ConnectorSession connectorSession, ConnectorTableMetadata connectorTableMetadata) {
         checkNotNull(connectorTableMetadata.getOwner(), "Table owner is null");
         log.warn("Table Creation is not suppported for now.");
         throw new UnsupportedOperationException();
     }
+
     @Override
     public void commitCreateTable(ConnectorOutputTableHandle connectorOutputTableHandle, Collection<Slice> collection) {
         log.warn("Table Creation is not suppported for now.");
         throw new UnsupportedOperationException();
     }
+
     @Override
     public ConnectorInsertTableHandle beginInsert(ConnectorSession connectorSession, ConnectorTableHandle connectorTableHandle) {
-        RiakTableHandle handle = (RiakTableHandle)connectorTableHandle;
+        RiakTableHandle handle = (RiakTableHandle) connectorTableHandle;
         SchemaTableName schemaTableName = new SchemaTableName(handle.getSchemaName(), handle.getTableName());
         PRTable table = null; //PRTable.example(tableName.getTableName());
         try {
@@ -243,14 +245,14 @@ public class RiakMetadata
         log.warn("Table insertion is not suppported for now.");
         List<String> columnNames = new LinkedList<>();
         List<Type> columnTypes = new LinkedList<>();
-        for (ColumnMetadata columnMetadata : table.getColumnsMetadata())
-        {
+        for (ColumnMetadata columnMetadata : table.getColumnsMetadata()) {
             columnNames.add(columnMetadata.getName());
             columnTypes.add(columnMetadata.getType());
         }
         return new RiakOutputTableHandle(connectorId, schemaTableName.getSchemaName(),
                 schemaTableName.getTableName(), columnNames, columnTypes);
     }
+
     @Override
     public void commitInsert(ConnectorInsertTableHandle connectorInsertTableHandle, Collection<Slice> collection) {
         log.debug("Table insertion has done for now.");
@@ -262,6 +264,7 @@ public class RiakMetadata
         log.warn("Table cannot be renamed as supposed to be huge.");
         throw new UnsupportedOperationException();
     }
+
     @Override
     public void dropTable(ConnectorTableHandle connectorTableHandle) {
         log.warn("Table cannot be dropped as supposed to be huge.");
@@ -274,16 +277,19 @@ public class RiakMetadata
         log.warn("Views are not supported in presto-riak");
         throw new UnsupportedOperationException();
     }
+
     @Override
     public void dropView(ConnectorSession connectorSession, SchemaTableName schemaTableName) {
         log.warn("Views are not supported in presto-riak");
         throw new UnsupportedOperationException();
     }
+
     @Override
     public List<SchemaTableName> listViews(ConnectorSession connectorSession, String s) {
         log.warn("Views are not supported in presto-riak");
         throw new UnsupportedOperationException();
     }
+
     @Override
     public Map<SchemaTableName, String> getViews(ConnectorSession connectorSession, SchemaTablePrefix schemaTablePrefix) {
         log.warn("Views are not supported in presto-riak");

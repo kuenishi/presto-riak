@@ -70,7 +70,9 @@ public class RiakConnector
     }
 
     @Override
-    public ConnectorRecordSinkProvider getRecordSinkProvider() { return recordSinkProvider; }
+    public ConnectorRecordSinkProvider getRecordSinkProvider() {
+        return recordSinkProvider;
+    }
 
     @Override
     public ConnectorHandleResolver getHandleResolver() {
