@@ -287,7 +287,7 @@ public class RiakMetadata
     @Override
     public List<SchemaTableName> listViews(ConnectorSession connectorSession, String s) {
         log.warn("Views are not supported in presto-riak");
-        throw new UnsupportedOperationException();
+        return new LinkedList<SchemaTableName>();
     }
 
     @Override

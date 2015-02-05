@@ -95,13 +95,14 @@ public class RiakRecordSink implements RecordSink {
         ObjectMapper mapper = new ObjectMapper();
         try {
             obj.setValue(BinaryValue.create(mapper.writeValueAsBytes(data)));
+            //TODO: set 2i !!!
             //obj.setVTag(vtag);
             SchemaTableName schemaTableName = new SchemaTableName(handle.getSchemaName(), handle.getTableName());
             boolean result = client.insert(schemaTableName, key, obj);
             log.debug("insert result: %s", result);
             i = -1;
         } catch (JsonProcessingException e) {
-
+            log.warn(e.getMessage());
         }
     }
 
