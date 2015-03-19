@@ -14,7 +14,8 @@
 package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.type.*;
+import com.facebook.presto.spi.type.BigintType;
+import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
@@ -23,6 +24,7 @@ import io.airlift.log.Logger;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,16 +34,22 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 public class PRTable {
     private static final Logger log = Logger.get(PRTable.class);
     private final String name;
+    private final Optional<String> bucketName;
+    private final Optional<String> path;
     private final List<RiakColumn> columns;
     private final List<ColumnMetadata> columnsMetadata;
 
     @JsonCreator
     public PRTable(
             @JsonProperty("name") String name,
+            @JsonProperty("bucket") String bucketName,
+            @JsonProperty("path") String path,
             @JsonProperty("columns") List<RiakColumn> columns,
             @JsonProperty(value = "comments", required = false) String comments) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = checkNotNull(name, "name is null");
+        this.bucketName = Optional.ofNullable(bucketName);
+        this.path = Optional.ofNullable(path); // should check whether valid JSONPath
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
 
         ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
@@ -49,6 +57,8 @@ public class PRTable {
         columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.KEY_COLUMN_NAME, VarcharType.VARCHAR, 0, true, "primary key", true));
         //columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.KEY_COLUMN_NAME, VarbinaryType.VARBINARY, 0, true, "primary key", true));
         columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.VTAG_COLUMN_NAME, VarcharType.VARCHAR, 1, false, "vtag", true));
+        //columnsMetadata.add(new ColumnMetadata(RiakColumnHandle.VTAG_COLUMN_NAME, VarcharType.VARCHAR, 1, false, "vtag", true));
+
         int index = 2;
 
         for (RiakColumn column : this.columns) {
@@ -72,13 +82,23 @@ public class PRTable {
                 new RiakColumn("col1", VarcharType.VARCHAR, "d1vv", false),
                 new RiakColumn("col2", VarcharType.VARCHAR, "d2", true),
                 new RiakColumn("poopie", BigintType.BIGINT, "d3", true));
-        return new PRTable(tableName, cols, "");
+        return new PRTable(tableName, tableName, "", cols, "");
 
     }
 
     @JsonProperty
     public String getName() {
         return name;
+    }
+
+    @JsonProperty
+    public String getBucket() {
+        return bucketName.orElse(name);
+    }
+
+    @JsonProperty
+    public Optional<String> getPath() {
+        return path;
     }
 
     @JsonProperty
