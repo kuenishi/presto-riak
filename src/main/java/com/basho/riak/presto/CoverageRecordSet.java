@@ -17,12 +17,12 @@ package com.basho.riak.presto;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.Type;
-import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
 import org.apache.commons.codec.DecoderException;
 
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -34,6 +34,8 @@ public class CoverageRecordSet
     private static final Logger log = Logger.get(CoverageRecordSet.class);
     private final String schemaName;
     private final String tableName;
+    private final String bucketName;
+    private final Optional<String> path;
     private final List<RiakColumnHandle> columnHandles;
     private final List<Type> types;
     private final List<HostAddress> addresses;
@@ -55,6 +57,8 @@ public class CoverageRecordSet
 
         this.schemaName = checkNotNull(split.getSchemaName());
         this.tableName = checkNotNull(split.getTableName());
+        this.bucketName = checkNotNull(split.getBucketName());
+        this.path = split.getPath();
 
         ImmutableList.Builder<Type> types = ImmutableList.builder();
         for (RiakColumnHandle column : columnHandles) {
@@ -76,7 +80,7 @@ public class CoverageRecordSet
 
     @Override
     public RecordCursor cursor() {
-        return new CoverageRecordCursor(schemaName, tableName,
+        return new CoverageRecordCursor(schemaName, tableName, bucketName, path,
                 columnHandles, addresses, splitTask, tupleDomain,
                 riakConfig, directConnection);
     }

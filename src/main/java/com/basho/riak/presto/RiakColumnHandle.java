@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import io.airlift.log.Logger;
 
-import java.util.Map;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakColumnHandle
@@ -45,6 +43,7 @@ public final class RiakColumnHandle
     }
  /*
     public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata) {
+
         this(connectorId,
                 new RiakColumn(columnMetadata.getName(),
                         columnMetadata.getType(),

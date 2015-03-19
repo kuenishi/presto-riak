@@ -37,7 +37,8 @@ public final class RiakColumn {
             @JsonProperty(value = "type", required = true) Type type,
             @JsonProperty(value = "comment") String comment,
             @JsonProperty("index") boolean index,
-            @JsonProperty(value = "pkey", required = false, defaultValue = "false") boolean pkey) {
+            @JsonProperty(value = "pkey", required = false, defaultValue = "false") boolean pkey
+    ) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = checkNotNull(type, "type is null");

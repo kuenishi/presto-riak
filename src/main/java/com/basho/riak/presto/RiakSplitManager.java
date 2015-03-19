@@ -134,7 +134,8 @@ public class RiakSplitManager
 
                 splits.add(new CoverageSplit(connectorId,
                         riakTableHandle.getSchemaName(),
-                        riakTableHandle.getTableName(),
+                        table.getName(),
+                        table.getPath(),
                         split.getHost(),
                         split.toString(),
                         partition.getTupleDomain(),
