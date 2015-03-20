@@ -29,6 +29,7 @@ import org.apache.commons.codec.DecoderException;
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -41,6 +42,8 @@ public class CoverageSplit implements ConnectorSplit {
     private final String connectorId;
     private final String schemaName;
     private final String tableName;
+    private final String bucketName;
+    private final Optional<String> path;
     private final String host;
     private final String splitData;
     private final TupleDomain<ConnectorColumnHandle> tupleDomain;
@@ -51,6 +54,8 @@ public class CoverageSplit implements ConnectorSplit {
             @JsonProperty("connectorId") String connectorId,
             @JsonProperty("schemaName") String schemaName,
             @JsonProperty("tableName") String tableName,
+            @JsonProperty("bucketName") String bucketName,
+            @JsonProperty("path") Optional<String> path,
             @JsonProperty("host") String host,
             @JsonProperty("splitData") String splitData,
             @JsonProperty("tupleDomain") TupleDomain<ConnectorColumnHandle> tupleDomain,
@@ -58,6 +63,8 @@ public class CoverageSplit implements ConnectorSplit {
         this.schemaName = checkNotNull(schemaName, "schema name is null");
         this.connectorId = checkNotNull(connectorId, "connector id is null");
         this.tableName = checkNotNull(tableName, "table name is null");
+        this.bucketName = checkNotNull(bucketName, "bucket name is null");
+        this.path = path;
         this.host = checkNotNull(host);
         this.splitData = checkNotNull(splitData);
         this.tupleDomain = checkNotNull(tupleDomain);
@@ -81,6 +88,16 @@ public class CoverageSplit implements ConnectorSplit {
     @JsonProperty
     public String getTableName() {
         return tableName;
+    }
+
+    @JsonProperty
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    @JsonProperty
+    public Optional<String> getPath() {
+        return path;
     }
 
     @JsonProperty
@@ -118,6 +135,8 @@ public class CoverageSplit implements ConnectorSplit {
                 .put("splitData", splitData)
                 .put("schemaName", schemaName)
                 .put("tableName", tableName)
+                .put("bucketName", bucketName)
+                .put("path", path)
                 .put("tupleDomain", tupleDomain)
                 .put("indexedColumns", indexedColumns)
                 .build();
