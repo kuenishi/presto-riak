@@ -1,21 +1,7 @@
-/*
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.type.BigintType;
 import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,47 +10,62 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.airlift.log.Logger;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-// Presto-Riak style table, stored in Riak and also exchanged between presto nodes
-public class PRTable {
+/**
+ * Created by kuenishi on 2015/5/9.
+ */
+public class PRSubTable {
+
+    /*
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     *     http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
+    public static final String SEPARATOR = "/";
     private static final Logger log = Logger.get(PRTable.class);
     private final String name;
+    private final String path;
     private final List<RiakColumn> columns;
-    private final Optional<String> comments;
-    private final Optional<List<PRSubTable>> subtables;
     private String pkey;
 
     @JsonCreator
-    public PRTable(
+    public PRSubTable(
             @JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "columns", required = true) List<RiakColumn> columns,
-            @JsonProperty(value = "comments", required = false) String comments,
-            @JsonProperty(value = "subtables") List<PRSubTable> subtables) {
+            @JsonProperty("path") String path) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = checkNotNull(name, "name is null");
+        this.path = checkNotNull(path, "Subtable can't be empty in subtable"); // should check whether valid JSONPath
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
-        this.comments = Optional.ofNullable(comments);
-        this.subtables = Optional.ofNullable(ImmutableList.copyOf(subtables));
+
+        int index = 2;
 
         for (RiakColumn column : this.columns) {
-            System.out.println(">"+column.getPkey() + " " + column.getType() + " " + pkey);
+            System.out.println(">" + column.getPkey() + " " + column.getType() + " " + pkey);
             if (column.getPkey() &&
                     column.getType() == VarcharType.VARCHAR &&
-                    this.pkey == null)
-            {
+                    this.pkey == null) {
                 this.pkey = column.getName();
             }
         }
-        if (pkey == null) {
-            log.warn("Primary Key is not defined in columns effectively. Some queries become slow.");
-        }
+    }
 
-        // TODO: verify all subtable definitions here
+    public void setPkey(String k) {
+        this.pkey = k;
     }
 
     public static Function<PRTable, String> nameGetter() {
@@ -76,18 +77,14 @@ public class PRTable {
         };
     }
 
-    public static PRTable example(String tableName) {
-        List<RiakColumn> cols = Arrays.asList(
-                new RiakColumn("col1", VarcharType.VARCHAR, "d1vv", false, true),
-                new RiakColumn("col2", VarcharType.VARCHAR, "d2", true, false),
-                new RiakColumn("poopie", BigintType.BIGINT, "d3", true, false));
-        return new PRTable(tableName, cols, "coment", new ArrayList<>());
-
-    }
-
     @JsonProperty
     public String getName() {
         return name;
+    }
+
+    @JsonProperty
+    public String getPath() {
+        return path;
     }
 
     @JsonProperty
@@ -95,19 +92,13 @@ public class PRTable {
         return columns;
     }
 
-    @JsonProperty
-    public List<PRSubTable> getSubtables() { return subtables.get(); }
-
-    @JsonProperty
-    public String getComments() { return comments.get(); }
-
-    public List<ColumnMetadata> getColumnsMetadata(String connectorId){
+    public List<ColumnMetadata> getColumnsMetadata(String connectorId) {
         Map<String, ColumnHandle> columnHandles = getColumnHandles(connectorId);
         ImmutableList.Builder<ColumnMetadata> builder = ImmutableList.builder();
-        for (ColumnHandle columnHandle : columnHandles.values()){
+        for (ColumnHandle columnHandle : columnHandles.values()) {
             RiakColumnHandle handle = (RiakColumnHandle) columnHandle;
             boolean hidden = false;
-            if ( handle.getOrdinalPosition() < 2 )
+            if (handle.getOrdinalPosition() < 2)
                 hidden = true;
             builder.add(new ColumnMetadata(handle.getColumn().getName(),
                     handle.getColumn().getType(),
@@ -137,7 +128,7 @@ public class PRTable {
         int index = 2;
 
         for (RiakColumn column : this.columns) {
-            // Column metadata should remember whichi is primary key, but for now it's
+            // Column metadata should remember which is primary key, but for now it's
             // impossible, as Presto database has no concept of primary key like this.
             columnHandles.put(column.getName(),
                     new RiakColumnHandle(connectorId, column, index));
@@ -146,5 +137,32 @@ public class PRTable {
             index++;
         }
         return columnHandles.build();
+    }
+
+    public static String parentTableName(String s) {
+        String[] parts = s.split(SEPARATOR);
+        if (parts.length == 1) {
+            return s;
+        } else if (parts.length == 2) {
+            return parts[0];
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+    public static String bucketName(String fullTableName)
+    {
+        return parentTableName(fullTableName);
+    }
+
+    public boolean match(String fullTableName)
+    {
+        String[] parts = fullTableName.split(SEPARATOR);
+        if (parts.length == 1) {
+            throw new IllegalArgumentException();
+        } else if (parts.length == 2) {
+            return this.name.equals(parts[1]);
+        } else {
+            throw new IllegalArgumentException();
+        }
     }
 }

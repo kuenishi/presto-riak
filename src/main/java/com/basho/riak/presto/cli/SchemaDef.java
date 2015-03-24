@@ -1,7 +1,7 @@
 package com.basho.riak.presto.cli;
 
 import com.basho.riak.client.core.query.RiakObject;
-import com.basho.riak.presto.PRSchema;
+import com.basho.riak.presto.models.PRSchema;
 import com.basho.riak.presto.RiakClient;
 import com.basho.riak.presto.RiakConfig;
 import com.facebook.presto.spi.SchemaTableName;

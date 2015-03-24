@@ -11,8 +11,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
+import com.basho.riak.presto.RiakRecordSetProvider;
 import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -36,10 +37,11 @@ public final class RiakColumn {
             @JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "type", required = true) Type type,
             @JsonProperty(value = "comment") String comment,
-            @JsonProperty("index") boolean index,
+            @JsonProperty(value = "index", required = false) boolean index,
             @JsonProperty(value = "pkey", required = false, defaultValue = "false") boolean pkey
     ) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
+        checkNotNull(index);
         this.name = name;
         this.type = checkNotNull(type, "type is null");
         this.comment = comment;

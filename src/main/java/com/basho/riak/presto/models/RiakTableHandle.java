@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
 import com.facebook.presto.spi.ConnectorTableHandle;
 import com.facebook.presto.spi.SchemaTableName;
@@ -74,7 +74,7 @@ public final class RiakTableHandle
             return false;
         }
 
-        com.basho.riak.presto.RiakTableHandle other = (com.basho.riak.presto.RiakTableHandle) obj;
+        RiakTableHandle other = (RiakTableHandle) obj;
         return Objects.equal(this.connectorId, other.connectorId) &&
                 Objects.equal(this.schemaName, other.schemaName) &&
                 Objects.equal(this.tableName, other.tableName);

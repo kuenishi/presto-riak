@@ -14,6 +14,9 @@
 
 package com.basho.riak.presto;
 
+import com.basho.riak.presto.models.CoverageSplit;
+import com.basho.riak.presto.models.PRSubTable;
+import com.basho.riak.presto.models.RiakColumnHandle;
 import com.ericsson.otp.erlang.*;
 import com.facebook.presto.spi.*;
 import com.facebook.presto.spi.type.*;
@@ -23,10 +26,14 @@ import com.jayway.jsonpath.JsonPath;
 import io.airlift.log.Logger;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import org.apache.commons.codec.DecoderException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -36,14 +43,11 @@ public class CoverageRecordCursor
 
     //private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
 
-    private final String schemaName;
-    private final String tableName;
-    private final String bucketName;
-    private final Optional<String> path;
+    private final CoverageSplit split;
     private final List<RiakColumnHandle> columnHandles;
-    //private final int[] fieldToColumnIndex;
-    private final SplitTask splitTask;
     private final TupleDomain tupleDomain;
+
+    private final SplitTask splitTask;
     private final DirectConnection directConnection;
     private final List<Map> buffer;
     private final String[] fields;
@@ -54,26 +58,18 @@ public class CoverageRecordCursor
     private long totalBytes;
     private Map<String, Object> cursor;
 
-    public CoverageRecordCursor(String schemaName,
-                                String tableName,
-                                String bucketName,
-                                Optional<String> path,
-                                List<RiakColumnHandle> columnHandles,//, InputSupplier<InputStream> inputStreamSupplier)
-                                List<HostAddress> addresses,
-                                SplitTask splitTask,
-                                TupleDomain tupleDomain,
-                                RiakConfig riakConfig,
-                                DirectConnection directConnection) {
-        this.schemaName = checkNotNull(schemaName);
-        this.tableName = checkNotNull(tableName);
-        this.bucketName = checkNotNull(bucketName);
-        this.path = path;
-        checkNotNull(addresses);
-        checkState(!addresses.isEmpty());
+    public CoverageRecordCursor(
+            CoverageSplit split,
+            List<RiakColumnHandle> columnHandles,//, InputSupplier<InputStream> inputStreamSupplier)
+            TupleDomain tupleDomain,
+            DirectConnection directConnection)
+            throws OtpErlangDecodeException, DecoderException {
+
+        this.split = checkNotNull(split);
         // TODO: if (*) selected, columnHandles gets really empty...
         log.debug(columnHandles.toString());
         checkState(!columnHandles.isEmpty(), "Queries just with (*) cannot run anywhere");
-        this.splitTask = checkNotNull(splitTask, "splitTask is null");
+        this.splitTask = split.getSplitTask();
         this.tupleDomain = checkNotNull(tupleDomain, "tupleDomain is null");
         this.directConnection = checkNotNull(directConnection);
 
@@ -84,18 +80,15 @@ public class CoverageRecordCursor
         has2i = new boolean[columnHandles.size()];
 
         this.columnHandles = columnHandles;
-//        fieldToColumnIndex = new int[columnHandles.size()];
 
         log.debug(columnHandles.toString());
         log.debug(tupleDomain.toString());
 
         for (int i = 0; i < columnHandles.size(); i++) {
-//            log.debug("%d, %s", i, columnHandles.get(i));
             RiakColumnHandle columnHandle = columnHandles.get(i);
             fields[i] = columnHandle.getColumn().getName();
             has2i[i] = columnHandle.getColumn().getIndex();
-//            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
-            if (columnHandle.getColumn().getPkey()){
+            if (columnHandle.getColumn().getPkey()) {
                 pkey = columnHandle.getColumn().getName();
             }
         }
@@ -104,8 +97,12 @@ public class CoverageRecordCursor
 
     private void fetchData() {
         totalBytes = 0;
-
+        String tableName = split.getTableHandle().getTableName();
         try {
+
+            String bucket = PRSubTable.bucketName(tableName);
+            log.info("accessing bucket %s for table %s", bucket, tableName);
+
             DirectConnection conn = directConnection;
 
             // TODO: if tupleDomain indicates there is a predicate and
@@ -115,22 +112,26 @@ public class CoverageRecordCursor
             OtpErlangList objects = null;
 
             if (tupleDomain.isAll()) {
-                log.info("using coverage query on %s:%s, this may take a long time!!",
-                        schemaName, bucketName);
-                objects = splitTask.fetchAllData(conn, schemaName, bucketName);
+                log.info("using coverage query on %s, this may take a long time!!",
+                        split.getTableHandle().toString());
+                objects = splitTask.fetchAllData(conn,
+                        split.getTableHandle().getSchemaName(),
+                        bucket);
 
             } else if (!tupleDomain.isNone()) {
 
                 OtpErlangTuple query = buildQuery();
-                log.info("2i query '%s' on %s:%s", query, schemaName, bucketName);
+                log.info("2i query '%s' on %s", query, split.getTableHandle().toString());
                 if (query == null) {
                     log.warn("there are no matching index btw %s and %s",
                             columnHandles, tupleDomain);
-                    objects = splitTask.fetchAllData(conn, schemaName, bucketName);
+                    objects = splitTask.fetchAllData(conn,
+                            split.getTableHandle().getSchemaName(),
+                            bucket);
                 } else {
 
                     objects = splitTask.fetchViaIndex(conn,
-                            schemaName, bucketName, query);
+                            split.getTableHandle().getSchemaName(), bucket, query);
                 }
             }
             for (OtpErlangObject o : objects) {
@@ -138,8 +139,10 @@ public class CoverageRecordCursor
                 InternalRiakObject riakObject = new InternalRiakObject(o);
                 totalBytes += riakObject.getValueAsString().length();
 
-                if (path.isPresent()) {
-                    List<Map<String, Object>> jsonRecords = JsonPath.read(riakObject.getValueAsString(), path.get());
+                PRSubTable subtable = split.getTable().getSubtable(tableName);
+                if (subtable != null) {
+                    List<Map<String, Object>> jsonRecords = JsonPath.read(riakObject.getValueAsString(),
+                            subtable.getPath());
                     for (Map<String, Object> record : jsonRecords) {
                         try {
 
@@ -158,7 +161,9 @@ public class CoverageRecordCursor
 
                         //TODO: utilize hidden column with vtags
                         record.put(RiakColumnHandle.PKEY_COLUMN_NAME, new String(riakObject.getKey(), "UTF-8"));
+                        record.put(pkey, new String(riakObject.getKey(), "UTF-8"));
                         record.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
+
                         buffer.add(record);
                     } catch (IOException e) {
                         log.warn(e.getMessage());
@@ -168,9 +173,7 @@ public class CoverageRecordCursor
             }
             log.info("%d key data fetched.", buffer.size());
         }
-//        catch (IOException e){
-//            log.error(e);
-//        }
+
         catch (OtpErlangExit e) {
             log.error(e);
         } catch (OtpAuthException e) {
@@ -186,19 +189,22 @@ public class CoverageRecordCursor
         return 0;
     }
 
-    private OtpErlangTuple buildEqQuery(String field, OtpErlangObject value){
+    private OtpErlangTuple buildEqQuery(String field, OtpErlangObject value) {
         OtpErlangObject[] t = {
                 new OtpErlangAtom("eq"),
                 new OtpErlangBinary(field.getBytes()),
                 value};
         return new OtpErlangTuple(t);
     }
+
     private OtpErlangTuple buildBinEqQuery(String field, Slice s) {
         return buildEqQuery(field, new OtpErlangBinary(s.getBytes()));
     }
+
     private OtpErlangTuple buildIntEqQuery(String field, Long l) {
         return buildEqQuery(field, new OtpErlangLong(l));
     }
+
     // {range, Field, Start, End} or {eq, Field, Val} <- columnHandles and tupleDomain
     private OtpErlangTuple buildQuery() //List<RiakColumnHandle> columnHandles,
     {
@@ -223,12 +229,12 @@ public class CoverageRecordCursor
                     String field = null;
 
                     if (columnHandle.getColumn().getType() == BigintType.BIGINT) {
-                        field =  tableName + "_" + columnHandle.getColumn().getName() + "_int";
+                        field = columnHandle.getColumn().getName() + "_int";
                         log.debug(field);
                         Long l = (Long) fixedValue.getValue();
                         return buildIntEqQuery(field, l);
                     } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
-                        field = tableName + "_" + columnHandle.getColumn().getName() + "_bin";
+                        field = columnHandle.getColumn().getName() + "_bin";
                         log.debug(field);
                         Slice s = (Slice) fixedValue.getValue();
                         return buildBinEqQuery(field, s);
@@ -260,6 +266,7 @@ public class CoverageRecordCursor
                     } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
                         return buildBinRangeQuery(field, span);
+
                     }
                 }
             }
@@ -267,8 +274,7 @@ public class CoverageRecordCursor
         return null;
     }
 
-    private OtpErlangTuple buildIntRangeQuery(String field, Range span)
-    {
+    private OtpErlangTuple buildIntRangeQuery(String field, Range span) {
         // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
         Long l = Long.MIN_VALUE;
         if (!span.getLow().isLowerUnbounded()) {
@@ -281,8 +287,8 @@ public class CoverageRecordCursor
         }
         return buildRangeQuery(field, new OtpErlangLong(l), new OtpErlangLong(r));
     }
-    private OtpErlangTuple buildBinRangeQuery(String field, Range span)
-    {
+
+    private OtpErlangTuple buildBinRangeQuery(String field, Range span) {
         byte[] from = {0};
         if (!span.getLow().isLowerUnbounded()) {
             from = ((String) span.getLow().getValue()).getBytes();
@@ -294,8 +300,8 @@ public class CoverageRecordCursor
         }
         return buildRangeQuery(field, new OtpErlangBinary(from), new OtpErlangBinary(to));
     }
-    private OtpErlangTuple buildRangeQuery(String field, OtpErlangObject from, OtpErlangObject to)
-    {
+
+    private OtpErlangTuple buildRangeQuery(String field, OtpErlangObject from, OtpErlangObject to) {
         OtpErlangObject[] t = {
                 new OtpErlangAtom("range"),
                 new OtpErlangBinary(field.getBytes()),
@@ -325,30 +331,7 @@ public class CoverageRecordCursor
         if (buffer.isEmpty()) {
             return false;
         }
-        //log.debug("buffer length>> %d", buffer.size());
-/*
-<<<<<<< HEAD
-        InternalRiakObject riakObject = buffer.remove(0);
 
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            //log.debug("riakObject.getKey() => %s", new String(riakObject.getKey(), "UTF-8"));
-            //log.debug("riakObject.getValue() => %s", riakObject.getValueAsString());
-            cursor = mapper.readValue(riakObject.getValueAsString(), HashMap.class);
-
-            //TODO: utilize hidden column with vtags
-            String pkeyValue = new String(riakObject.getKey(), "UTF-8");
-            cursor.put(RiakColumnHandle.PKEY_COLUMN_NAME, pkeyValue);
-            cursor.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
-            if (pkey != null) {
-                cursor.put(pkey, pkeyValue);
-            }
-            totalBytes += riakObject.getValueAsString().length();
-            return true;
-        } catch (IOException e) {
-            log.debug(e.toString());
-        }
-======= */
         Map riakObject = buffer.remove(0);
 
         cursor = riakObject;

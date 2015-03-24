@@ -13,6 +13,7 @@
  */
 package com.basho.riak.presto;
 
+import com.basho.riak.presto.models.PRTable;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.TypeManager;
 import com.fasterxml.jackson.databind.DeserializationContext;

@@ -13,9 +13,11 @@
  */
 package com.basho.riak.presto;
 
+import com.basho.riak.presto.models.*;
 import com.facebook.presto.spi.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.airlift.json.JsonCodecFactory;
 import io.airlift.log.Logger;
 
 import javax.inject.Inject;
@@ -53,33 +55,32 @@ public class RiakSplitManager
         log.info("==========================tupleDomain=============================");
         log.info(tupleDomain.toString());
 
-        SchemaTableName schemaTableName = new SchemaTableName(
-                riakTableHandle.getSchemaName(), riakTableHandle.getTableName()
-        );
-        PRTable table = null;//PRTable.example(riakTableHandle.getTableName());
         try {
-            table = riakClient.getTable(schemaTableName);
+            String parentTable = PRSubTable.parentTableName(riakTableHandle.getTableName());
+            SchemaTableName parentSchemaTable = new SchemaTableName(
+                    riakTableHandle.getSchemaName(),
+                    parentTable);
+            PRTable table = riakClient.getTable(parentSchemaTable);
+            List<String> indexedColumns = new LinkedList<String>();
+            for (RiakColumn riakColumn : table.getColumns()) {
+                if (riakColumn.getIndex()) {
+                    indexedColumns.add(riakColumn.getName());
+                }
+            }
 
+            // Riak connector has only one partition
+            List<ConnectorPartition> partitions = ImmutableList.<ConnectorPartition>of(
+                    new RiakPartition(riakTableHandle.getSchemaName(),
+                            riakTableHandle.getTableName(),
+                            tupleDomain,
+                            indexedColumns));
+
+            // Riak connector does not do any additional processing/filtering with the TupleDomain, so just return the whole TupleDomain
+            return new ConnectorPartitionResult(partitions, tupleDomain);
         } catch (Exception e) {
             log.error("interrupted: %s", e.toString());
+            throw new TableNotFoundException(riakTableHandle.toSchemaTableName());
         }
-
-        List<String> indexedColumns = new LinkedList<String>();
-        for (RiakColumn riakColumn : table.getColumns()) {
-            if (riakColumn.getIndex()) {
-                indexedColumns.add(riakColumn.getName());
-            }
-        }
-
-        // Riak connector has only one partition
-        List<ConnectorPartition> partitions = ImmutableList.<ConnectorPartition>of(
-                new RiakPartition(riakTableHandle.getSchemaName(),
-                        riakTableHandle.getTableName(),
-                        tupleDomain,
-                        indexedColumns));
-
-        // Riak connector does not do any additional processing/filtering with the TupleDomain, so just return the whole TupleDomain
-        return new ConnectorPartitionResult(partitions, tupleDomain);
     }
 
     // TODO: return correct splits from partitions
@@ -91,82 +92,72 @@ public class RiakSplitManager
         ConnectorPartition partition = partitions.get(0);
 
         checkArgument(partition instanceof RiakPartition, "partition is not an instance of RiakPartition");
-        RiakPartition riakPartition = (RiakPartition) partition;
+        //RiakPartition riakPartition = (RiakPartition) partition;
 
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
-        SchemaTableName schemaTableName = new SchemaTableName(
-                riakTableHandle.getSchemaName(), riakTableHandle.getTableName()
-        );
-        PRTable table = null; //PRTable.example(riakTableHandle.getTableName());
+
         try {
-            table = riakClient.getTable(schemaTableName);
+            String parentTable = PRSubTable.parentTableName(riakTableHandle.getTableName());
+            SchemaTableName parentSchemaTable = new SchemaTableName(
+                    riakTableHandle.getSchemaName(),
+                    parentTable);
+            PRTable table = riakClient.getTable(parentSchemaTable);
+
+            log.debug("> %s", table.getColumns().toString());
+            // add all nodes at the cluster here
+            List<ConnectorSplit> splits = Lists.newArrayList();
+            String hosts = riakClient.getHosts();
+            log.debug(hosts);
+
+            if (riakConfig.getLocalNode() != null) {
+                // TODO: make coverageSplits here
+
+                //try {
+                DirectConnection conn = directConnection;
+                //conn.connect(riak);
+                //conn.ping();
+                Coverage coverage = new Coverage(conn);
+                coverage.plan();
+                List<SplitTask> splitTasks = coverage.getSplits();
+
+                log.debug("print coverage plan==============");
+                log.debug(coverage.toString());
+
+                for (SplitTask split : splitTasks) {
+                    log.info("============printing split data at " + split.getHost() + "===============");
+                    //log.debug(((OtpErlangObject)split.getTask()).toString());
+                    log.info(split.toString());
+
+                    CoverageSplit coverageSplit = new CoverageSplit(
+                            riakTableHandle, //maybe toplevel or subtable
+                            table, //toplevel PRTable
+                            split.getHost(),
+                            split.toString(),
+                            partition.getTupleDomain());
+                    log.info(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(coverageSplit));
+                    splits.add(coverageSplit);
+                }
+            } else {
+                // TODO: in Riak connector, you only need single access point for each presto worker???
+                log.error("localNode must be set and working");
+                log.debug(hosts);
+                //splits.add(new CoverageSplit(connectorId, riakTableHandle.getSchemaName(),
+                //        riakTableHandle.getTableName(), hosts,
+                //        partition.getTupleDomain(),
+                //        ((RiakPartition) partition).getIndexedColumns()));
+
+            }
+            log.debug("table %s.%s has %d splits.",
+                    riakTableHandle.getSchemaName(), riakTableHandle.getTableName(),
+                    splits.size());
+
+            Collections.shuffle(splits);
+            return new FixedSplitSource(connectorId, splits);
+
         } catch (Exception e) {
+            throw new TableNotFoundException(riakTableHandle.toSchemaTableName());
         }
         // this can happen if table is removed during a query
-        checkState(table != null, "Table %s.%s no longer exists", riakTableHandle.getSchemaName(), riakTableHandle.getTableName());
 
-        log.debug("> %s", table.getColumns().toString());
-        // add all nodes at the cluster here
-        List<ConnectorSplit> splits = Lists.newArrayList();
-        String hosts = riakClient.getHosts();
-        log.debug(hosts);
-
-        if (riakConfig.getLocalNode() != null) {
-            // TODO: make coverageSplits here
-
-            //try {
-            DirectConnection conn = directConnection;
-            //conn.connect(riak);
-            //conn.ping();
-            Coverage coverage = new Coverage(conn);
-            coverage.plan();
-            List<SplitTask> splitTasks = coverage.getSplits();
-
-            log.debug("print coverage plan==============");
-            log.debug(coverage.toString());
-
-            for (SplitTask split : splitTasks) {
-                log.debug("============printing split data at " + split.getHost() + "===============");
-                //log.debug(((OtpErlangObject)split.getTask()).toString());
-                //log.debug(split.toString());
-
-                //split.fetchAllData(conn, "default", "foobartable");
-
-                splits.add(new CoverageSplit(connectorId,
-                        riakTableHandle.getSchemaName(),
-                        table.getName(),
-                        table.getPath(),
-                        split.getHost(),
-                        split.toString(),
-                        partition.getTupleDomain(),
-                        ((RiakPartition) partition).getIndexedColumns()));
-            }
-            //}
-//            catch (java.io.IOException e){
-//                log.error(e);
-//            }
-//            catch (OtpAuthException e){
-//                log.error(e);
-//            }
-//            catch (OtpErlangExit e)
-//            {
-//                log.error(e);
-//            }
-        } else {
-            // TODO: in Riak connector, you only need single access point for each presto worker???
-            log.error("localNode must be set and working");
-            log.debug(hosts);
-            //splits.add(new CoverageSplit(connectorId, riakTableHandle.getSchemaName(),
-            //        riakTableHandle.getTableName(), hosts,
-            //        partition.getTupleDomain(),
-            //        ((RiakPartition) partition).getIndexedColumns()));
-
-        }
-        log.debug("table %s.%s has %d splits.",
-                riakTableHandle.getSchemaName(), riakTableHandle.getTableName(),
-                splits.size());
-
-        Collections.shuffle(splits);
-        return new FixedSplitSource(connectorId, splits);
-    }
+     }
 }

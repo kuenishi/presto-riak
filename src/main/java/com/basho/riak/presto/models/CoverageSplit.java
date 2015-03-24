@@ -12,8 +12,9 @@
  * limitations under the License.
  */
 
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
+import com.basho.riak.presto.SplitTask;
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorSplit;
@@ -29,46 +30,32 @@ import org.apache.commons.codec.DecoderException;
 import javax.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-/**
- * Created by kuenishi on 14/03/28.
- */
 public class CoverageSplit implements ConnectorSplit {
 
     private static final Logger log = Logger.get(CoverageSplit.class);
-    private final String connectorId;
-    private final String schemaName;
-    private final String tableName;
-    private final String bucketName;
-    private final Optional<String> path;
+
+    private final RiakTableHandle tableHandle;
+    private final PRTable table;
     private final String host;
     private final String splitData;
     private final TupleDomain<ColumnHandle> tupleDomain;
-    private final List<String> indexedColumns;
 
     @JsonCreator
     public CoverageSplit(
-            @JsonProperty("connectorId") String connectorId,
-            @JsonProperty("schemaName") String schemaName,
-            @JsonProperty("tableName") String tableName,
-            @JsonProperty("bucketName") String bucketName,
-            @JsonProperty("path") Optional<String> path,
+            @JsonProperty("tableHandle") RiakTableHandle tableHandle,
+            @JsonProperty("table") PRTable table,
             @JsonProperty("host") String host,
             @JsonProperty("splitData") String splitData,
-            @JsonProperty("tupleDomain") TupleDomain<ColumnHandle> tupleDomain,
-            @JsonProperty("indexedColumns") List<String> indexedColumns) {
-        this.schemaName = checkNotNull(schemaName, "schema name is null");
-        this.connectorId = checkNotNull(connectorId, "connector id is null");
-        this.tableName = checkNotNull(tableName, "table name is null");
-        this.bucketName = checkNotNull(bucketName, "bucket name is null");
-        this.path = path;
+            @JsonProperty("tupleDomain") TupleDomain<ColumnHandle> tupleDomain) {
+
+        this.tableHandle = checkNotNull(tableHandle);
+        this.table = checkNotNull(table);
         this.host = checkNotNull(host);
         this.splitData = checkNotNull(splitData);
         this.tupleDomain = checkNotNull(tupleDomain);
-        this.indexedColumns = checkNotNull(indexedColumns);
 
         //log.debug("%s.%s to %s: %s", schemaName, tableName, host, splitData);
         //this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromParts(host, 8080)));
@@ -76,28 +63,13 @@ public class CoverageSplit implements ConnectorSplit {
     }
 
     @JsonProperty
-    public String getConnectorId() {
-        return connectorId;
+    public RiakTableHandle getTableHandle() {
+        return tableHandle;
     }
 
     @JsonProperty
-    public String getSchemaName() {
-        return schemaName;
-    }
-
-    @JsonProperty
-    public String getTableName() {
-        return tableName;
-    }
-
-    @JsonProperty
-    public String getBucketName() {
-        return bucketName;
-    }
-
-    @JsonProperty
-    public Optional<String> getPath() {
-        return path;
+    public PRTable getTable() {
+        return table;
     }
 
     @JsonProperty
@@ -115,11 +87,6 @@ public class CoverageSplit implements ConnectorSplit {
         return tupleDomain;
     }
 
-    @JsonProperty
-    public List<String> getIndexedColumns() {
-        return indexedColumns;
-    }
-
     @Override
     public boolean isRemotelyAccessible() {
         //log.debug(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(this));
@@ -130,15 +97,11 @@ public class CoverageSplit implements ConnectorSplit {
     @Override
     public Object getInfo() {
         return ImmutableMap.builder()
-                .put("connectorId", connectorId)
+                .put("tableHandle", tableHandle)
+                .put("table", table)
                 .put("host", host)
                 .put("splitData", splitData)
-                .put("schemaName", schemaName)
-                .put("tableName", tableName)
-                .put("bucketName", bucketName)
-                .put("path", path)
                 .put("tupleDomain", tupleDomain)
-                .put("indexedColumns", indexedColumns)
                 .build();
     }
 

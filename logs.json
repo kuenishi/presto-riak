@@ -1,7 +1,33 @@
-{"name":"logs",
- "columns":[
-     {"name":"timestamp", "type":"varchar", "index":false},
-     {"name":"ts-id", "type":"varchar", "index":true, "pkey":true},
-     {"name":"method", "type":"varchar", "index":true},
-     {"name":"status", "type":"bigint", "index":true},
-     {"name":"accessor", "type":"bigint", "index":true}]}
+{
+  "name": "logs",
+  "columns": [
+    {
+      "name": "timestamp",
+      "type": "varchar",
+      "index": false
+    },
+    {
+      "name": "ts-id",
+      "type": "varchar",
+      "index": true,
+      "pkey": true
+    },
+    {
+      "name": "method",
+      "type": "varchar",
+      "index": true
+    },
+    {
+      "name": "status",
+      "type": "bigint",
+      "index": true
+    },
+    {
+      "name": "accessor",
+      "type": "bigint",
+      "index": true
+    }
+  ],
+  "subtables":[],
+  "comments":"why do I need this?"
+}

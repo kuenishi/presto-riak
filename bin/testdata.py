@@ -103,7 +103,7 @@ if __name__ == '__main__':
         print(get('logs', k))
 
     # insert_with_index data to table 2
-    insert_with_index('users', 'Luke', '{"id":0, "name":"Luke", "army":"Rebellion"}')
+    insert_with_index('users', 'Luke', '{"id":0,"name":"Luke","army":"Rebellion","inventory":[{"name":"Light saber"}]}')
     insert_with_index('users', 'Darth=Vador', '{"id":1, "name":"Anakin", "army":"Imperial"}')
     insert_with_index('users', 'Leia', '{"id":2, "name":"Leia", "army":"Rebellion"}')
     insert_with_index('users', 'Sith', '{"id":3, "army":"Imperial"}')

@@ -13,6 +13,10 @@
  */
 package com.basho.riak.presto;
 
+import com.basho.riak.presto.models.CoverageSplit;
+import com.basho.riak.presto.models.PRSchema;
+import com.basho.riak.presto.models.PRTable;
+import com.basho.riak.presto.models.RiakColumnHandle;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.spi.type.Type;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -45,6 +49,7 @@ public final class MetadataUtil
     public static final JsonCodec<PRTable> TABLE_CODEC;
     public static final JsonCodec<RiakColumnHandle> COLUMN_CODEC;
     public static final JsonCodec<PRSchema> SCHEMA_CODEC;
+    public static final JsonCodec<CoverageSplit> COV_CODEC;
 
     static {
         ObjectMapperProvider objectMapperProvider = new ObjectMapperProvider();
@@ -54,6 +59,7 @@ public final class MetadataUtil
         TABLE_CODEC = codecFactory.jsonCodec(PRTable.class);
         COLUMN_CODEC = codecFactory.jsonCodec(RiakColumnHandle.class);
         SCHEMA_CODEC = codecFactory.jsonCodec(PRSchema.class);
+        COV_CODEC = codecFactory.jsonCodec(CoverageSplit.class);
     }
 
     public static final class TestingTypeDeserializer

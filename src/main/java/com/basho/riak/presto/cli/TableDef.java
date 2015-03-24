@@ -3,6 +3,9 @@ package com.basho.riak.presto.cli;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
 import com.basho.riak.presto.*;
+import com.basho.riak.presto.models.PRSchema;
+import com.basho.riak.presto.models.PRTable;
+import com.basho.riak.presto.models.RiakColumn;
 import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
@@ -68,6 +71,7 @@ public class TableDef {
             CLI.log(o.getValue().toStringUtf8());
             PRSchema schema = objectMapper.readValue(o.getValue().toStringUtf8(), PRSchema.class);
 
+            CLI.log(table.toString());
             schema.addTable(table, "added today");
             o.setValue(BinaryValue.create(objectMapper.writeValueAsBytes(schema)));
 

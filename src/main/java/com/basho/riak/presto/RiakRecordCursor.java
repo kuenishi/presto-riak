@@ -14,6 +14,7 @@
 package com.basho.riak.presto;
 
 import com.basho.riak.client.core.util.BinaryValue;
+import com.basho.riak.presto.models.RiakColumnHandle;
 import com.facebook.presto.spi.HostAddress;
 import com.facebook.presto.spi.RecordCursor;
 import com.facebook.presto.spi.type.BigintType;

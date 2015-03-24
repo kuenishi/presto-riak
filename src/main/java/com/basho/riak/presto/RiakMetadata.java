@@ -13,6 +13,10 @@
  */
 package com.basho.riak.presto;
 
+import com.basho.riak.presto.models.PRSubTable;
+import com.basho.riak.presto.models.PRTable;
+import com.basho.riak.presto.models.RiakColumnHandle;
+import com.basho.riak.presto.models.RiakTableHandle;
 import com.facebook.presto.spi.*;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,33 +41,6 @@ public class RiakMetadata
         this.riakClient = checkNotNull(riakClient, "client is null");
     }
 
-    @Override
-    public ConnectorTableHandle getTableHandle(ConnectorSession connectorSession, SchemaTableName schemaTableName) {
-        log.info("getTableHandle;");
-
-
-        //TODO: add check once bucket types API created
-        /*
-        if (!listSchemaNames(connectorSession).contains(schemaTableName.getSchemaName())) {
-            log.error("no schema %d found", schemaTableName);
-            return null;
-        }*/
-
-        PRTable table = null;
-        try {
-            table = riakClient.getTable(schemaTableName);
-        } catch (Exception e) {
-            log.debug("cannot find table: %s", e.toString());
-        }
-        if (table == null) {
-            log.error("no tables found at %s", schemaTableName);
-            return null;
-        }
-        return new RiakTableHandle(connectorId,
-                schemaTableName.getSchemaName(),
-                schemaTableName.getTableName());
-    }
-
     // called from `show schemas`;
     @Override
     public List<String> listSchemaNames(ConnectorSession connectorSession) {
@@ -71,22 +48,9 @@ public class RiakMetadata
         return ImmutableList.copyOf(riakClient.getSchemaNames());
     }
 
-
-    @Override
-    public ConnectorTableMetadata getTableMetadata(ConnectorTableHandle table) {
-        log.info("getTableMetadata");
-        checkArgument(table instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
-        RiakTableHandle RiakTableHandle = (RiakTableHandle) table;
-        checkArgument(RiakTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
-        SchemaTableName tableName = new SchemaTableName(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
-
-        return getTableMetadata(tableName);
-    }
-
     // called from `show tables;`
     @Override
     public List<SchemaTableName> listTables(ConnectorSession connectorSession, String schemaNameOrNull) {
-
 
         String schemaName;
         if (schemaNameOrNull != null) {
@@ -111,6 +75,39 @@ public class RiakMetadata
                 tables.size());
 
         return tables;
+    }
+
+    @Override
+    public ConnectorTableHandle getTableHandle(ConnectorSession connectorSession,
+                                               SchemaTableName schemaTableName) {
+
+        try {
+            String parentTable = PRSubTable.parentTableName(schemaTableName.getTableName());
+            SchemaTableName parentSchemaTable = new SchemaTableName(
+                    schemaTableName.getSchemaName(),
+                    parentTable);
+            PRTable table = riakClient.getTable(parentSchemaTable);
+            if (table != null) {
+                return new RiakTableHandle(connectorId,
+                        schemaTableName.getSchemaName(),
+                        schemaTableName.getTableName());
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("cannot find table: %s: %s", schemaTableName, e.getMessage());
+            throw new TableNotFoundException(schemaTableName);
+        }
+    }
+
+    @Override
+    public ConnectorTableMetadata getTableMetadata(ConnectorTableHandle table) {
+        log.info("getTableMetadata");
+        checkArgument(table instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
+        RiakTableHandle RiakTableHandle = (RiakTableHandle) table;
+        checkArgument(RiakTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
+        SchemaTableName tableName = new SchemaTableName(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
+
+        return getTableMetadata(tableName);
     }
 
     @Override
@@ -142,46 +139,56 @@ public class RiakMetadata
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
         checkArgument(riakTableHandle.getConnectorId().equals(connectorId), "tableHandle is not for this connector");
 
-//        PRTable table = RiakClient.getTable(RiakTableHandle.getSchemaName(), RiakTableHandle.getTableName());
-        PRTable table = null;
-        SchemaTableName schemaTableName = new SchemaTableName(riakTableHandle.getSchemaName(),
-                riakTableHandle.getTableName());
         try {
-            table = riakClient.getTable(schemaTableName);
-        } catch (Exception e) {
-        }
+            String parentTable = PRSubTable.parentTableName(riakTableHandle.getTableName());
+            SchemaTableName parentSchemaTable = new SchemaTableName(
+                    riakTableHandle.getSchemaName(),
+                    parentTable);
+            PRTable table = riakClient.getTable(parentSchemaTable);
 
-        if (table == null) {
+            if(riakTableHandle.getTableName().equals(parentTable)) {
+                return table.getColumnHandles(connectorId);
+            }else
+            { //Case for subtables
+                return table.getSubtable(riakTableHandle.getTableName()).getColumnHandles(connectorId);
+             }
+
+        } catch (Exception e) {
+            log.debug("table %s found.", riakTableHandle.getTableName());
             throw new TableNotFoundException(riakTableHandle.toSchemaTableName());
         }
-        log.debug("table %s found.", riakTableHandle.getTableName());
 
-        return table.getColumnHandles(connectorId);
     }
 
 
     private ConnectorTableMetadata getTableMetadata(SchemaTableName schemaTableName) {
         log.info("getTableMetadata>> %s", schemaTableName.toString());
-//        if (!listSchemaNames().contains(tableName.getSchemaName())) {
-        //           return null;
-        //      }
 
-        PRTable table = null; //PRTable.example(tableName.getTableName());
         try {
-            table = riakClient.getTable(schemaTableName);
+            String parentTable = PRSubTable.parentTableName(schemaTableName.getTableName());
+            SchemaTableName parentSchemaTable = new SchemaTableName(
+                    schemaTableName.getSchemaName(),
+                    parentTable);
+            PRTable table = riakClient.getTable(parentSchemaTable);
+            log.debug("table> %s", table.toString());
+
+            List<ColumnMetadata> l = table.getColumnsMetadata(connectorId);
+
+
+            if(schemaTableName.getTableName().equals(parentTable)) {
+                l = table.getColumnsMetadata(connectorId);
+            }else {
+                l = table.getSubtable(schemaTableName.getTableName()).getColumnsMetadata(connectorId);
+            }
+
+            log.debug("table %s with %d columns.", schemaTableName.getTableName(), l.size());
+            return new ConnectorTableMetadata(schemaTableName, l);
+
         } catch (Exception e) {
             log.error(e.toString());
-        }
-        if (table == null) {
+
             throw new TableNotFoundException(schemaTableName);
         }
-        log.debug("table %s found.", schemaTableName.getTableName());
-        log.debug("%s", table.toString());
-
-        List<ColumnMetadata> l = table.getColumnsMetadata(connectorId);
-        log.debug("table %s with %d columns.", schemaTableName.getTableName(), l.size());
-
-        return new ConnectorTableMetadata(schemaTableName, l);
     }
 
     @Override

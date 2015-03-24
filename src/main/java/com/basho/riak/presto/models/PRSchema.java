@@ -11,7 +11,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -57,9 +57,11 @@ public class PRSchema {
 
     public void addTable(PRTable table, String comment) {
         addTable(table.getName());
+        tables.addAll(table.getSubtableNames());
+        comments.add(comment);
     }
 
-    private void addTable(String tableName) {
-        tables.add(tableName);
+    private void addTable(String table) {
+        tables.add(table);
     }
 }

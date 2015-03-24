@@ -13,9 +13,9 @@
  */
 package com.basho.riak.presto.cli;
 
-import com.basho.riak.presto.PRSchema;
-import com.basho.riak.presto.PRTable;
-import com.basho.riak.presto.RiakColumnHandle;
+import com.basho.riak.presto.models.PRSchema;
+import com.basho.riak.presto.models.PRTable;
+import com.basho.riak.presto.models.RiakColumnHandle;
 import com.facebook.presto.spi.type.StandardTypes;
 import com.facebook.presto.spi.type.TimestampType;
 import com.facebook.presto.spi.type.Type;
