@@ -1,5 +1,6 @@
 # presto-riak
 
+[![Build Status](https://api.travis-ci.org/kuenishi/presto-riak.png?branch=master)](https://travis-ci.org/kuenishi/presto-riak)
 [![Build Status](https://drone.io/github.com/kuenishi/presto-riak/status.png)](https://drone.io/github.com/kuenishi/presto-riak/latest)
 
 Riak connector for [prestodb](http://prestodb.io). [RP](https://github.com/kuenishi/rp) is for development environment. The latest information and examples are in RP repository.
