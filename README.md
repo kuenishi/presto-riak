@@ -254,7 +254,7 @@ $ rel/riak/bin/riak-admin bucket-type activate <schemaname>
 | Prestodb | presto-riak | Riak  |
 |:---------|:------------|:------|
 | 0.88     | 0.0.5       | 2.0.2 |
-| 0.92     | 0.0.6-SNAPS | 2.0.5 |
+| 0.100    | 0.0.6       | 2.0.5 |
 
 
 # rights
