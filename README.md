@@ -256,7 +256,6 @@ $ rel/riak/bin/riak-admin bucket-type activate <schemaname>
 | 0.88     | 0.0.5       | 2.0.2 |
 | 0.100    | 0.0.6       | 2.0.5 |
 
-
 # rights
 
 Distributed under Apached 2.0 license, (C) Kota UENISHI.
