@@ -39,7 +39,7 @@ public class CoverageRecordSet
     private final List<HostAddress> addresses;
     //private final InputSupplier<InputStream> inputStreamSupplier;
     private final SplitTask splitTask;
-    private final TupleDomain<ConnectorColumnHandle> tupleDomain;
+    private final TupleDomain<ColumnHandle> tupleDomain;
     private final RiakConfig riakConfig;
     private final DirectConnection directConnection;
 
@@ -47,7 +47,7 @@ public class CoverageRecordSet
     public CoverageRecordSet(CoverageSplit split,
                              List<RiakColumnHandle> columnHandles,
                              RiakConfig riakConfig,
-                             TupleDomain<ConnectorColumnHandle> tupleDomain,
+                             TupleDomain<ColumnHandle> tupleDomain,
                              DirectConnection directConnection)
             throws OtpErlangDecodeException, DecoderException {
         checkNotNull(split, "split is null");

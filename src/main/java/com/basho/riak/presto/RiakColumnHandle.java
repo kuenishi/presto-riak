@@ -14,7 +14,7 @@
 package com.basho.riak.presto;
 
 import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.ConnectorColumnHandle;
+import com.facebook.presto.spi.ColumnHandle;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
@@ -25,7 +25,7 @@ import java.util.Map;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakColumnHandle
-        implements ConnectorColumnHandle {
+        implements ColumnHandle {
     public static final String KEY_COLUMN_NAME = "__key";
     public static final String VTAG_COLUMN_NAME = "__vtag";
 

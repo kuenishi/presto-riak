@@ -154,13 +154,13 @@ public class CoverageRecordCursor
     {
 
         // case where a='b'
-        Map<ConnectorColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
-        for (Map.Entry<ConnectorColumnHandle, Comparable<?>> fixedValue : fixedValues.entrySet()) {
+        Map<ColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
+        for (Map.Entry<ColumnHandle, Comparable<?>> fixedValue : fixedValues.entrySet()) {
             log.debug("> %s (%s)", fixedValue, fixedValue.getClass());
             log.debug(">> %s", fixedValue.getKey());
 
             checkNotNull(fixedValue.getKey());
-            checkArgument(fixedValue.getKey() instanceof ConnectorColumnHandle);
+            checkArgument(fixedValue.getKey() instanceof ColumnHandle);
             checkArgument(fixedValue.getKey() instanceof RiakColumnHandle);
 
             RiakColumnHandle c = (RiakColumnHandle) fixedValue.getKey();

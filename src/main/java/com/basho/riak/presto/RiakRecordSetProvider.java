@@ -14,7 +14,7 @@
 package com.basho.riak.presto;
 
 import com.ericsson.otp.erlang.OtpErlangDecodeException;
-import com.facebook.presto.spi.ConnectorColumnHandle;
+import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorRecordSetProvider;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.RecordSet;
@@ -52,7 +52,7 @@ public class RiakRecordSetProvider
 
     @Override
     public RecordSet getRecordSet(ConnectorSplit split,
-                                  List<? extends ConnectorColumnHandle> columns) {
+                                  List<? extends ColumnHandle> columns) {
         checkNotNull(split, "partitionChunk is null");
         checkArgument(split instanceof CoverageSplit);
         //log.debug("getRecordSet");
@@ -61,7 +61,7 @@ public class RiakRecordSetProvider
         checkArgument(coverageSplit.getConnectorId().equals(connectorId));
 
         ImmutableList.Builder<RiakColumnHandle> handles = ImmutableList.builder();
-        for (ConnectorColumnHandle handle : columns) {
+        for (ColumnHandle handle : columns) {
             checkArgument(handle instanceof RiakColumnHandle);
             RiakColumnHandle riakColumnHandle = (RiakColumnHandle) handle;
             boolean has2i = coverageSplit.getIndexedColumns().contains(riakColumnHandle.getColumn().getName());
