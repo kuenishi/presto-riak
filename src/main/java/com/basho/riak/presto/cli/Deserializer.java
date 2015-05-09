@@ -23,11 +23,11 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 import com.google.common.collect.ImmutableMap;
-import javax.inject.Inject;
 import io.airlift.json.JsonCodec;
 import io.airlift.json.JsonCodecFactory;
 import io.airlift.json.ObjectMapperProvider;
 
+import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 

@@ -74,7 +74,9 @@ public class InternalRiakObject {
         return bucket;
     }
 
-    public String getVTag() { return vtag; }
+    public String getVTag() {
+        return vtag;
+    }
 
     private void checkRecord(OtpErlangObject o, String v) {
         checkAtom(((OtpErlangTuple) o).elementAt(0), v);

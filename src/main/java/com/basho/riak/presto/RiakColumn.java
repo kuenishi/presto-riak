@@ -54,7 +54,10 @@ public final class RiakColumn {
     }
 
     @JsonProperty
-    public String getComment() { return comment; }
+    public String getComment() {
+        return comment;
+    }
+
     @JsonProperty
     public boolean getIndex() {
         return index;

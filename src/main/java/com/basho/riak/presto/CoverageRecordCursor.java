@@ -35,8 +35,6 @@ public class CoverageRecordCursor
         implements RecordCursor {
     private static final Logger log = Logger.get(CoverageRecordCursor.class);
 
-    //private static final Splitter LINE_SPLITTER = Splitter.on(",").trimResults();
-
     private final String schemaName;
     private final String tableName;
     private final List<RiakColumnHandle> columnHandles;
