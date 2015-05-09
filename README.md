@@ -201,6 +201,54 @@ key. If `pkey` is not set in schema, is is just ignored, where you can
 refer the Riak key with a column named `__key`. (`__vtag` is also a
 column ... that will be implemented in the future)
 
+## Subtables
+
+Given nested JSON object like this.
+
+```
+{ "id": 100,
+  "name": "Obi One Kenobi",
+  "army": "Rebellion",
+  "inventory" : [
+    { "name" : "Light saber", "weight" : 1.0 },
+    { "name" : "Sandal", "weight" : 0.5 }
+  ]
+}
+```
+
+To handle nested JSON objects, `subtables` can be included in a table
+schema definition, with JSONpath specified. All nested objects that
+match the json path spec are to be handled as single raw of a
+subtable.
+
+
+```
+{"name":"users",
+ "columns":[
+  {"name":"id", "type":"bigint", "index":true},
+  {"name":"name", "type":"varchar", "index":true, "pkey":true},
+  {"name":"army", "type":"varchar", "index":true}],
+  "subtables" :
+   [{
+     name: "inventory",
+     path: "$.inventory.*",
+     columns: [
+      {"name":"name", "type":"varchar", "index":false},
+      {"name":"weight", "type":"float", "index":false}
+    ]}]
+}
+```
+
+With this schema, you can query your inventory like `SELECT count(*)
+FROM "users/inventory" GROUP BY __key` , or `SELECT count(*) FROM
+"users/inventory" i, users u WHERE u.name = i.__key GROUP BY u.army`.
+Please note that the latter runs join operation, where all keys are
+read twice. This is something hard to optimize, a future work.
+
+- [Goessner's JSONPATH spec](http://goessner.net/articles/JsonPath/)
+- [JOSNPATH Expression Tester](http://jsonpath.curiousconcept.com)
+- [Java port of JSONPATH](https://github.com/jayway/JsonPath)
+
 ## Types supported
 
 Correspondence from JSON to SQL types,
