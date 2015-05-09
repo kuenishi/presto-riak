@@ -255,6 +255,7 @@ $ rel/riak/bin/riak-admin bucket-type activate <schemaname>
 |:---------|:------------|:------|
 | 0.88     | 0.0.5       | 2.0.2 |
 | 0.100    | 0.0.6       | 2.0.5 |
+| 0.102    | 0.0.7       | 2.1.1 |
 
 # rights
 
