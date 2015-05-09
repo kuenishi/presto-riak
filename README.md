@@ -141,13 +141,13 @@ Where a table definition json file looks like this (users.json):
 {"name":"users",
  "columns":[
   {"name":"id", "type":"bigint", "index":true},
-  {"name":"name", "type":"varchar", "index":true},
+  {"name":"name", "type":"varchar", "index":true, "pkey":true},
   {"name":"army", "type":"varchar", "index":true}]}
 ```
 
 See also logs.json and bin/testdata.py for test data and schema.
 
-# Design
+# Design and Data layout
 
 Concept correspondence:
 
@@ -158,14 +158,11 @@ Concept correspondence:
  - Keys: `(name of a table)` => list of columns
 
 These metadatas are stored in special bucket `__presto_schema` with
-special key `__tables` has a JSON like this:
+special key `__schema` has a JSON like this:
 
 ```
 {
-    "tables":{
-        "table-a" : ["special properties here"],
-        "table-b" : []
-    }
+    "tables": [ "table-a", "table-b" ]
 }
 ```
 
@@ -179,7 +176,8 @@ there is a JSON like this:
         {
             "name": "col1",
             "type": "varchar",
-            "index": false
+            "index": false,
+            "pkey": true
         },
         {
             "name": "col2",
@@ -193,6 +191,63 @@ there is a JSON like this:
 ```
 
 Any tool to create this style of schema?
+
+## Primary keys
+
+A property `pkey` is a boolean property that indicates the column is
+primary key, namely a key in Riak. You can put the property into value
+as JSON, but that will be overwritten when you run any query, by Riak
+key. If `pkey` is not set in schema, is is just ignored, where you can
+refer the Riak key with a column named `__key`. (`__vtag` is also a
+column ... that will be implemented in the future)
+
+## Subtables
+
+Given nested JSON object like this.
+
+```
+{ "id": 100,
+  "name": "Obi One Kenobi",
+  "army": "Rebellion",
+  "inventory" : [
+    { "name" : "Light saber", "weight" : 1.0 },
+    { "name" : "Sandal", "weight" : 0.5 }
+  ]
+}
+```
+
+To handle nested JSON objects, `subtables` can be included in a table
+schema definition, with JSONpath specified. All nested objects that
+match the json path spec are to be handled as single raw of a
+subtable.
+
+
+```
+{"name":"users",
+ "columns":[
+  {"name":"id", "type":"bigint", "index":true},
+  {"name":"name", "type":"varchar", "index":true, "pkey":true},
+  {"name":"army", "type":"varchar", "index":true}],
+  "subtables" :
+   [{
+     name: "inventory",
+     path: "$.inventory.*",
+     columns: [
+      {"name":"name", "type":"varchar", "index":false},
+      {"name":"weight", "type":"float", "index":false}
+    ]}]
+}
+```
+
+With this schema, you can query your inventory like `SELECT count(*)
+FROM "users/inventory" GROUP BY __key` , or `SELECT count(*) FROM
+"users/inventory" i, users u WHERE u.name = i.__key GROUP BY u.army`.
+Please note that the latter runs join operation, where all keys are
+read twice. This is something hard to optimize, a future work.
+
+- [Goessner's JSONPATH spec](http://goessner.net/articles/JsonPath/)
+- [JOSNPATH Expression Tester](http://jsonpath.curiousconcept.com)
+- [Java port of JSONPATH](https://github.com/jayway/JsonPath)
 
 ## Types supported
 
