@@ -57,7 +57,7 @@ public class RiakHandleResolver implements ConnectorHandleResolver {
     }
 
     @Override
-    public boolean canHandle(ConnectorColumnHandle columnHandle) {
+    public boolean canHandle(ColumnHandle columnHandle) {
         return columnHandle instanceof RiakColumnHandle && ((RiakColumnHandle) columnHandle).getConnectorId().equals(connectorId);
     }
 
@@ -75,7 +75,7 @@ public class RiakHandleResolver implements ConnectorHandleResolver {
     }
 
     @Override
-    public Class<? extends ConnectorColumnHandle> getColumnHandleClass() {
+    public Class<? extends ColumnHandle> getColumnHandleClass() {
         return RiakColumnHandle.class;
     }
 

@@ -128,13 +128,13 @@ public class RiakMetadata
     }
 
     @Override
-    public ConnectorColumnHandle getSampleWeightColumnHandle(ConnectorTableHandle tableHandle) {
+    public ColumnHandle getSampleWeightColumnHandle(ConnectorTableHandle tableHandle) {
         log.debug("getSampleWeightColumnHandle;");
         return null;
     }
 
     @Override
-    public Map<String, ConnectorColumnHandle> getColumnHandles(ConnectorTableHandle tableHandle) {
+    public Map<String, ColumnHandle> getColumnHandles(ConnectorTableHandle tableHandle) {
         checkNotNull(tableHandle, "tableHandle is null");
         checkArgument(tableHandle instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
         RiakTableHandle riakTableHandle = (RiakTableHandle) tableHandle;
@@ -154,7 +154,7 @@ public class RiakMetadata
         }
         log.debug("table %s found.", riakTableHandle.getTableName());
 
-        ImmutableMap.Builder<String, ConnectorColumnHandle> columnHandles = ImmutableMap.builder();
+        ImmutableMap.Builder<String, ColumnHandle> columnHandles = ImmutableMap.builder();
         for (ColumnMetadata columnMetadata : table.getColumnsMetadata()) {
             columnHandles.put(columnMetadata.getName(), new RiakColumnHandle(connectorId, columnMetadata));
         }
@@ -187,7 +187,7 @@ public class RiakMetadata
     }
 
     @Override
-    public ColumnMetadata getColumnMetadata(ConnectorTableHandle tableHandle, ConnectorColumnHandle columnHandle) {
+    public ColumnMetadata getColumnMetadata(ConnectorTableHandle tableHandle, ColumnHandle columnHandle) {
         log.info("getColumnMetadata");
         checkNotNull(tableHandle, "tableHandle is null");
         checkNotNull(columnHandle, "columnHandle is null");
