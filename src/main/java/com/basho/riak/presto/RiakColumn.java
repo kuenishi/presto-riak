@@ -29,18 +29,21 @@ public final class RiakColumn {
     private final Type type;
     private final String comment;
     private boolean index;
+    private boolean pkey = false;
 
     @JsonCreator
     public RiakColumn(
             @JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "type", required = true) Type type,
             @JsonProperty(value = "comment") String comment,
-            @JsonProperty("index") boolean index) {
+            @JsonProperty("index") boolean index,
+            @JsonProperty(value = "pkey", required = false, defaultValue = "false") boolean pkey) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = name;
         this.type = checkNotNull(type, "type is null");
         this.comment = comment;
         this.index = index;
+        this.pkey = checkNotNull(pkey);
     }
 
     @JsonProperty
@@ -59,11 +62,13 @@ public final class RiakColumn {
     public boolean getIndex() {
         return index;
     }
-
     public void setIndex(boolean b) {
         this.index = b;
     }
-
+    @JsonProperty
+    public boolean getPkey() {
+        return pkey;
+    }
     @Override
     public int hashCode() {
         return Objects.hashCode(name, type);

@@ -26,10 +26,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class RiakColumnHandle
         implements ColumnHandle {
-    public static final String KEY_COLUMN_NAME = "__key";
+    public static final String PKEY_COLUMN_NAME = "__key";
     public static final String VTAG_COLUMN_NAME = "__vtag";
 
-    private static final Logger log = Logger.get(RiakRecordSetProvider.class);
+    private static final Logger log = Logger.get(RiakColumnHandle.class);
     private final String connectorId;
     private final RiakColumn column;
     private final int ordinalPosition;
@@ -43,17 +43,20 @@ public final class RiakColumnHandle
         this.column = checkNotNull(column, "column is null");
         this.ordinalPosition = ordinalPosition;
     }
-
+ /*
     public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata) {
         this(connectorId,
                 new RiakColumn(columnMetadata.getName(),
                         columnMetadata.getType(),
                         "phew",
-                        // TODO: this default 'false' can be implicit performance lose
-                        // TODO: if there be a bug that indexedColumns lost somewhere
-                        false),
+                        // Whether that column has index or not is stored here
+                        columnMetadata.isPartitionKey(),
+                        // PartitionKey in Riak is Consistent Hashing-based, but it's used
+                        // for vnode partitioning for sure :) and hereby data was lost ><
+                        false
+                ),
                 columnMetadata.getOrdinalPosition());
-    }
+    } */
 
     @JsonProperty
     public String getConnectorId() {
@@ -97,5 +100,13 @@ public final class RiakColumnHandle
                 .add("column", column)
                 .add("ordinalPosition", ordinalPosition)
                 .toString();
+    }
+
+    public boolean matchAndBothHasIndex(RiakColumnHandle rhs)
+    {
+        return getColumn().getName().equals(rhs.getColumn().getName())
+                && getColumn().getType().equals(rhs.getColumn().getType())
+                && getColumn().getIndex()
+                && rhs.getColumn().getIndex();
     }
 }
