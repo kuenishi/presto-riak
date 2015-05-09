@@ -49,6 +49,7 @@ public class CoverageRecordCursor
     private final Slice[] slices;
     private final boolean[] has2i;
     //private final Iterator<String> lines;
+    private String pkey;
     private long totalBytes;
     private Map<String, Object> cursor;
 
@@ -89,6 +90,9 @@ public class CoverageRecordCursor
             fields[i] = columnHandle.getColumn().getName();
             has2i[i] = columnHandle.getColumn().getIndex();
 //            fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
+            if (columnHandle.getColumn().getPkey()){
+                pkey = columnHandle.getColumn().getName();
+            }
         }
         fetchData();
     }
@@ -148,11 +152,22 @@ public class CoverageRecordCursor
         return 0;
     }
 
+    private OtpErlangTuple buildEqQuery(String field, OtpErlangObject value){
+        OtpErlangObject[] t = {
+                new OtpErlangAtom("eq"),
+                new OtpErlangBinary(field.getBytes()),
+                value};
+        return new OtpErlangTuple(t);
+    }
+    private OtpErlangTuple buildBinEqQuery(String field, Slice s) {
+        return buildEqQuery(field, new OtpErlangBinary(s.getBytes()));
+    }
+    private OtpErlangTuple buildIntEqQuery(String field, Long l) {
+        return buildEqQuery(field, new OtpErlangLong(l));
+    }
     // {range, Field, Start, End} or {eq, Field, Val} <- columnHandles and tupleDomain
     private OtpErlangTuple buildQuery() //List<RiakColumnHandle> columnHandles,
-    //TupleDomain tupleDom)
     {
-
         // case where a='b'
         Map<ColumnHandle, Comparable<?>> fixedValues = tupleDomain.extractFixedValues();
         for (Map.Entry<ColumnHandle, Comparable<?>> fixedValue : fixedValues.entrySet()) {
@@ -164,30 +179,24 @@ public class CoverageRecordCursor
             checkArgument(fixedValue.getKey() instanceof RiakColumnHandle);
 
             RiakColumnHandle c = (RiakColumnHandle) fixedValue.getKey();
+            if (c.getColumn().getPkey()) {
+                Slice s = (Slice) fixedValue.getValue();
+                return buildBinEqQuery("$key", s);
+            }
 
             for (RiakColumnHandle columnHandle : columnHandles) {
-                if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
-                        && c.getColumn().getType().equals(columnHandle.getColumn().getType())
-                        && columnHandle.getColumn().getIndex()) {
+                if (c.matchAndBothHasIndex(columnHandle)) {
                     String field = null;
-                    OtpErlangObject value;
+
                     if (columnHandle.getColumn().getType() == BigintType.BIGINT) {
                         field = columnHandle.getColumn().getName() + "_int";
                         Long l = (Long) fixedValue.getValue();
-                        value = new OtpErlangLong(l);
+                        return buildIntEqQuery(field, l);
                     } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
                         Slice s = (Slice) fixedValue.getValue();
-                        value = new OtpErlangBinary(s.getBytes());
-                    } else {
-                        continue;
+                        return buildBinEqQuery(field, s);
                     }
-                    OtpErlangObject[] t = {
-                            new OtpErlangAtom("eq"),
-                            new OtpErlangBinary(field.getBytes()),
-                            value};
-
-                    return new OtpErlangTuple(t);
                 }
             }
         }
@@ -196,58 +205,66 @@ public class CoverageRecordCursor
         Map<RiakColumnHandle, Domain> map = tupleDomain.getDomains();
         for (Map.Entry<RiakColumnHandle, Domain> entry : map.entrySet()) {
             RiakColumnHandle c = entry.getKey();
+            Range span = entry.getValue().getRanges().getSpan();
+
+            if (c.getColumn().getPkey()) {
+                return buildBinRangeQuery("$key", span);
+            }
+
             for (RiakColumnHandle columnHandle : columnHandles) {
-                if (c.getColumn().getName().equals(columnHandle.getColumn().getName())
-                        && c.getColumn().getType().equals(columnHandle.getColumn().getType())
-                        && columnHandle.getColumn().getIndex()) {
+                if (c.matchAndBothHasIndex(columnHandle)) {
                     String field = null;
-                    OtpErlangObject lhs, rhs;
-                    Range span = entry.getValue().getRanges().getSpan();
                     //log.debug("value:%s, range:%s, span:%s",
                     //        entry.getValue(), entry.getValue().getRanges(),span);
                     //log.debug("min: %s max:%s", span.getLow(), span.getHigh());
                     if (columnHandle.getColumn().getType() == BigintType.BIGINT) {
                         field = columnHandle.getColumn().getName() + "_int";
-                        // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
-                        Long l = Long.MIN_VALUE;
-                        if (!span.getLow().isLowerUnbounded()) {
-                            l = (Long) span.getLow().getValue();
-                        }
-                        // NOTE: Both Erlang and JSON can express greater integer lang Long.MAX_VALUE
-                        Long r = Long.MAX_VALUE;
-                        if (!span.getHigh().isUpperUnbounded()) {
-                            r = (Long) span.getHigh().getValue();
-                        }
+                        return buildIntRangeQuery(field, span);
 
-                        lhs = new OtpErlangLong(l);
-                        rhs = new OtpErlangLong(r);
                     } else if (columnHandle.getColumn().getType() == VarcharType.VARCHAR) {
                         field = columnHandle.getColumn().getName() + "_bin";
-                        //Byte m = Byte.MIN_VALUE;
-                        byte[] l = {0};
-                        if (!span.getLow().isLowerUnbounded()) {
-                            l = ((String) span.getLow().getValue()).getBytes();
-                        }
-                        Byte m2 = Byte.MAX_VALUE;
-                        byte[] r = {m2};
-                        if (!span.getHigh().isUpperUnbounded()) {
-                            r = ((String) span.getHigh().getValue()).getBytes();
-                        }
-                        lhs = new OtpErlangBinary(l);
-                        rhs = new OtpErlangBinary(r);
-
-                    } else {
-                        continue;
+                        return buildBinRangeQuery(field, span);
                     }
-                    OtpErlangObject[] t = {
-                            new OtpErlangAtom("range"),
-                            new OtpErlangBinary(field.getBytes()),
-                            lhs, rhs};
-                    return new OtpErlangTuple(t);
                 }
             }
         }
         return null;
+    }
+
+    private OtpErlangTuple buildIntRangeQuery(String field, Range span)
+    {
+        // NOTE: Both Erlang and JSON can express smaller integer than Long.MIN_VALUE
+        Long l = Long.MIN_VALUE;
+        if (!span.getLow().isLowerUnbounded()) {
+            l = (Long) span.getLow().getValue();
+        }
+        // NOTE: Both Erlang and JSON can express greater integer lang Long.MAX_VALUE
+        Long r = Long.MAX_VALUE;
+        if (!span.getHigh().isUpperUnbounded()) {
+            r = (Long) span.getHigh().getValue();
+        }
+        return buildRangeQuery(field, new OtpErlangLong(l), new OtpErlangLong(r));
+    }
+    private OtpErlangTuple buildBinRangeQuery(String field, Range span)
+    {
+        byte[] from = {0};
+        if (!span.getLow().isLowerUnbounded()) {
+            from = ((String) span.getLow().getValue()).getBytes();
+        }
+        Byte m2 = Byte.MAX_VALUE;
+        byte[] to = {m2};
+        if (!span.getHigh().isUpperUnbounded()) {
+            to = ((String) span.getHigh().getValue()).getBytes();
+        }
+        return buildRangeQuery(field, new OtpErlangBinary(from), new OtpErlangBinary(to));
+    }
+    private OtpErlangTuple buildRangeQuery(String field, OtpErlangObject from, OtpErlangObject to)
+    {
+        OtpErlangObject[] t = {
+                new OtpErlangAtom("range"),
+                new OtpErlangBinary(field.getBytes()),
+                from, to};
+        return new OtpErlangTuple(t);
     }
 
     @Override
@@ -283,8 +300,12 @@ public class CoverageRecordCursor
             cursor = mapper.readValue(riakObject.getValueAsString(), HashMap.class);
 
             //TODO: utilize hidden column with vtags
-            cursor.put(RiakColumnHandle.KEY_COLUMN_NAME, new String(riakObject.getKey(), "UTF-8"));
+            String pkeyValue = new String(riakObject.getKey(), "UTF-8");
+            cursor.put(RiakColumnHandle.PKEY_COLUMN_NAME, pkeyValue);
             cursor.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
+            if (pkey != null) {
+                cursor.put(pkey, pkeyValue);
+            }
             totalBytes += riakObject.getValueAsString().length();
             return true;
         } catch (IOException e) {

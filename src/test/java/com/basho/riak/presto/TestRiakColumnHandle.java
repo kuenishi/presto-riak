@@ -24,11 +24,11 @@ public class TestRiakColumnHandle {
 
     @Test
     public void testSerializtion2()
-            throws JsonProcessingException, IOException
+            throws IOException
     {
         String connectorId = "fooo gooo";
-        ColumnMetadata metadata = new ColumnMetadata("p", BooleanType.BOOLEAN, 42, false);
-        RiakColumnHandle c = new RiakColumnHandle(connectorId, metadata);
+        RiakColumn column = new RiakColumn("p", BooleanType.BOOLEAN, "boom", true, false);
+        RiakColumnHandle c = new RiakColumnHandle(connectorId, column, 4);
         assert(c.getColumn().getType() == BooleanType.BOOLEAN);
 
         String s = COLUMN_CODEC.toJson(c);
@@ -41,19 +41,17 @@ public class TestRiakColumnHandle {
         assert(c2.getColumn().getType() == BooleanType.BOOLEAN);
         System.out.println(c);
         System.out.println(c2);
-
     }
 
     @Test
     public void testSerialization()
-            throws JsonProcessingException, IOException
+            throws IOException
     {
         String connectorId = "riak foo bar";
         String columnName = "DevClownVanColummmmm";
 
-        //java.lang.String name, com.facebook.presto.spi.type.Type type, int ordinalPosition, boolean partitionKey) { /* compiled code */ }
-        ColumnMetadata metadata = new ColumnMetadata(columnName, VarcharType.VARCHAR, 42, false);
-        RiakColumnHandle c = new RiakColumnHandle(connectorId, metadata);
+        RiakColumn column = new RiakColumn(columnName, VarcharType.VARCHAR, "comment, ...", true, false);
+        RiakColumnHandle c = new RiakColumnHandle(connectorId, column, 54);
 
         ObjectMapper om = new ObjectMapper();
         String s = COLUMN_CODEC.toJson(c);

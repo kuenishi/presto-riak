@@ -21,7 +21,7 @@ import javax.inject.Inject;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class RiakHandleResolver implements ConnectorHandleResolver {
-    private static final Logger log = Logger.get(RiakRecordSetProvider.class);
+    private static final Logger log = Logger.get(RiakHandleResolver.class);
 
 
     private final String connectorId;

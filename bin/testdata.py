@@ -103,11 +103,11 @@ if __name__ == '__main__':
         print(get('logs', k))
 
     # insert_with_index data to table 2
-    insert_with_index('users', '0', '{"id":0, "name":"Luke", "army":"Rebellion"}')
-    insert_with_index('users', '1', '{"id":1, "name":"Anakin", "army":"Imperial"}')
-    insert_with_index('users', '2', '{"id":2, "name":"Leia", "army":"Rebellion"}')
-    insert_with_index('users', '3', '{"id":3, "name":"Sith", "army":"Imperial"}')
-    insert_with_index('users', '4', '{"id":4, "name":"Fett", "army":"Freelance"}')
-    insert_with_index('users', '5', '{"id":5, "name":"Solo", "army":"Freelance"}')
-    for i in xrange(0, 6):
-        print(get('users', str(i)))
+    insert_with_index('users', 'Luke', '{"id":0, "name":"Luke", "army":"Rebellion"}')
+    insert_with_index('users', 'Darth=Vador', '{"id":1, "name":"Anakin", "army":"Imperial"}')
+    insert_with_index('users', 'Leia', '{"id":2, "name":"Leia", "army":"Rebellion"}')
+    insert_with_index('users', 'Sith', '{"id":3, "army":"Imperial"}')
+    insert_with_index('users', 'Fett', '{"id":4, "army":"Freelance"}')
+    insert_with_index('users', 'Solo', '{"id":5, "name":"Solo", "army":"Freelance"}')
+    for name in ['Luke', 'Darth=Vador', 'Leia', 'Sith', 'Fett', 'Solo']:
+        print(get('users', name))

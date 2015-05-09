@@ -59,7 +59,9 @@ public class RiakMetadata
             log.error("no tables found at %s", schemaTableName);
             return null;
         }
-        return new RiakTableHandle(connectorId, schemaTableName.getSchemaName(), schemaTableName.getTableName());
+        return new RiakTableHandle(connectorId,
+                schemaTableName.getSchemaName(),
+                schemaTableName.getTableName());
     }
 
     // called from `show schemas`;
@@ -154,11 +156,7 @@ public class RiakMetadata
         }
         log.debug("table %s found.", riakTableHandle.getTableName());
 
-        ImmutableMap.Builder<String, ColumnHandle> columnHandles = ImmutableMap.builder();
-        for (ColumnMetadata columnMetadata : table.getColumnsMetadata()) {
-            columnHandles.put(columnMetadata.getName(), new RiakColumnHandle(connectorId, columnMetadata));
-        }
-        return columnHandles.build();
+        return table.getColumnHandles(connectorId);
     }
 
 
@@ -180,7 +178,7 @@ public class RiakMetadata
         log.debug("table %s found.", schemaTableName.getTableName());
         log.debug("%s", table.toString());
 
-        List<ColumnMetadata> l = table.getColumnsMetadata();
+        List<ColumnMetadata> l = table.getColumnsMetadata(connectorId);
         log.debug("table %s with %d columns.", schemaTableName.getTableName(), l.size());
 
         return new ConnectorTableMetadata(schemaTableName, l);

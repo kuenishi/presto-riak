@@ -109,6 +109,7 @@ public class CLI {
             String tableArg = args[4];
             if (command.equals("create-schema")) {
                 CLI.log("This option is not currently supported.");
+                CLI.log("Instead just create bucket type.");
             } else if (command.equals("create-tabledef")) {
                 new TableDef(i, config, schemaName, true).create(tableArg);
             } else if (command.equals("show-tabledef")) {
