@@ -13,15 +13,15 @@
  */
 package com.basho.riak.presto;
 
-import com.ericsson.otp.erlang.OtpErlangDecodeException;
+import com.basho.riak.presto.models.CoverageSplit;
+import com.basho.riak.presto.models.PRTable;
+import com.basho.riak.presto.models.RiakColumnHandle;
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ConnectorRecordSetProvider;
 import com.facebook.presto.spi.ConnectorSplit;
 import com.facebook.presto.spi.RecordSet;
-import com.facebook.presto.spi.type.TypeManager;
 import com.google.common.collect.ImmutableList;
 import io.airlift.log.Logger;
-import org.apache.commons.codec.DecoderException;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -58,28 +58,25 @@ public class RiakRecordSetProvider
         //log.debug("getRecordSet");
 
         CoverageSplit coverageSplit = (CoverageSplit) split;
-        checkArgument(coverageSplit.getConnectorId().equals(connectorId));
+        checkArgument(coverageSplit.getTableHandle().getConnectorId()
+                .equals(connectorId));
+
+        PRTable table = coverageSplit.getTable();
 
         ImmutableList.Builder<RiakColumnHandle> handles = ImmutableList.builder();
         for (ColumnHandle handle : columns) {
             checkArgument(handle instanceof RiakColumnHandle);
             RiakColumnHandle riakColumnHandle = (RiakColumnHandle) handle;
-            boolean has2i = coverageSplit.getIndexedColumns().contains(riakColumnHandle.getColumn().getName());
+            boolean has2i = false;//TODO: table.hasIndex(riakColumnHandle.getColumn().getName());
             riakColumnHandle.getColumn().setIndex(has2i);
             handles.add(riakColumnHandle);
         }
 
         //log.debug("supplying CoverageRecordSet");
-        try {
-            return new CoverageRecordSet(coverageSplit,
-                    handles.build(),
-                    riakConfig, coverageSplit.getTupleDomain(),
-                    directConnection);
-        } catch (OtpErlangDecodeException e) {
-            log.error(e);
-        } catch (DecoderException e) {
-            log.error(e);
-        }
-        return null;
+        return new CoverageRecordSet(coverageSplit,
+                handles.build(),
+                riakConfig,
+                coverageSplit.getTupleDomain(),
+                directConnection);
     }
 }

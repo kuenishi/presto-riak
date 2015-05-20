@@ -11,16 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
-import com.facebook.presto.spi.ColumnMetadata;
 import com.facebook.presto.spi.ColumnHandle;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import io.airlift.log.Logger;
-
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -43,20 +40,6 @@ public final class RiakColumnHandle
         this.column = checkNotNull(column, "column is null");
         this.ordinalPosition = ordinalPosition;
     }
- /*
-    public RiakColumnHandle(String connectorId, ColumnMetadata columnMetadata) {
-        this(connectorId,
-                new RiakColumn(columnMetadata.getName(),
-                        columnMetadata.getType(),
-                        "phew",
-                        // Whether that column has index or not is stored here
-                        columnMetadata.isPartitionKey(),
-                        // PartitionKey in Riak is Consistent Hashing-based, but it's used
-                        // for vnode partitioning for sure :) and hereby data was lost ><
-                        false
-                ),
-                columnMetadata.getOrdinalPosition());
-    } */
 
     @JsonProperty
     public String getConnectorId() {

@@ -11,12 +11,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
 import com.facebook.presto.spi.ColumnHandle;
 import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.ConnectorTableHandle;
-import com.facebook.presto.spi.type.*;
+import com.facebook.presto.spi.type.VarcharType;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Function;
@@ -24,9 +23,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import io.airlift.log.Logger;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -37,26 +37,28 @@ public class PRTable {
     private static final Logger log = Logger.get(PRTable.class);
     private final String name;
     private final List<RiakColumn> columns;
+    private final Optional<String> comments;
+    private final Optional<List<PRSubTable>> subtables;
+
     private String pkey;
 
     @JsonCreator
     public PRTable(
             @JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "columns", required = true) List<RiakColumn> columns,
-            @JsonProperty(value = "comments", required = false) String comments) {
+            @JsonProperty(value = "comments", required = false) String comments,
+            @JsonProperty(value = "subtables", required = false) List<PRSubTable> subtables) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = checkNotNull(name, "name is null");
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
+        this.comments = Optional.ofNullable(comments);
+        this.subtables = Optional.ofNullable(ImmutableList.copyOf(subtables));
 
-        ImmutableList.Builder<ColumnMetadata> columnsMetadata = ImmutableList.builder();
-
-        System.out.println("boom");
         for (RiakColumn column : this.columns) {
-            System.out.println(">"+column.getPkey() + " " + column.getType() + " " + pkey);
+            System.out.println(">" + column.getPkey() + " " + column.getType() + " " + pkey);
             if (column.getPkey() &&
                     column.getType() == VarcharType.VARCHAR &&
-                    this.pkey == null)
-            {
+                    this.pkey == null) {
                 this.pkey = column.getName();
             }
         }
@@ -64,6 +66,7 @@ public class PRTable {
             log.warn("Primary Key is not defined in columns effectively. Some queries become slow.");
         }
 
+        // TODO: verify all subtable definitions here
     }
 
     public static Function<PRTable, String> nameGetter() {
@@ -75,13 +78,6 @@ public class PRTable {
         };
     }
 
-    public static PRTable example(String tableName) {
-        List<RiakColumn> cols = Arrays.asList(
-                new RiakColumn("col1", VarcharType.VARCHAR, "d1vv", false, true),
-                new RiakColumn("col2", VarcharType.VARCHAR, "d2", true, false),
-                new RiakColumn("poopie", BigintType.BIGINT, "d3", true, false));
-        return new PRTable(tableName, cols, "coment");
-    }
 
     @JsonProperty
     public String getName() {
@@ -93,18 +89,59 @@ public class PRTable {
         return columns;
     }
 
-    public List<ColumnMetadata> getColumnsMetadata(String connectorId){
+    @JsonProperty
+    public List<PRSubTable> getSubtables() {
+        return subtables.get();
+    }
+
+    public List<String> getSubtableNames() {
+        List<String> l = new ArrayList<>();
+        if (!subtables.isPresent()) {
+            return l;
+        }
+        for (PRSubTable subtable : subtables.get()) {
+            l.add(name + PRSubTable.SEPARATOR + subtable.getName());
+        }
+        return l;
+    }
+
+    public PRSubTable getSubtable(String fullTableName) {
+        if (fullTableName.equals(name)) {
+            return null;
+        }
+        for (PRSubTable subtable : subtables.get()) {
+            if (subtable.match(fullTableName)) {
+                return subtable;
+            }
+        }
+        return null;
+    }
+
+    @JsonProperty
+    public String getComments() {
+        return comments.get();
+    }
+
+    public List<ColumnMetadata> getColumnsMetadata(String connectorId) {
         Map<String, ColumnHandle> columnHandles = getColumnHandles(connectorId);
         ImmutableList.Builder<ColumnMetadata> builder = ImmutableList.builder();
-        for (ColumnHandle columnHandle : columnHandles.values()){
+        for (ColumnHandle columnHandle : columnHandles.values()) {
             RiakColumnHandle handle = (RiakColumnHandle) columnHandle;
             boolean hidden = false;
-            if ( handle.getOrdinalPosition() < 2 )
+            if (handle.getOrdinalPosition() < 2)
                 hidden = true;
+            String comment = handle.getColumn().getComment();
+            if (handle.getColumn().getPkey()) {
+                if (comment == null) {
+                    comment = "(key)";
+                } else {
+                    comment += " (key)";
+                }
+            }
             builder.add(new ColumnMetadata(handle.getColumn().getName(),
                     handle.getColumn().getType(),
                     handle.getOrdinalPosition(), handle.getColumn().getIndex(),
-                    handle.getColumn().getComment(), hidden));
+                    comment, hidden));
 
         }
         return builder.build();
@@ -139,4 +176,18 @@ public class PRTable {
         }
         return columnHandles.build();
     }
+
+    public String toString() {
+        String ret = name + ":{";
+        for (RiakColumn col : columns) {
+            ret += col.toString();
+            ret += " ";
+        }
+        ret += "} ";
+        for (PRSubTable subtable : subtables.get()) {
+            ret += subtable.toString();
+        }
+        return ret;
+    }
+
 }

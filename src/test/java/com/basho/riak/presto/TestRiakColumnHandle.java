@@ -1,19 +1,14 @@
 package com.basho.riak.presto;
 
-import com.facebook.presto.spi.ColumnMetadata;
-import com.facebook.presto.spi.SchemaTableName;
-import com.facebook.presto.spi.TupleDomain;
+import com.basho.riak.presto.models.RiakColumn;
+import com.basho.riak.presto.models.RiakColumnHandle;
 import com.facebook.presto.spi.type.BooleanType;
-import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static com.basho.riak.presto.MetadataUtil.COLUMN_CODEC;
 
-import javax.management.remote.rmi._RMIConnection_Stub;
 import java.io.IOException;
 
 

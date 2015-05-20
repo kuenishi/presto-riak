@@ -13,6 +13,9 @@
  */
 package com.basho.riak.presto;
 
+import com.basho.riak.presto.models.CoverageSplit;
+import com.basho.riak.presto.models.RiakColumnHandle;
+import com.basho.riak.presto.models.RiakTableHandle;
 import com.facebook.presto.spi.*;
 import io.airlift.log.Logger;
 
@@ -64,7 +67,8 @@ public class RiakHandleResolver implements ConnectorHandleResolver {
     @Override
     public boolean canHandle(ConnectorSplit split) {
         if (split instanceof CoverageSplit) {
-            return ((CoverageSplit) split).getConnectorId().equals(connectorId);
+            CoverageSplit coverageSplit = (CoverageSplit) split;
+            return coverageSplit.getTableHandle().getConnectorId().equals(connectorId);
         }
         return false;
     }

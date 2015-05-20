@@ -22,6 +22,9 @@ import com.basho.riak.client.core.query.Location;
 import com.basho.riak.client.core.query.Namespace;
 import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.client.core.util.BinaryValue;
+import com.basho.riak.presto.models.PRSchema;
+import com.basho.riak.presto.models.PRTable;
+import com.basho.riak.presto.models.PairwiseNode;
 import com.facebook.presto.spi.SchemaNotFoundException;
 import com.facebook.presto.spi.SchemaTableName;
 import com.facebook.presto.spi.TableNotFoundException;
@@ -198,7 +201,7 @@ public class RiakClient {
             log.debug("ro: %s", o.getValue().toStringUtf8());
             PRTable table = objectMapper.readValue(o.getValue().toStringUtf8(), PRTable.class);
             checkNotNull(table, "table schema (%s) wasn't found.", schemaTableName.getSchemaName());
-            log.debug("table %s schema found.", schemaTableName.getTableName());
+            log.debug("table schema found: %s.", table.toString());
 
             return table;
         }

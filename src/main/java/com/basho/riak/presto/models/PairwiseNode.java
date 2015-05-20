@@ -1,4 +1,4 @@
-package com.basho.riak.presto;
+package com.basho.riak.presto.models;
 
 import com.facebook.presto.spi.HostAddress;
 import com.facebook.presto.spi.Node;
@@ -17,9 +17,9 @@ public class PairwiseNode implements Node {
     public final String host;
     public final int port;
 
-    PairwiseNode(@JsonProperty("localNode") String localNode,
-                 @JsonProperty("host") String host,
-                 @JsonProperty("port") int port) {
+    public PairwiseNode(@JsonProperty("localNode") String localNode,
+                        @JsonProperty("host") String host,
+                        @JsonProperty("port") int port) {
         this.host = host;
         this.port = port;
         this.localNode = localNode;
