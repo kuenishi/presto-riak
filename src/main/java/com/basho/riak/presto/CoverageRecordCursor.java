@@ -141,18 +141,22 @@ public class CoverageRecordCursor
 
                 PRSubTable subtable = split.getTable().getSubtable(tableName);
                 if (subtable != null) {
-                    List<Map<String, Object>> jsonRecords = JsonPath.read(riakObject.getValueAsString(),
-                            subtable.getPath());
-                    for (Map<String, Object> record : jsonRecords) {
-                        try {
+                    try {
+                        List<Map<String, Object>> jsonRecords = JsonPath.read(riakObject.getValueAsString(),
+                                subtable.getPath());
+                        for (Map<String, Object> record : jsonRecords) {
+                            try {
 
-                            //TODO: utilize hidden column with vtags
-                            record.put(RiakColumnHandle.PKEY_COLUMN_NAME, new String(riakObject.getKey(), "UTF-8"));
-                            record.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
-                            buffer.add(record);
-                        } catch (UnsupportedEncodingException e) {
-                            log.warn(e.getMessage());
+                                //TODO: utilize hidden column with vtags
+                                record.put(RiakColumnHandle.PKEY_COLUMN_NAME, new String(riakObject.getKey(), "UTF-8"));
+                                record.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
+                                buffer.add(record);
+                            } catch (UnsupportedEncodingException e) {
+                                log.warn(e.getMessage());
+                            }
                         }
+                    }catch (IllegalArgumentException e) {
+                        log.debug(e.getMessage() + " - JSONPath couldn't parse this string : " + riakObject.getValueAsString());
                     }
                 } else {
                     try {
