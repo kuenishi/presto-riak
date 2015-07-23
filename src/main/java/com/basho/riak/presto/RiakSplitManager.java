@@ -134,6 +134,7 @@ public class RiakSplitManager
                             split.getHost(),
                             split.toString(),
                             partition.getTupleDomain());
+
                     log.info(new JsonCodecFactory().jsonCodec(CoverageSplit.class).toJson(coverageSplit));
                     splits.add(coverageSplit);
                 }

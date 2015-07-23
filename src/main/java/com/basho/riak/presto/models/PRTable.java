@@ -140,7 +140,7 @@ public class PRTable {
             }
             builder.add(new ColumnMetadata(handle.getColumn().getName(),
                     handle.getColumn().getType(),
-                    handle.getOrdinalPosition(), handle.getColumn().getIndex(),
+                    handle.getColumn().getPkey(),
                     comment, hidden));
 
         }

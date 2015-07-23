@@ -102,7 +102,7 @@ public class PRSubTable {
                 hidden = true;
             builder.add(new ColumnMetadata(handle.getColumn().getName(),
                     handle.getColumn().getType(),
-                    handle.getOrdinalPosition(), handle.getColumn().getIndex(),
+                    handle.getColumn().getPkey(),
                     handle.getColumn().getComment(), hidden));
 
         }

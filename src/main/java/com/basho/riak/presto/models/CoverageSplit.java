@@ -56,10 +56,6 @@ public class CoverageSplit implements ConnectorSplit {
         this.host = checkNotNull(host);
         this.splitData = checkNotNull(splitData);
         this.tupleDomain = checkNotNull(tupleDomain);
-
-        //log.debug("%s.%s to %s: %s", schemaName, tableName, host, splitData);
-        //this.addresses = ImmutableList.copyOf(Arrays.asList(HostAddress.fromParts(host, 8080)));
-
     }
 
     @JsonProperty
