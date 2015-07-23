@@ -1,15 +1,16 @@
 package com.basho.riak.presto.cli;
 
 import com.basho.riak.client.core.query.RiakObject;
-import com.basho.riak.presto.models.PRSchema;
 import com.basho.riak.presto.RiakClient;
 import com.basho.riak.presto.RiakConfig;
+import com.basho.riak.presto.models.PRSchema;
 import com.facebook.presto.spi.SchemaTableName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Injector;
 import io.airlift.log.Logger;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -70,16 +71,22 @@ public class SchemaDef {
     }
 
     public void listTables(String schemaName) {
+        CLI.log("tables in " + schemaName);
+
+        for (String tableName : tableNames(schemaName)) {
+            System.out.println(tableName);
+        }
+    }
+
+    public List<String> tableNames(String schemaName) {
         try {
             setupClient(config);
             Set<String> tableNames = client.getTableNames(schemaName);
-            CLI.log("tables in " + schemaName);
+            return new ArrayList<>(tableNames);
 
-            for (String tableName : tableNames) {
-                System.out.println(tableName);
-            }
         } catch (Exception e) {
             log.error(e);
+            return null; // Bad TBD
         } finally {
             client.shutdown();
         }

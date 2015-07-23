@@ -67,6 +67,7 @@ public class CLI {
         System.out.println("usage: ./presto-riak-cli <hostname> <port> [<commands>... ]"); //plan <node> [<cookie>])");
         System.out.println("   list-tables <schema name>");
         System.out.println("   setup-schema <schema name>");
+        System.out.println("   verify-schema <schema name>");
         System.out.println("   create-tabledef <schema name> <table definition json file>");
         System.out.println("   show-tabledef <schema name> <table name>");
         System.out.println("   clear-tabledef <schema name> <table name>");
@@ -104,6 +105,12 @@ public class CLI {
             new SchemaDef(i, config).listTables(schemaName);
         } else if (command.equals("setup-schema") && args.length == 4) {
             new SchemaDef(i, config).setupSchema(schemaName);
+        } else if (command.equals("verify-schema") && args.length == 4) {
+            SchemaDef schema = new SchemaDef(i, config);
+            for (String tableName : schema.tableNames(schemaName))
+            {
+                new TableDef(i, config, schemaName, true).show(tableName);
+            }
 
         } else if (args.length == 5) {
             String tableArg = args[4];

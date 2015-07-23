@@ -37,7 +37,7 @@ public class PRTable {
     private static final Logger log = Logger.get(PRTable.class);
     private final String name;
     private final List<RiakColumn> columns;
-    private final Optional<String> comments;
+    private final Optional<String> comment;
     private final Optional<List<PRSubTable>> subtables;
 
     private String pkey;
@@ -46,12 +46,12 @@ public class PRTable {
     public PRTable(
             @JsonProperty(value = "name", required = true) String name,
             @JsonProperty(value = "columns", required = true) List<RiakColumn> columns,
-            @JsonProperty(value = "comments", required = false) String comments,
+            @JsonProperty(value = "comment", required = false) String comment,
             @JsonProperty(value = "subtables", required = false) List<PRSubTable> subtables) {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = checkNotNull(name, "name is null");
         this.columns = ImmutableList.copyOf(checkNotNull(columns, "columns is null"));
-        this.comments = Optional.ofNullable(comments);
+        this.comment = Optional.ofNullable(comment);
         this.subtables = Optional.ofNullable(ImmutableList.copyOf(subtables));
 
         for (RiakColumn column : this.columns) {
@@ -118,8 +118,8 @@ public class PRTable {
     }
 
     @JsonProperty
-    public String getComments() {
-        return comments.get();
+    public String getComment() {
+        return comment.get();
     }
 
     public List<ColumnMetadata> getColumnsMetadata(String connectorId) {
