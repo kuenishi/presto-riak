@@ -65,7 +65,15 @@ public class RiakMetadata
 
             for (String tableName : riakClient.getTableNames(schemaName)) {
                 log.info("table %s found.", tableName);
-                builder.add(new SchemaTableName(schemaName, tableName));
+                SchemaTableName schemaTableName = new SchemaTableName(schemaName, tableName);
+                builder.add(schemaTableName);
+
+                PRTable table = riakClient.getTable(schemaTableName);
+                for (PRSubTable subtable : table.getSubtables())
+                {
+                    log.info("subtable %s found.", subtable.getFullName(table));
+                    builder.add(new SchemaTableName(schemaName, subtable.getFullName(table)));
+                }
             }
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -101,6 +109,7 @@ public class RiakMetadata
 
     @Override
     public ConnectorTableMetadata getTableMetadata(ConnectorTableHandle table) {
+        // TODO: handle PRSubtable by splitting with separator!
         log.info("getTableMetadata");
         checkArgument(table instanceof RiakTableHandle, "tableHandle is not an instance of RiakTableHandle");
         RiakTableHandle RiakTableHandle = (RiakTableHandle) table;

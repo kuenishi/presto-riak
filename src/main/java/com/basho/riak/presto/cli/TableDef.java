@@ -95,7 +95,7 @@ public class TableDef {
             CLI.log(column.getName() + hasIndex + ": \t" + column.getType());
         }
         //System.out.println(table);
-        objectMapper.writeValue(System.out, table);
+        //objectMapper.writeValue(System.out, table);
         return true;
 
     }

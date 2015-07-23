@@ -55,7 +55,6 @@ public class PRSubTable {
         int index = 2;
 
         for (RiakColumn column : this.columns) {
-            System.out.println(">" + column.getPkey() + " " + column.getType() + " " + pkey);
             if (column.getPkey() &&
                     column.getType() == VarcharType.VARCHAR &&
                     this.pkey == null) {
@@ -77,6 +76,9 @@ public class PRSubTable {
         };
     }
 
+    public String getFullName(PRTable parent) {
+        return parent.getName() + SEPARATOR + name;
+    }
     @JsonProperty
     public String getName() {
         return name;

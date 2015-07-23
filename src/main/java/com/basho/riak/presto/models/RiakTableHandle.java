@@ -38,7 +38,6 @@ public final class RiakTableHandle
         this.connectorId = checkNotNull(connectorId, "connectorId is null");
         this.schemaName = checkNotNull(schemaName, "schemaName is null");
         this.tableName = checkNotNull(tableName, "tableName is null");
-        log.debug("constuctor...");
     }
 
     @JsonProperty

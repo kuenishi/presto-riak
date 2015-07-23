@@ -198,7 +198,7 @@ public class RiakClient {
         log.info("RiakClient.getTable(%s)", schemaTableName);
 
         for (RiakObject o : objects) {
-            log.debug("ro: %s", o.getValue().toStringUtf8());
+            //log.debug("ro: %s", o.getValue().toStringUtf8());
             PRTable table = objectMapper.readValue(o.getValue().toStringUtf8(), PRTable.class);
             checkNotNull(table, "table schema (%s) wasn't found.", schemaTableName.getSchemaName());
             log.debug("table schema found: %s.", table.toString());

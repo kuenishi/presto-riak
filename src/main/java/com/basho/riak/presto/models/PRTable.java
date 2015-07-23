@@ -55,7 +55,6 @@ public class PRTable {
         this.subtables = Optional.ofNullable(ImmutableList.copyOf(subtables));
 
         for (RiakColumn column : this.columns) {
-            System.out.println(">" + column.getPkey() + " " + column.getType() + " " + pkey);
             if (column.getPkey() &&
                     column.getType() == VarcharType.VARCHAR &&
                     this.pkey == null) {
