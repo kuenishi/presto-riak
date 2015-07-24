@@ -81,8 +81,6 @@ public final class RiakTableHandle
 
     @Override
     public String toString() {
-        log.debug("toString?");
-
         return Joiner.on(":").join(connectorId, schemaName, tableName);
     }
 }

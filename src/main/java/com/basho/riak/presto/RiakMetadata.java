@@ -122,10 +122,11 @@ public class RiakMetadata
     @Override
     public Map<SchemaTableName, List<ColumnMetadata>> listTableColumns(ConnectorSession connectorSession,
                                                                        SchemaTablePrefix prefix) {
-        log.info("listTableColumns");
+        log.info("listTableColumns> %s.%s", prefix.getSchemaName(), prefix.getTableName());
         checkNotNull(prefix, "prefix is null");
         ImmutableMap.Builder<SchemaTableName, List<ColumnMetadata>> columns = ImmutableMap.builder();
         for (SchemaTableName tableName : listTables(connectorSession, prefix.getSchemaName())) {
+            log.debug("schema table > %s", tableName);
             ConnectorTableMetadata tableMetadata = getTableMetadata(tableName);
             // table can disappear during listing operation
             if (tableMetadata != null) {
@@ -179,13 +180,14 @@ public class RiakMetadata
                     schemaTableName.getSchemaName(),
                     parentTable);
             PRTable table = riakClient.getTable(parentSchemaTable);
-            log.debug("table> %s", table.toString());
+            //log.debug("table> %s", table.toString());
 
             List<ColumnMetadata> l; // = table.getColumnsMetadata(connectorId);
             if(schemaTableName.getTableName().equals(parentTable)) {
                 l = table.getColumnsMetadata(connectorId);
             }else {
-                l = table.getSubtable(schemaTableName.getTableName()).getColumnsMetadata(connectorId);
+                PRSubTable subtable = table.getSubtable(schemaTableName.getTableName());
+                l = subtable.getColumnsMetadata(connectorId);
             }
 
             log.debug("table %s with %d columns.", schemaTableName.getTableName(), l.size());

@@ -169,4 +169,14 @@ public class PRSubTable {
             throw new IllegalArgumentException();
         }
     }
+
+    public String toString() {
+        String ret = name + "(path= " + path + ", pkey=" + pkey + "):{";
+        for (RiakColumn col : columns) {
+            ret += col.toString();
+            ret += " ";
+        }
+        ret += "} ";
+        return ret;
+    }
 }
