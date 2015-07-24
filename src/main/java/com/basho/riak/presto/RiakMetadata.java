@@ -181,9 +181,7 @@ public class RiakMetadata
             PRTable table = riakClient.getTable(parentSchemaTable);
             log.debug("table> %s", table.toString());
 
-            List<ColumnMetadata> l = table.getColumnsMetadata(connectorId);
-
-
+            List<ColumnMetadata> l; // = table.getColumnsMetadata(connectorId);
             if(schemaTableName.getTableName().equals(parentTable)) {
                 l = table.getColumnsMetadata(connectorId);
             }else {

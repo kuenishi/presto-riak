@@ -156,6 +156,8 @@ public class PRSubTable {
         return parentTableName(fullTableName);
     }
 
+    // fullTableName is all lowercase, which came from schema
+    // tableName is also lowercase, which came from schema
     public boolean match(String fullTableName)
     {
         String[] parts = fullTableName.split(SEPARATOR);

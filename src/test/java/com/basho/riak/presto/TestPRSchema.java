@@ -16,10 +16,10 @@ public class TestPRSchema {
     public void testPRSchemaSerealization()
     {
         PRSchema t = PRSchema.example();
-        System.out.println(t.toString());
+        //System.out.println(t.toString());
 
         String s = SCHEMA_CODEC.toJson(t);
-        System.out.println(s);
+        //System.out.println(s);
 
         PRSchema t2 = SCHEMA_CODEC.fromJson(s);
         assert(t.getTables().equals(t2.getTables()));

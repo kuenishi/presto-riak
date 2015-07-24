@@ -21,7 +21,6 @@ public class TestSerialization {
         CoverageSplit coverageSplit = new CoverageSplit(handle,
                 table, "192.168.0.1", "", TupleDomain.<ColumnHandle>all());
         String s = MetadataUtil.COV_CODEC.toJson(coverageSplit);
-        System.out.println(s);
 
         CoverageSplit cs2 = MetadataUtil.COV_CODEC.fromJson(s);
         assert(coverageSplit.getTableHandle().getTableName()

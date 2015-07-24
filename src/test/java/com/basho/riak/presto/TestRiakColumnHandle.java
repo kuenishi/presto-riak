@@ -50,15 +50,12 @@ public class TestRiakColumnHandle {
 
         ObjectMapper om = new ObjectMapper();
         String s = COLUMN_CODEC.toJson(c);
-        System.out.println(s);
 
         RiakColumnHandle c2 = COLUMN_CODEC.fromJson(s);
 
         assert(c.equals(c2));
         assert(c.getColumn().getType() == VarcharType.VARCHAR);
         assert(c2.getColumn().getType() == VarcharType.VARCHAR);
-        System.out.println(c);
-        System.out.println(c2);
     }
 
     @Test

@@ -21,20 +21,13 @@ public class TestPRTable {
     @Test
     public void testSerialization()
     {
-
         PRTable t;
         t = example("foobar_table");
-        System.out.println(t.toString());
 
         String s = TABLE_CODEC.toJson(t);
-        System.out.println(s);
-
         PRTable t2 = TABLE_CODEC.fromJson(s);
-        System.out.println(t2.toString());
-        System.out.println(t2.getName());
         assert(t.getName().equals(t2.getName()));
         assert(t.getColumns().equals(t2.getColumns()));
-        System.out.println(t.getSubtableNames());
         assert(t.getSubtable("foobar_table/boom") != null);
         assert(t.getSubtable("foobar_table/boom").getName() == "boom");
         assert(t.getSubtable("foobar_table/noop") == null);
@@ -43,14 +36,10 @@ public class TestPRTable {
     @Test
     public void testDeSerialization()
     {
-
         //TODO: this is strange to me that with empty subtables added test passes,
         // while without subtables, null, fails
-        String s = "{\"subtables\":[],\"name\":\"logs\", \"columns\":[{\"name\":\"a\", \"type\":\"varchar\", \"index\":false, \"pkey\":true}]}";
-        System.out.println(s);
+        String s = "{\"comment\":\"comme\", \"subtables\":[],\"name\":\"logs\", \"columns\":[{\"name\":\"a\", \"type\":\"varchar\", \"index\":false, \"pkey\":true}]}";
         PRTable t = TABLE_CODEC.fromJson(s);
-        System.out.println(t.toString());
-        System.out.println(t.getName());
         assert(t.getName().equals("logs"));
         assert(t.getSubtables().isEmpty());
         assert(null != t.getColumnHandles("a"));

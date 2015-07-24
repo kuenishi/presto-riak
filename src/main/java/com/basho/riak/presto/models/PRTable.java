@@ -109,6 +109,7 @@ public class PRTable {
             return null;
         }
         for (PRSubTable subtable : subtables.get()) {
+            //fullTableName is lowercase due to Presto's constraint
             if (subtable.match(fullTableName)) {
                 return subtable;
             }
