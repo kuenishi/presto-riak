@@ -66,8 +66,8 @@ public class CoverageRecordCursor
             throws OtpErlangDecodeException, DecoderException {
 
         this.split = checkNotNull(split);
-        // TODO: if (*) selected, columnHandles gets really empty...
-        log.debug(columnHandles.toString());
+
+        //log.debug(columnHandles.toString());
         checkState(!columnHandles.isEmpty(), "Queries just with (*) cannot run anywhere");
         this.splitTask = split.getSplitTask();
         this.tupleDomain = checkNotNull(tupleDomain, "tupleDomain is null");
@@ -81,7 +81,7 @@ public class CoverageRecordCursor
 
         this.columnHandles = columnHandles;
 
-        log.debug(columnHandles.toString());
+        //log.debug(columnHandles.toString());
         log.debug(tupleDomain.toString());
 
         for (int i = 0; i < columnHandles.size(); i++) {
@@ -326,6 +326,7 @@ public class CoverageRecordCursor
     @Override
     public Type getType(int field) {
         checkArgument(field < columnHandles.size(), "Invalid field index");
+        checkArgument(field >= 0, "Negative field index");
         return columnHandles.get(field).getColumn().getType();
     }
 
@@ -345,8 +346,6 @@ public class CoverageRecordCursor
     private String getFieldValue(int field) {
         checkState(fields != null, "Cursor has not been advanced yet");
 
-        //int columnIndex = fieldToColumnIndex[field];
-        //return fields[columnIndex];
         //log.debug("field #%d, %s => %s, %s", field, fields[field], cursor.get(fields[field]), cursor);
         Object o = cursor.get(fields[field]);
         if (o == null) {
@@ -377,11 +376,7 @@ public class CoverageRecordCursor
     @Override
     public Slice getSlice(int field) {
         //return slices[i];
-        if (slices[field] == null) {
-            slices[field] = Slices.utf8Slice(getFieldValue(field));
-        } else {
-            slices[field].setBytes(0, getFieldValue(field).getBytes());
-        }
+        slices[field] = Slices.utf8Slice(getFieldValue(field));
         //log.debug("getSlice called: %s", slices[field]);
 
         return slices[field];
