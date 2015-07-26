@@ -18,8 +18,8 @@ package com.basho.riak.presto;
 // or 1.5.6 on maven repo.
 
 import com.ericsson.otp.erlang.*;
-import javax.inject.Inject;
 
+import javax.inject.Inject;
 import java.io.IOException;
 
 // @doc directly connect to Riak via distributed Erlang.

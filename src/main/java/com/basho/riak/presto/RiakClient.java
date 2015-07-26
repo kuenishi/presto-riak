@@ -33,9 +33,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.net.HostAndPort;
-import javax.inject.Inject;
 import io.airlift.log.Logger;
 
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;

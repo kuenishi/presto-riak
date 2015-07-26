@@ -60,18 +60,24 @@ public final class RiakColumn {
     }
 
     @JsonProperty
-    public String getComment() { return comment; }
+    public String getComment() {
+        return comment;
+    }
+
     @JsonProperty
     public boolean getIndex() {
         return index;
     }
+
     public void setIndex(boolean b) {
         this.index = b;
     }
+
     @JsonProperty
     public boolean getPkey() {
         return pkey;
     }
+
     @Override
     public int hashCode() {
         return Objects.hashCode(name, type);
