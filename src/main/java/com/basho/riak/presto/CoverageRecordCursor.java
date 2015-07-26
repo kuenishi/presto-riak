@@ -205,7 +205,6 @@ public class CoverageRecordCursor
     }
     @Override
     public long getReadTimeNanos() {
-        log.debug("getReadTimeNanos");
         return 0;
     }
 
