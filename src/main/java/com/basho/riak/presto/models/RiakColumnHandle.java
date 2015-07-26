@@ -16,6 +16,7 @@ package com.basho.riak.presto.models;
 import com.facebook.presto.spi.ColumnHandle;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import io.airlift.log.Logger;
 
@@ -78,7 +79,7 @@ public final class RiakColumnHandle
 
     @Override
     public String toString() {
-        return Objects.toStringHelper(this)
+        return MoreObjects.toStringHelper(this)
                 .add("connectorId", connectorId)
                 .add("column", column)
                 .add("ordinalPosition", ordinalPosition)
