@@ -14,6 +14,7 @@
 
 package com.basho.riak.presto;
 
+import com.basho.riak.client.core.query.RiakObject;
 import com.basho.riak.presto.models.CoverageSplit;
 import com.basho.riak.presto.models.PRSubTable;
 import com.basho.riak.presto.models.RiakColumnHandle;
@@ -142,31 +143,34 @@ public class CoverageRecordCursor
                 PRSubTable subtable = split.getTable().getSubtable(tableName);
                 if (subtable != null) {
                     try {
-                        List<Map<String, Object>> jsonRecords = JsonPath.read(riakObject.getValueAsString(),
-                                subtable.getPath());
-                        for (Map<String, Object> record : jsonRecords) {
-                            try {
+                        // @doc depending on path and object structure, both Object and List may
+                        // match path expression and be returned here. This if is to handle both.
+                        Object records = JsonPath.read(riakObject.getValueAsString(), subtable.getPath());
+                        if (records instanceof Map) {
+                            //log.debug("instance of map; %s", records);
+                            handleObject((Map)records, riakObject);
+                        }
+                        else if (records instanceof List) {
+                            //log.debug("instance of list; %s", records);
+                            for (Map<String, Object> record : (List<Map<String, Object>>)records) {
 
-                                //TODO: utilize hidden column with vtags
-                                record.put(RiakColumnHandle.PKEY_COLUMN_NAME, new String(riakObject.getKey(), "UTF-8"));
-                                record.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
-                                buffer.add(record);
-                            } catch (UnsupportedEncodingException e) {
-                                log.warn(e.getMessage());
+                                handleObject(record, riakObject);
                             }
                         }
                     }catch (IllegalArgumentException e) {
                         log.debug(e.getMessage() + " - JSONPath couldn't parse this string : " + riakObject.getValueAsString());
+                    }catch (com.jayway.jsonpath.PathNotFoundException e)
+                    {
+                        // A case where JsonPath returned Map
+                        //log.debug("JsonPath.read nothing from %s", riakObject.getValueAsString());
                     }
+
                 } else {
                     try {
                         ObjectMapper mapper = new ObjectMapper();
                         Map record = mapper.readValue(riakObject.getValueAsString(), HashMap.class);
 
-                        //TODO: utilize hidden column with vtags
-                        record.put(RiakColumnHandle.PKEY_COLUMN_NAME, new String(riakObject.getKey(), "UTF-8"));
-                        record.put(pkey, new String(riakObject.getKey(), "UTF-8"));
-                        record.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
+                        handleObject(record, riakObject);
 
                         buffer.add(record);
                     } catch (IOException e) {
@@ -175,7 +179,7 @@ public class CoverageRecordCursor
                 }
 
             }
-            log.info("%d key data fetched.", buffer.size());
+            log.debug("%d key data fetched.", buffer.size());
         }
 
         catch (OtpErlangExit e) {
@@ -187,6 +191,18 @@ public class CoverageRecordCursor
         }
     }
 
+    private void handleObject(Map<String, Object> record, InternalRiakObject riakObject)
+    {
+        try {
+            //TODO: utilize hidden column with vtags
+            record.put(RiakColumnHandle.PKEY_COLUMN_NAME, new String(riakObject.getKey(), "UTF-8"));
+            record.put(RiakColumnHandle.VTAG_COLUMN_NAME, riakObject.getVTag());
+            buffer.add(record);
+        } catch (UnsupportedEncodingException e) {
+            log.warn(e.getMessage());
+        }
+
+    }
     @Override
     public long getReadTimeNanos() {
         log.debug("getReadTimeNanos");
